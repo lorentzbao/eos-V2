@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="text-center mb-5">
+            <h1 class="display-4 mb-4">日本語検索エンジン</h1>
+            <p class="lead">Whooshを使用した高速検索システム</p>
+        </div>
+        
+        <div class="search-container">
+            <form action="{{ url_for('main.search') }}" method="GET">
+                <div class="input-group mb-3">
+                    <input type="text" 
+                           name="q" 
+                           class="form-control form-control-lg" 
+                           placeholder="検索キーワードを入力してください..."
+                           autocomplete="off"
+                           autofocus>
+                    <button class="btn btn-primary btn-lg" type="submit">検索</button>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <select name="type" class="form-select">
+                            <option value="auto">すべて検索</option>
+                            <option value="title">タイトルのみ</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <select name="limit" class="form-select">
+                            <option value="10">10件</option>
+                            <option value="20">20件</option>
+                            <option value="50">50件</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="mt-4">
+            <small class="text-muted">
+                <strong>検索のヒント:</strong><br>
+                • "完全一致" で完全一致検索<br>
+                • title:キーワード でタイトル検索<br>
+                • 複数キーワードでAND検索
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}

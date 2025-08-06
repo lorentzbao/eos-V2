@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <!-- Search Form -->
+        <div class="search-header mb-4">
+            <form action="{{ url_for('main.search') }}" method="GET">
+                <div class="input-group">
+                    <input type="text" 
+                           name="q" 
+                           value="{{ query }}" 
+                           class="form-control" 
+                           placeholder="検索キーワードを入力してください...">
+                    <button class="btn btn-primary" type="submit">検索</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Search Stats -->
+        {% if query %}
+        <div class="search-stats mb-3">
+            <small class="text-muted">
+                "{{ query }}" の検索結果: 
+                <strong>{{ total_found }}</strong> 件見つかりました
+                {% if search_time %}
+                ({{ search_time }}秒)
+                {% endif %}
+                <br>
+                {% if processed_query %}
+                処理済みクエリ: {{ processed_query }}
+                {% endif %}
+            </small>
+        </div>
+        {% endif %}
+
+        <!-- Search Results -->
+        {% if results %}
+        <div class="search-results">
+            {% for result in results %}
+            <div class="result-item mb-4 p-3 border rounded">
+                <h5 class="result-title">
+                    {% if result.url %}
+                    <a href="{{ result.url }}" target="_blank" class="text-decoration-none">
+                        {{ result.title }}
+                    </a>
+                    {% else %}
+                    {{ result.title }}
+                    {% endif %}
+                    <small class="text-muted">(スコア: {{ "%.3f"|format(result.score) }})</small>
+                </h5>
+                <p class="result-content text-muted mb-2">{{ result.content }}</p>
+                {% if result.url %}
+                <small class="text-success">{{ result.url }}</small>
+                {% endif %}
+                <small class="text-muted d-block">ID: {{ result.id }}</small>
+            </div>
+            {% endfor %}
+        </div>
+        {% elif query %}
+        <div class="alert alert-info">
+            <h5>検索結果が見つかりませんでした</h5>
+            <p>以下をお試しください:</p>
+            <ul>
+                <li>キーワードのスペルを確認してください</li>
+                <li>別のキーワードで検索してみてください</li>
+                <li>より一般的な用語を使用してください</li>
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Stats -->
+        {% if stats %}
+        <div class="mt-5">
+            <hr>
+            <small class="text-muted">
+                インデックス済み文書数: {{ stats.total_documents }} 件
+            </small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
