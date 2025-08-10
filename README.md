@@ -43,17 +43,27 @@ search_engine/
 
 ## Key Components
 
-### 1. Core Search Engine (`simple_search.py`)
-- **Japanese tokenization** using Janome (MeCab alternative)
-- **TF-IDF scoring** for relevance ranking
+### 1. Search Engine Implementations
+
+#### Custom Implementation (`simple_search.py`)
+- **Japanese tokenization** using Janome
+- **Custom TF-IDF scoring** for relevance ranking  
 - **Inverted index** for fast lookups
 - **JSON persistence** for data storage
+- **Lightweight and educational**
 
-### 2. Search Service Layer (`search_service.py`)
-- **Query processing** with timing
-- **Search type handling** (content vs title)
-- **Error handling** and statistics
-- **API wrapper** for the search engine
+#### Whoosh Implementation (`whoosh_simple.py`)
+- **Whoosh-powered indexing** with Japanese preprocessing
+- **Industry-standard TF-IDF scoring**
+- **Multi-field search** capabilities
+- **High-performance binary index**
+- **Scalable for large datasets**
+
+### 2. Search Service Layer
+- **`search_service.py`** - Custom implementation service
+- **`search_service_whoosh.py`** - Whoosh implementation service
+- **Query processing** with timing and error handling
+- **Unified API** for both implementations
 
 ### 3. Flask Web Interface
 - **Main page** (`/`) - Clean search interface
@@ -68,10 +78,13 @@ search_engine/
 
 ## Installation
 
-1. **Create virtual environment**:
+### Option 1: Using uv (Recommended)
+
+1. **Create and activate virtual environment**:
    ```bash
    uv venv
    source .venv/bin/activate  # Linux/Mac
+   # or on Windows: .venv\Scripts\activate
    ```
 
 2. **Install dependencies**:
@@ -81,8 +94,18 @@ search_engine/
 
 3. **Run the application**:
    ```bash
-   python run.py
+   uv run python run.py
    ```
+
+### Option 2: Direct uv execution (No activation needed)
+
+```bash
+# Install dependencies and run directly
+uv run --with-requirements requirements.txt python run.py
+
+# Or run tests
+uv run --with-requirements requirements.txt python test_search_engine.py
+```
 
 4. **Access the web interface**:
    Open http://127.0.0.1:5000 in your browser
@@ -171,7 +194,17 @@ tokens = ["機械", "学習", "基礎"]  # Extracted nouns
 Run the test script to see example searches:
 
 ```bash
+# With activated environment
 python test_search_engine.py
+
+# Or with uv directly
+uv run --with-requirements requirements.txt python test_search_engine.py
+
+# Test Whoosh implementation
+uv run --with-requirements requirements.txt python test_whoosh_simple.py
+
+# Compare both implementations
+uv run --with-requirements requirements.txt python compare_implementations.py
 ```
 
 This will:
@@ -201,9 +234,10 @@ This will:
 ## Dependencies
 
 - **Flask**: Web framework
-- **Janome**: Japanese tokenization
+- **Janome**: Japanese tokenization  
+- **Whoosh**: Full-text search library (optional)
 - **Bootstrap**: UI styling
-- **JSON**: Data persistence
+- **uv**: Fast Python package manager
 
 ## Future Enhancements
 

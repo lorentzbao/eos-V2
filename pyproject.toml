@@ -4,4 +4,10 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "beautifulsoup4==4.12.2",
+    "flask==2.3.3",
+    "janome==0.4.2",
+    "requests==2.31.0",
+    "whoosh==2.7.4",
+]

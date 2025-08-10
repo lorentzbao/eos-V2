@@ -2,8 +2,8 @@ from typing import List, Dict, Optional
 from .whoosh_simple import WhooshSimpleJapanese
 from .query_processor import QueryProcessor
 
-class SearchService:
-    def __init__(self, index_dir: str = "data/whoosh_index"):
+class WhooshSearchService:
+    def __init__(self, index_dir: str = "data/whoosh_simple"):
         self.search_engine = WhooshSimpleJapanese(index_dir)
         self.query_processor = QueryProcessor()
     
@@ -22,15 +22,6 @@ class SearchService:
         
         processed = self.query_processor.process_advanced_query(query)
         processed_query = processed['processed_query']
-        
-        if not processed_query:
-            return {
-                'results': [],
-                'total_found': 0,
-                'query': query,
-                'processed_query': processed_query,
-                'search_time': 0
-            }
         
         try:
             if search_type == "title" or processed['search_type'] == 'title':
@@ -66,14 +57,11 @@ class SearchService:
     
     def get_stats(self) -> Dict:
         return {
-            'total_documents': self.search_engine.get_document_count(),
-            'engine_type': 'Whoosh'
+            'total_documents': self.search_engine.get_document_count()
         }
     
     def clear_index(self):
-        """Clear the search index (Whoosh-specific)"""
         return self.search_engine.clear_index()
     
     def optimize_index(self):
-        """Optimize the search index (Whoosh-specific)"""
         return self.search_engine.optimize_index()
