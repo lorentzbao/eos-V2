@@ -3,7 +3,7 @@ from .whoosh_simple import WhooshSimpleJapanese
 from .query_processor import QueryProcessor
 
 class WhooshSearchService:
-    def __init__(self, index_dir: str = "data/whoosh_simple"):
+    def __init__(self, index_dir: str = "data/whoosh_index"):
         self.search_engine = WhooshSimpleJapanese(index_dir)
         self.query_processor = QueryProcessor()
     

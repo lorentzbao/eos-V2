@@ -36,7 +36,7 @@ env/
 *~
 
 # Search Engine Data
-data/index/
+data/whoosh_index/
 data/search_index.json
 data/documents/*.txt
 data/documents/*.html

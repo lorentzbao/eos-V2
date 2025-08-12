@@ -9,7 +9,7 @@ from typing import List, Dict
 class WhooshSimpleJapanese:
     """Whoosh search engine with pre-processed Japanese text"""
     
-    def __init__(self, index_dir: str = "data/whoosh_simple"):
+    def __init__(self, index_dir: str = "data/whoosh_index"):
         self.index_dir = index_dir
         self.tokenizer = Tokenizer()
         self.stop_words = {
