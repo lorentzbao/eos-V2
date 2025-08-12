@@ -11,15 +11,17 @@ This search engine provides full-text search capabilities for Japanese documents
 ```
 search_engine/
 ├── app/                          # Flask application package
-│   ├── __init__.py              # App factory with template/static config
+│   ├── __init__.py              # App factory with blueprint registration
 │   ├── routes/                  # URL routes and endpoints
 │   │   ├── __init__.py
-│   │   └── main.py             # Main routes (/, /search, /api/*)
+│   │   ├── main.py             # Web interface routes (/, /search)
+│   │   └── api.py              # REST API routes (/api/*)
 │   ├── services/               # Core search logic
-│   │   ├── simple_search.py    # Japanese search engine with TF-IDF
+│   │   ├── simple_search.py    # Custom Japanese search with TF-IDF
+│   │   ├── whoosh_simple.py    # Whoosh-based search implementation
 │   │   ├── query_processor.py  # Query parsing and processing
-│   │   ├── search_service.py   # Main search service layer
-│   │   ├── whoosh_indexer.py   # Original Whoosh implementation
+│   │   ├── search_service.py   # Main search service (uses Whoosh)
+│   │   ├── search_service_whoosh.py # Alternative Whoosh service
 │   │   └── japanese_text_processor.py # Text processing utilities
 │   ├── models/                 # Data models (empty for now)
 │   └── utils/                  # Utility functions (empty for now)
@@ -35,9 +37,15 @@ search_engine/
 ├── data/                      # Data storage
 │   ├── search_index.json      # JSON-based search index
 │   └── documents/             # Document storage (empty)
+├── tests/                     # Test suite
+│   ├── __init__.py           # Test package
+│   ├── test_search_engine.py # Main search engine tests
+│   ├── test_whoosh_simple.py # Whoosh implementation tests
+│   ├── test_api_routes.py    # API endpoint tests
+│   ├── test_tokenization_behavior.py # Tokenization tests
+│   └── compare_implementations.py # Engine comparison
 ├── requirements.txt           # Python dependencies
 ├── run.py                     # Application entry point
-├── test_search_engine.py      # Test script
 └── README.md                  # This documentation
 ```
 
@@ -126,7 +134,14 @@ uv run --with-requirements requirements.txt python test_search_engine.py
 
 ### REST API
 
-#### Add Document
+All API endpoints are prefixed with `/api/` and return JSON responses.
+
+#### Search Documents
+```bash
+GET /api/search?q=検索語&limit=10&type=auto
+```
+
+#### Add Single Document
 ```bash
 POST /api/add_document
 Content-Type: application/json
@@ -139,14 +154,42 @@ Content-Type: application/json
 }
 ```
 
-#### Search Documents
+#### Add Multiple Documents (Batch)
 ```bash
-GET /api/search?q=検索語&limit=10&type=auto
+POST /api/add_documents
+Content-Type: application/json
+
+{
+    "documents": [
+        {
+            "id": "doc1",
+            "title": "文書1のタイトル",
+            "content": "文書1の内容...",
+            "url": "https://example.com/doc1"
+        },
+        {
+            "id": "doc2", 
+            "title": "文書2のタイトル",
+            "content": "文書2の内容...",
+            "url": "https://example.com/doc2"
+        }
+    ]
+}
 ```
 
 #### Get Statistics
 ```bash
 GET /api/stats
+```
+
+#### Clear Search Index
+```bash
+POST /api/clear_index
+```
+
+#### Optimize Search Index
+```bash
+POST /api/optimize_index
 ```
 
 ## How It Works
@@ -191,20 +234,23 @@ tokens = ["機械", "学習", "基礎"]  # Extracted nouns
 
 ## Testing
 
-Run the test script to see example searches:
+All test files are organized in the `tests/` directory. Run any test script to see example functionality:
 
 ```bash
-# With activated environment
-python test_search_engine.py
+# Main search engine test
+uv run python tests/test_search_engine.py
 
-# Or with uv directly
-uv run --with-requirements requirements.txt python test_search_engine.py
+# Test Whoosh implementation  
+uv run python tests/test_whoosh_simple.py
 
-# Test Whoosh implementation
-uv run --with-requirements requirements.txt python test_whoosh_simple.py
+# Test API routes
+uv run python tests/test_api_routes.py
+
+# Test tokenization behavior
+uv run python tests/test_tokenization_behavior.py
 
 # Compare both implementations
-uv run --with-requirements requirements.txt python compare_implementations.py
+uv run python tests/compare_implementations.py
 ```
 
 This will:

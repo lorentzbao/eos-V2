@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 import os
 import sys
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.services.whoosh_japanese_search import WhooshJapaneseSearch
+from app.services.whoosh_simple import WhooshSimpleJapanese
 
 def test_whoosh_search():
     print("=== Whoosh日本語検索エンジンテスト ===\n")
     
     # Initialize Whoosh search engine
-    search_engine = WhooshJapaneseSearch()
+    search_engine = WhooshSimpleJapanese()
     
     # Clear existing index
     print("既存のインデックスをクリア中...")

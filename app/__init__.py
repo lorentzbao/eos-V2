@@ -7,7 +7,11 @@ def create_app():
                 static_folder='../static')
     app.config['SECRET_KEY'] = 'your-secret-key-here'
     
+    # Register blueprints
     from app.routes.main import main
+    from app.routes.api import api
+    
     app.register_blueprint(main)
+    app.register_blueprint(api)
     
     return app
