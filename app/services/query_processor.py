@@ -47,7 +47,7 @@ class QueryProcessor:
         if not all_parts:
             return ""
         
-        return ' AND '.join(all_parts)
+        return ' '.join(all_parts)
     
     def process_advanced_query(self, query: str) -> Dict:
         result = {

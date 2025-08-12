@@ -1,7 +1,7 @@
 import os
 import shutil
 from whoosh import fields, index
-from whoosh.qparser import QueryParser, MultifieldParser
+from whoosh.qparser import QueryParser, MultifieldParser, OrGroup
 from whoosh.analysis import StandardAnalyzer
 from janome.tokenizer import Tokenizer
 from typing import List, Dict
@@ -129,7 +129,7 @@ class WhooshSimpleJapanese:
             return False
     
     def search(self, query_string: str, limit: int = 10) -> List[Dict]:
-        """Search in title and content"""
+        """Search in title and content with highlighting support"""
         if not query_string.strip():
             return []
         
@@ -142,24 +142,41 @@ class WhooshSimpleJapanese:
             
             with self.ix.searcher() as searcher:
                 # Search in both original and tokenized fields
-                parser = MultifieldParser(["title", "content", "title_tokens", "content_tokens"], self.ix.schema)
+                parser = MultifieldParser(["title", "content", "title_tokens", "content_tokens"], self.ix.schema, group=OrGroup)
                 
                 try:
                     query = parser.parse(processed_query)
                 except Exception:
                     # Fallback to simple search
-                    simple_parser = QueryParser("content_tokens", self.ix.schema)
+                    simple_parser = QueryParser("content_tokens", self.ix.schema, group=OrGroup)
                     query = simple_parser.parse(processed_query)
                 
-                results = searcher.search(query, limit=limit)
+                results = searcher.search(query, limit=limit, terms=True)
                 
-                return [{
-                    'id': result['id'],
-                    'title': result['title'],
-                    'content': result['content'][:200] + '...' if len(result['content']) > 200 else result['content'],
-                    'url': result['url'],
-                    'score': float(result.score) if result.score else 0.0
-                } for result in results]
+                search_results = []
+                for result in results:
+                    # Use Whoosh's built-in matched_terms() method and process the results
+                    raw_matched_terms = result.matched_terms()
+                    # Extract unique terms from tuples and decode bytes
+                    unique_terms = set()
+                    for field_name, term_bytes in raw_matched_terms:
+                        if isinstance(term_bytes, bytes):
+                            term = term_bytes.decode('utf-8')
+                        else:
+                            term = str(term_bytes)
+                        unique_terms.add(term)
+                    matched_terms = list(unique_terms)
+                    
+                    search_results.append({
+                        'id': result['id'],
+                        'title': result['title'],
+                        'content': result['content'][:200] + '...' if len(result['content']) > 200 else result['content'],
+                        'url': result['url'],
+                        'score': float(result.score) if result.score else 0.0,
+                        'matched_terms': matched_terms
+                    })
+                
+                return search_results
                 
         except Exception as e:
             print(f"Search error: {e}")
@@ -178,23 +195,40 @@ class WhooshSimpleJapanese:
             
             with self.ix.searcher() as searcher:
                 # Search in both title and title_tokens
-                parser = MultifieldParser(["title", "title_tokens"], self.ix.schema)
+                parser = MultifieldParser(["title", "title_tokens"], self.ix.schema, group=OrGroup)
                 
                 try:
                     query = parser.parse(processed_query)
                 except Exception:
-                    simple_parser = QueryParser("title_tokens", self.ix.schema)
+                    simple_parser = QueryParser("title_tokens", self.ix.schema, group=OrGroup)
                     query = simple_parser.parse(processed_query)
                 
-                results = searcher.search(query, limit=limit)
+                results = searcher.search(query, limit=limit, terms=True)
                 
-                return [{
-                    'id': result['id'],
-                    'title': result['title'],
-                    'content': result['content'][:200] + '...' if len(result['content']) > 200 else result['content'],
-                    'url': result['url'],
-                    'score': float(result.score) if result.score else 0.0
-                } for result in results]
+                search_results = []
+                for result in results:
+                    # Use Whoosh's built-in matched_terms() method and process the results
+                    raw_matched_terms = result.matched_terms()
+                    # Extract unique terms from tuples and decode bytes
+                    unique_terms = set()
+                    for field_name, term_bytes in raw_matched_terms:
+                        if isinstance(term_bytes, bytes):
+                            term = term_bytes.decode('utf-8')
+                        else:
+                            term = str(term_bytes)
+                        unique_terms.add(term)
+                    matched_terms = list(unique_terms)
+                    
+                    search_results.append({
+                        'id': result['id'],
+                        'title': result['title'],
+                        'content': result['content'][:200] + '...' if len(result['content']) > 200 else result['content'],
+                        'url': result['url'],
+                        'score': float(result.score) if result.score else 0.0,
+                        'matched_terms': matched_terms
+                    })
+                
+                return search_results
                 
         except Exception as e:
             print(f"Title search error: {e}")

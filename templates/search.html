@@ -31,6 +31,7 @@
                 処理済みクエリ: {{ processed_query }}
                 {% endif %}
             </small>
+            
         </div>
         {% endif %}
 
@@ -39,21 +40,35 @@
         <div class="search-results">
             {% for result in results %}
             <div class="result-item mb-4 p-3 border rounded">
-                <h5 class="result-title">
-                    {% if result.url %}
-                    <a href="{{ result.url }}" target="_blank" class="text-decoration-none">
-                        {{ result.title }}
-                    </a>
-                    {% else %}
-                    {{ result.title }}
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1 me-3">
+                        <h5 class="result-title">
+                            {% if result.url %}
+                            <a href="{{ result.url }}" target="_blank" class="text-decoration-none">
+                                {{ result.title }}
+                            </a>
+                            {% else %}
+                            {{ result.title }}
+                            {% endif %}
+                            <small class="text-muted">(スコア: {{ "%.3f"|format(result.score) }})</small>
+                        </h5>
+                        <p class="result-content text-muted mb-2">{{ result.content }}</p>
+                        {% if result.url %}
+                        <small class="text-success">{{ result.url }}</small>
+                        {% endif %}
+                        <small class="text-muted d-block">ID: {{ result.id }}</small>
+                    </div>
+                    
+                    <!-- Matched Terms Badges on the right -->
+                    {% if result.matched_terms %}
+                    <div class="matched-terms-sidebar">
+                        <small class="text-muted d-block mb-1">マッチした語句:</small>
+                        {% for term in result.matched_terms %}
+                        <span class="badge bg-primary me-1 mb-1">{{ term }}</span>
+                        {% endfor %}
+                    </div>
                     {% endif %}
-                    <small class="text-muted">(スコア: {{ "%.3f"|format(result.score) }})</small>
-                </h5>
-                <p class="result-content text-muted mb-2">{{ result.content }}</p>
-                {% if result.url %}
-                <small class="text-success">{{ result.url }}</small>
-                {% endif %}
-                <small class="text-muted d-block">ID: {{ result.id }}</small>
+                </div>
             </div>
             {% endfor %}
         </div>
