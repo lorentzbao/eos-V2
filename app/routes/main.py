@@ -76,12 +76,9 @@ def search():
     prefecture = request.args.get('prefecture', '')
     username = session['username']
     
-    if not query:
-        return render_template('search.html', 
-                             query='', 
-                             results=[], 
-                             username=username,
-                             stats={'total_documents': search_service.get_stats()['total_documents']})
+    # Handle empty or whitespace-only queries
+    if not query or not query.strip():
+        return redirect(url_for('main.index'))
     
     search_results = search_service.search(query, limit, search_type, prefecture)
     stats = search_service.get_stats()

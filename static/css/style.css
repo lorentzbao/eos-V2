@@ -293,6 +293,14 @@ main.container {
     box-shadow: var(--shadow-light);
 }
 
+/* Search Input Validation */
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background-image: none;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    transition: var(--transition);
+}
+
 /* Alerts */
 .alert {
     border: none;
