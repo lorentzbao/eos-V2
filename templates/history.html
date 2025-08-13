@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}検索履歴 - Enterprise Online Search{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>検索履歴</h2>
+            <a href="{{ url_for('main.index') }}" class="btn btn-primary">新しい検索</a>
+        </div>
+
+        {% if searches %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{{ username }}さんの検索履歴 ({{ total_searches }}件)</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>検索時刻</th>
+                                <th>検索クエリ</th>
+                                <th>検索タイプ</th>
+                                <th>結果数</th>
+                                <th>検索時間</th>
+                                <th>アクション</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for search in searches %}
+                            <tr>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ search['timestamp'].split('T')[0] }}<br>
+                                        {{ search['timestamp'].split('T')[1].split('.')[0] }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <strong>{{ search['query'] }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ search['search_type'] }}</span>
+                                </td>
+                                <td>
+                                    {% if search.get('results_count', 0) > 0 %}
+                                    <span class="badge bg-success">{{ search.get('results_count', 0) }}件</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">0件</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ search.get('search_time', 0) }}秒</small>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('main.search', q=search['query'], type=search['search_type']) }}" 
+                                       class="btn btn-sm btn-outline-primary">再検索</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <nav aria-label="検索履歴ページネーション" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('main.history', page=page-1) }}">前へ</a>
+                </li>
+                {% endif %}
+
+                {% for p in range(1, total_pages + 1) %}
+                {% if p == page %}
+                <li class="page-item active">
+                    <span class="page-link">{{ p }}</span>
+                </li>
+                {% elif p <= 3 or p > total_pages - 3 or (p >= page - 2 and p <= page + 2) %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('main.history', page=p) }}">{{ p }}</a>
+                </li>
+                {% elif p == 4 or p == total_pages - 3 %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                {% if has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('main.history', page=page+1) }}">次へ</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="alert alert-info">
+            <h5>検索履歴がありません</h5>
+            <p>まだ検索を行っていません。<a href="{{ url_for('main.index') }}">検索ページ</a>で検索を開始してください。</p>
+        </div>
+        {% endif %}
+
+        <!-- Search Statistics -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">検索統計</h6>
+                        <ul class="list-unstyled mb-0">
+                            <li><strong>総検索回数:</strong> {{ total_searches }}回</li>
+                            {% if searches %}
+                            <li><strong>平均検索時間:</strong> 
+                                {% set total_time = 0 %}
+                                {% set time_count = 0 %}
+                                {% for search in searches %}
+                                    {% if search.get('search_time') %}
+                                        {% set total_time = total_time + search.get('search_time', 0) %}
+                                        {% set time_count = time_count + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if time_count > 0 %}
+                                    {{ "%.3f"|format(total_time / time_count) }}秒
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </li>
+                            <li><strong>平均結果数:</strong> 
+                                {% set total_results = 0 %}
+                                {% set result_count = 0 %}
+                                {% for search in searches %}
+                                    {% if search.get('results_count') is not none %}
+                                        {% set total_results = total_results + search.get('results_count', 0) %}
+                                        {% set result_count = result_count + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if result_count > 0 %}
+                                    {{ "%.1f"|format(total_results / result_count) }}件
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

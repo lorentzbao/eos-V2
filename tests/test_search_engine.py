@@ -11,7 +11,7 @@ def test_search_engine():
     # Initialize search service
     search_service = SearchService()
     
-    # Test data
+    # Test data - clean set with no duplicates
     test_documents = [
         {
             "id": "doc1",
@@ -33,16 +33,30 @@ def test_search_engine():
         },
         {
             "id": "doc4",
-            "title": "データベース設計",
-            "content": "リレーショナルデータベースの設計は重要なスキルです。SQLを使ってデータの操作を行います。",
-            "url": "https://example.com/db"
+            "title": "データベース設計入門",
+            "content": "リレーショナルデータベースの正規化やインデックスについて学習します。SQLクエリの最適化も重要です。",
+            "url": "https://example.com/database-design"
+        },
+        {
+            "id": "doc5",
+            "title": "JavaScript 基本構文",
+            "content": "JavaScriptはウェブブラウザで動作するスクリプト言語です。DOM操作やイベント処理が可能です。",
+            "url": "https://example.com/javascript"
+        },
+        {
+            "id": "doc6",
+            "title": "モバイルアプリ開発",
+            "content": "iOSやAndroidアプリの開発手法を紹介します。ユーザーインターフェースの設計が重要です。",
+            "url": "https://example.com/mobile-dev"
         }
     ]
     
-    print("1. テストデータを追加中...")
+    print("1. インデックスをクリアしてテストデータを追加中...")
     try:
+        # Clear existing index to avoid duplicates
+        search_service.clear_index()
         search_service.add_documents_batch(test_documents)
-        print("✓ テストデータの追加が完了しました\n")
+        print("✓ インデックスのクリアとテストデータの追加が完了しました\n")
     except Exception as e:
         print(f"✗ エラー: {e}\n")
         return

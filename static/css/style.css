@@ -37,9 +37,8 @@ body {
     background-color: #f8f9fa;
 }
 
-.container {
+main.container {
     background-color: white;
-    min-height: 100vh;
-    padding-top: 20px;
+    min-height: calc(100vh - 60px);
     padding-bottom: 20px;
 }

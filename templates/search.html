@@ -31,7 +31,6 @@
                 処理済みクエリ: {{ processed_query }}
                 {% endif %}
             </small>
-            
         </div>
         {% endif %}
 
@@ -88,9 +87,14 @@
         {% if stats %}
         <div class="mt-5">
             <hr>
-            <small class="text-muted">
-                インデックス済み文書数: {{ stats.total_documents }} 件
-            </small>
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">
+                    インデックス済み文書数: {{ stats.total_documents }} 件
+                </small>
+                <a href="{{ url_for('main.history') }}" class="btn btn-sm btn-outline-secondary">
+                    📊 検索履歴を見る
+                </a>
+            </div>
         </div>
         {% endif %}
     </div>
