@@ -273,3 +273,18 @@ class WhooshSimpleJapanese:
     def optimize_index(self):
         """Optimize the index (automatic in modern Whoosh)"""
         return True
+    
+    def delete_document(self, doc_id: str) -> bool:
+        """Delete a document by ID"""
+        try:
+            writer = self.ix.writer()
+            # Delete document with the given ID
+            deleted_count = writer.delete_by_term('id', doc_id)
+            writer.commit()
+            
+            print(f"Deleted {deleted_count} document(s) with ID: {doc_id}")
+            return deleted_count > 0
+            
+        except Exception as e:
+            print(f"Error deleting document {doc_id}: {e}")
+            return False

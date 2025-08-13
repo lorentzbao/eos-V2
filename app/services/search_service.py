@@ -109,3 +109,10 @@ class SearchService:
     def get_cache_info(self):
         """Get detailed cache information"""
         return self._cached_search.cache_info()
+    
+    def delete_document(self, doc_id: str) -> bool:
+        """Delete a document by ID"""
+        result = self.search_engine.delete_document(doc_id)
+        # Clear cache when documents are deleted
+        self._cached_search.cache_clear()
+        return result
