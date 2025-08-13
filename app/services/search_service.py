@@ -7,7 +7,7 @@ class SearchService:
         self.search_engine = WhooshSimpleJapanese(index_dir)
         self.query_processor = QueryProcessor()
     
-    def search(self, query: str, limit: int = 10, search_type: str = "auto") -> Dict:
+    def search(self, query: str, limit: int = 10, search_type: str = "auto", prefecture: str = "") -> Dict:
         if not query.strip():
             return {
                 'results': [],
@@ -34,9 +34,9 @@ class SearchService:
         
         try:
             if search_type == "title" or processed['search_type'] == 'title':
-                results = self.search_engine.search_in_title(query, limit)
+                results = self.search_engine.search_in_title(query, limit, prefecture)
             else:
-                results = self.search_engine.search(query, limit)
+                results = self.search_engine.search(query, limit, prefecture)
             
             search_time = time.time() - start_time
             
@@ -58,8 +58,8 @@ class SearchService:
                 'error': str(e)
             }
     
-    def add_document(self, doc_id: str, title: str, content: str, url: str = ""):
-        return self.search_engine.add_document(doc_id, title, content, url)
+    def add_document(self, doc_id: str, title: str, content: str, url: str = "", prefecture: str = ""):
+        return self.search_engine.add_document(doc_id, title, content, url, prefecture)
     
     def add_documents_batch(self, documents: List[Dict]):
         return self.search_engine.add_documents_batch(documents)

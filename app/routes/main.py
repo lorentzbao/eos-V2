@@ -40,8 +40,8 @@ def history():
     
     username = session['username']
     
-    # Get limit from query parameter, default to 10
-    limit = int(request.args.get('limit', 10))
+    # Get limit from query parameter, default to 8
+    limit = int(request.args.get('limit', 8))
     show_all = request.args.get('show_all', 'false').lower() == 'true'
     
     # If show_all is requested, get more entries
@@ -73,6 +73,7 @@ def search():
     query = request.args.get('q', '')
     search_type = request.args.get('type', 'auto')
     limit = int(request.args.get('limit', 10))
+    prefecture = request.args.get('prefecture', '')
     username = session['username']
     
     if not query:
@@ -82,7 +83,7 @@ def search():
                              username=username,
                              stats={'total_documents': search_service.get_stats()['total_documents']})
     
-    search_results = search_service.search(query, limit, search_type)
+    search_results = search_service.search(query, limit, search_type, prefecture)
     stats = search_service.get_stats()
     
     # Log the search query with detailed information
@@ -91,7 +92,8 @@ def search():
         query, 
         search_type, 
         search_results['total_found'], 
-        search_results['search_time']
+        search_results['search_time'],
+        prefecture
     )
     
     return render_template('search.html', 
@@ -100,5 +102,8 @@ def search():
                          total_found=search_results['total_found'],
                          search_time=search_results['search_time'],
                          processed_query=search_results['processed_query'],
+                         search_type=search_type,
+                         prefecture=prefecture,
+                         limit=limit,
                          username=username,
                          stats=stats)

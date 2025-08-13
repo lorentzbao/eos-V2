@@ -26,7 +26,7 @@
                     </a>
                     {% else %}
                     <a href="{{ url_for('main.history') }}" class="btn btn-outline-secondary">
-                        最新10件のみ
+                        最新8件のみ
                     </a>
                     {% endif %}
                 </div>
@@ -39,6 +39,7 @@
                                 <th>検索時刻</th>
                                 <th>検索クエリ</th>
                                 <th>検索タイプ</th>
+                                <th>地域フィルター</th>
                                 <th>結果数</th>
                                 <th>検索時間</th>
                                 <th>アクション</th>
@@ -60,6 +61,13 @@
                                     <span class="badge bg-secondary">{{ search['search_type'] }}</span>
                                 </td>
                                 <td>
+                                    {% if search.get('prefecture') %}
+                                    <span class="badge bg-info">{{ search['prefecture'] }}</span>
+                                    {% else %}
+                                    <small class="text-muted">すべて</small>
+                                    {% endif %}
+                                </td>
+                                <td>
                                     {% if search.get('results_count', 0) > 0 %}
                                     <span class="badge bg-success">{{ search.get('results_count', 0) }}件</span>
                                     {% else %}
@@ -70,7 +78,7 @@
                                     <small class="text-muted">{{ search.get('search_time', 0) }}秒</small>
                                 </td>
                                 <td>
-                                    <a href="{{ url_for('main.search', q=search['query'], type=search['search_type']) }}" 
+                                    <a href="{{ url_for('main.search', q=search['query'], type=search['search_type'], prefecture=search.get('prefecture', '')) }}" 
                                        class="btn btn-sm btn-outline-primary">再検索</a>
                                 </td>
                             </tr>
@@ -82,9 +90,9 @@
         </div>
 
         <!-- Show More Options -->
-        {% if searches and limit == 10 and searches|length == 10 %}
+        {% if searches and limit == 8 and searches|length == 8 %}
         <div class="text-center mt-4">
-            <p class="text-muted mb-3">最新の10件を表示中</p>
+            <p class="text-muted mb-3">最新の8件を表示中</p>
             <a href="{{ url_for('main.history', show_all='true') }}" class="btn btn-outline-primary">
                 📋 さらに多くの履歴を表示 (最大100件)
             </a>
@@ -93,7 +101,7 @@
         <div class="text-center mt-4">
             <p class="text-muted mb-3">より多くの履歴を表示中 (最大{{ limit }}件)</p>
             <a href="{{ url_for('main.history') }}" class="btn btn-outline-secondary">
-                🔄 最新10件のみに戻る
+                🔄 最新8件のみに戻る
             </a>
         </div>
         {% endif %}

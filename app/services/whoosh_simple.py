@@ -18,14 +18,15 @@ class WhooshSimpleJapanese:
             'だ', 'である', 'です', 'ます'
         }
         
-        # Simple schema without custom analyzers
+        # Simple schema with prefecture metadata field
         self.schema = fields.Schema(
             id=fields.ID(stored=True, unique=True),
             title=fields.TEXT(stored=True),
             content=fields.TEXT(stored=True),
             url=fields.TEXT(stored=True),
             title_tokens=fields.TEXT(),  # Pre-processed title
-            content_tokens=fields.TEXT()  # Pre-processed content
+            content_tokens=fields.TEXT(),  # Pre-processed content
+            prefecture=fields.KEYWORD(stored=True, lowercase=True)  # Prefecture filter
         )
         
         self.ix = None
@@ -71,8 +72,8 @@ class WhooshSimpleJapanese:
         
         return ' '.join(tokens)
     
-    def add_document(self, doc_id: str, title: str, content: str, url: str = ""):
-        """Add a single document to the index"""
+    def add_document(self, doc_id: str, title: str, content: str, url: str = "", prefecture: str = ""):
+        """Add a single document to the index with prefecture metadata"""
         try:
             # Pre-process Japanese text
             title_tokens = self._tokenize_japanese(title)
@@ -85,7 +86,8 @@ class WhooshSimpleJapanese:
                 content=content,
                 url=url,
                 title_tokens=title_tokens,
-                content_tokens=content_tokens
+                content_tokens=content_tokens,
+                prefecture=prefecture.lower() if prefecture else ""
             )
             writer.commit()
             return True
@@ -114,7 +116,8 @@ class WhooshSimpleJapanese:
                     content=doc['content'],
                     url=doc.get('url', ''),
                     title_tokens=title_tokens,
-                    content_tokens=content_tokens
+                    content_tokens=content_tokens,
+                    prefecture=doc.get('prefecture', '').lower() if doc.get('prefecture') else ""
                 )
             
             writer.commit()
@@ -128,8 +131,8 @@ class WhooshSimpleJapanese:
                 pass
             return False
     
-    def search(self, query_string: str, limit: int = 10) -> List[Dict]:
-        """Search in title and content with highlighting support"""
+    def search(self, query_string: str, limit: int = 10, prefecture: str = "") -> List[Dict]:
+        """Search in title and content with highlighting support and prefecture filtering"""
         if not query_string.strip():
             return []
         
@@ -151,7 +154,13 @@ class WhooshSimpleJapanese:
                     simple_parser = QueryParser("content_tokens", self.ix.schema, group=OrGroup)
                     query = simple_parser.parse(processed_query)
                 
-                results = searcher.search(query, limit=limit, terms=True)
+                # Add prefecture filter if specified
+                filter_query = None
+                if prefecture:
+                    from whoosh.query import Term
+                    filter_query = Term("prefecture", prefecture.lower())
+                
+                results = searcher.search(query, limit=limit, terms=True, filter=filter_query)
                 
                 search_results = []
                 for result in results:
@@ -182,8 +191,8 @@ class WhooshSimpleJapanese:
             print(f"Search error: {e}")
             return []
     
-    def search_in_title(self, query_string: str, limit: int = 10) -> List[Dict]:
-        """Search only in titles"""
+    def search_in_title(self, query_string: str, limit: int = 10, prefecture: str = "") -> List[Dict]:
+        """Search only in titles with prefecture filtering"""
         if not query_string.strip():
             return []
         
@@ -203,7 +212,13 @@ class WhooshSimpleJapanese:
                     simple_parser = QueryParser("title_tokens", self.ix.schema, group=OrGroup)
                     query = simple_parser.parse(processed_query)
                 
-                results = searcher.search(query, limit=limit, terms=True)
+                # Add prefecture filter if specified
+                filter_query = None
+                if prefecture:
+                    from whoosh.query import Term
+                    filter_query = Term("prefecture", prefecture.lower())
+                
+                results = searcher.search(query, limit=limit, terms=True, filter=filter_query)
                 
                 search_results = []
                 for result in results:

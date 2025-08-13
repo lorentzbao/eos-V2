@@ -15,7 +15,7 @@ class SearchLogger:
         os.makedirs(os.path.dirname(self.log_file), exist_ok=True)
     
     def log_search(self, username: str, query: str, search_type: str = "auto", 
-                   results_count: int = 0, search_time: float = 0.0):
+                   results_count: int = 0, search_time: float = 0.0, prefecture: str = ""):
         """Log a search query by user with detailed information"""
         log_entry = {
             "timestamp": datetime.datetime.now().isoformat(),
@@ -25,6 +25,10 @@ class SearchLogger:
             "results_count": results_count,
             "search_time": round(search_time, 3)
         }
+        
+        # Only include prefecture if it's specified
+        if prefecture:
+            log_entry["prefecture"] = prefecture
         
         try:
             with open(self.log_file, 'a', encoding='utf-8') as f:

@@ -6,13 +6,43 @@
         <!-- Search Form -->
         <div class="search-header mb-4">
             <form action="{{ url_for('main.search') }}" method="GET">
-                <div class="input-group">
+                <div class="input-group mb-3">
                     <input type="text" 
                            name="q" 
                            value="{{ query }}" 
                            class="form-control" 
                            placeholder="検索キーワードを入力してください...">
                     <button class="btn btn-primary" type="submit">検索</button>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <select name="type" class="form-select">
+                            <option value="auto" {% if search_type == 'auto' %}selected{% endif %}>すべて検索</option>
+                            <option value="title" {% if search_type == 'title' %}selected{% endif %}>タイトルのみ</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="prefecture" class="form-select">
+                            <option value="" {% if not prefecture %}selected{% endif %}>すべての地域</option>
+                            <option value="tokyo" {% if prefecture == 'tokyo' %}selected{% endif %}>東京都</option>
+                            <option value="osaka" {% if prefecture == 'osaka' %}selected{% endif %}>大阪府</option>
+                            <option value="kyoto" {% if prefecture == 'kyoto' %}selected{% endif %}>京都府</option>
+                            <option value="aichi" {% if prefecture == 'aichi' %}selected{% endif %}>愛知県</option>
+                            <option value="kanagawa" {% if prefecture == 'kanagawa' %}selected{% endif %}>神奈川県</option>
+                            <option value="fukuoka" {% if prefecture == 'fukuoka' %}selected{% endif %}>福岡県</option>
+                            <option value="hokkaido" {% if prefecture == 'hokkaido' %}selected{% endif %}>北海道</option>
+                            <option value="sendai" {% if prefecture == 'sendai' %}selected{% endif %}>宮城県</option>
+                            <option value="hiroshima" {% if prefecture == 'hiroshima' %}selected{% endif %}>広島県</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="limit" class="form-select">
+                            <option value="10" {% if limit == 10 %}selected{% endif %}>10件</option>
+                            <option value="20" {% if limit == 20 %}selected{% endif %}>20件</option>
+                            <option value="50" {% if limit == 50 %}selected{% endif %}>50件</option>
+                        </select>
+                    </div>
                 </div>
             </form>
         </div>
@@ -21,7 +51,7 @@
         {% if query %}
         <div class="search-stats mb-3">
             <small class="text-muted">
-                "{{ query }}" の検索結果: 
+                "{{ query }}" の検索結果{% if prefecture %} ({{ prefecture }}のみ){% endif %}: 
                 <strong>{{ total_found }}</strong> 件見つかりました
                 {% if search_time %}
                 ({{ search_time }}秒)
