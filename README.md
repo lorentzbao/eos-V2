@@ -19,6 +19,7 @@ http://127.0.0.1:5000
 ✅ **Search History** - Track and view past searches with scalable pagination  
 ✅ **Metadata Filtering** - Filter companies by prefecture (Tokyo, Osaka, etc.)  
 ✅ **Client-side Pagination** - Instant navigation through search results  
+✅ **LRU Cache** - Built-in search result caching for instant repeat queries  
 ✅ **Modern UI** - Clean, responsive interface with Bootstrap  
 ✅ **Sample Data** - 25+ test companies across Japanese prefectures  
 
@@ -75,6 +76,7 @@ Quick reference:
 - **Backend**: Flask with Whoosh search engine
 - **Frontend**: Bootstrap 5 with JavaScript pagination  
 - **Japanese**: Janome tokenizer for proper text processing
+- **Cache**: Python's built-in LRU cache (128 entries, auto-clearing)
 - **Data**: JSON-based persistence with binary search index
 - **Authentication**: Session-based user tracking
 
