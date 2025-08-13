@@ -277,6 +277,20 @@ This will:
 - Inverted index for fast term lookups
 - Persistent storage in `data/search_index.json`
 
+## Frontend Development
+
+For frontend developers who want to integrate with this search engine backend:
+
+📚 **[Frontend API Documentation](./FRONTEND_API_DOCS.md)** - Complete guide covering:
+- All backend API endpoints and parameters
+- Authentication system integration
+- Search functionality with Japanese text processing
+- Prefecture filtering and metadata handling
+- Form structures and client-side validation
+- Performance considerations and best practices
+
+The documentation provides everything needed to build a custom frontend or integrate the search engine into existing applications.
+
 ## Dependencies
 
 - **Flask**: Web framework
