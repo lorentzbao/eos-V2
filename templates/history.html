@@ -5,9 +5,14 @@
 {% block content %}
 <div class="row">
     <div class="col-md-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>検索履歴</h2>
-            <a href="{{ url_for('main.index') }}" class="btn btn-primary">新しい検索</a>
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h2 class="mb-1">📊 検索履歴</h2>
+                <p class="text-muted mb-0">あなたの検索活動を確認</p>
+            </div>
+            <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                <i class="me-1">🔍</i> 新しい検索
+            </a>
         </div>
 
         {% if searches %}
@@ -108,11 +113,11 @@
         {% endif %}
 
         <!-- Search Statistics -->
-        <div class="row mt-4">
+        <div class="row mt-5">
             <div class="col-md-6">
-                <div class="card">
+                <div class="card border-0 bg-light">
                     <div class="card-body">
-                        <h6 class="card-title">検索統計</h6>
+                        <h6 class="card-title text-primary">📈 検索統計</h6>
                         <ul class="list-unstyled mb-0">
                             <li><strong>総検索回数:</strong> {{ total_searches }}回</li>
                             {% if searches %}
