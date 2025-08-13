@@ -58,8 +58,8 @@ class SearchService:
                 'error': str(e)
             }
     
-    def add_document(self, doc_id: str, title: str, content: str, url: str = "", prefecture: str = ""):
-        return self.search_engine.add_document(doc_id, title, content, url, prefecture)
+    def add_document(self, doc_id: str, title: str, content: str, introduction: str, url: str = "", prefecture: str = ""):
+        return self.search_engine.add_document(doc_id, title, content, introduction, url, prefecture)
     
     def add_documents_batch(self, documents: List[Dict]):
         return self.search_engine.add_documents_batch(documents)

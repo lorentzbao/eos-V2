@@ -47,3 +47,23 @@
 {"timestamp": "2025-08-13T16:36:45.732075", "username": "lbao40", "query": "python", "search_type": "auto", "results_count": 2, "search_time": 0.011, "prefecture": "tokyo"}
 {"timestamp": "2025-08-13T16:40:03.775300", "username": "lbao40", "query": "python", "search_type": "auto", "results_count": 4, "search_time": 0.04}
 {"timestamp": "2025-08-13T16:40:08.606105", "username": "lbao40", "query": "python", "search_type": "auto", "results_count": 2, "search_time": 0.009, "prefecture": "tokyo"}
+{"timestamp": "2025-08-13T16:41:53.789394", "username": "lbao40", "query": "python", "search_type": "auto", "results_count": 4, "search_time": 0.01}
+{"timestamp": "2025-08-13T16:42:05.530997", "username": "lbao40", "query": "python", "search_type": "auto", "results_count": 2, "search_time": 0.013, "prefecture": "tokyo"}
+{"timestamp": "2025-08-13T16:42:32.593443", "username": "lbao40", "query": "python", "search_type": "auto", "results_count": 4, "search_time": 0.009}
+{"timestamp": "2025-08-13T16:52:03.932465", "username": "lbao40", "query": "\"機械学習”", "search_type": "auto", "results_count": 2, "search_time": 0.022}
+{"timestamp": "2025-08-13T16:52:12.040079", "username": "lbao40", "query": "機械学習", "search_type": "auto", "results_count": 2, "search_time": 0.009}
+{"timestamp": "2025-08-13T16:52:30.208675", "username": "lbao40", "query": "研究開発", "search_type": "auto", "results_count": 6, "search_time": 0.013}
+{"timestamp": "2025-08-13T16:52:34.824923", "username": "lbao40", "query": "\"研究開発\"", "search_type": "auto", "results_count": 6, "search_time": 0.011}
+{"timestamp": "2025-08-13T16:52:59.002621", "username": "lbao40", "query": "'\"機械学習\"'", "search_type": "auto", "results_count": 2, "search_time": 0.011}
+{"timestamp": "2025-08-13T16:53:13.019394", "username": "lbao40", "query": "'\"研究開発\"'", "search_type": "auto", "results_count": 6, "search_time": 0.008}
+{"timestamp": "2025-08-13T16:56:49.372825", "username": "lbao40", "query": "python", "search_type": "auto", "results_count": 4, "search_time": 0.01}
+{"timestamp": "2025-08-13T16:56:53.894740", "username": "lbao40", "query": "python", "search_type": "auto", "results_count": 2, "search_time": 0.011, "prefecture": "tokyo"}
+{"timestamp": "2025-08-13T16:56:57.208649", "username": "lbao40", "query": "python", "search_type": "auto", "results_count": 4, "search_time": 0.009}
+{"timestamp": "2025-08-13T17:03:28.679185", "username": "lbao40", "query": "\"機械学習\"", "search_type": "auto", "results_count": 2, "search_time": 0.009}
+{"timestamp": "2025-08-13T17:03:36.785924", "username": "lbao40", "query": "\"研究開発\"", "search_type": "auto", "results_count": 6, "search_time": 0.01}
+{"timestamp": "2025-08-13T17:04:24.453643", "username": "lbao40", "query": "'研究開発'", "search_type": "auto", "results_count": 6, "search_time": 0.009}
+{"timestamp": "2025-08-13T17:14:18.816429", "username": "lbao40", "query": "python", "search_type": "auto", "results_count": 4, "search_time": 0.048}
+{"timestamp": "2025-08-13T17:14:23.477578", "username": "lbao40", "query": "python", "search_type": "auto", "results_count": 1, "search_time": 0.014, "prefecture": "osaka"}
+{"timestamp": "2025-08-13T17:14:26.119361", "username": "lbao40", "query": "python", "search_type": "auto", "results_count": 2, "search_time": 0.009, "prefecture": "tokyo"}
+{"timestamp": "2025-08-13T21:58:49.558530", "username": "lbao40", "query": "python", "search_type": "auto", "results_count": 2, "search_time": 0.036}
+{"timestamp": "2025-08-13T21:58:57.690144", "username": "lbao40", "query": "python", "search_type": "auto", "results_count": 1, "search_time": 0.009, "prefecture": "tokyo"}

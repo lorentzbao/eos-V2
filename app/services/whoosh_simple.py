@@ -22,10 +22,10 @@ class WhooshSimpleJapanese:
         self.schema = fields.Schema(
             id=fields.ID(stored=True, unique=True),
             title=fields.TEXT(stored=True),
-            content=fields.TEXT(stored=True),
+            introduction=fields.TEXT(stored=True),  # Company introduction for display
             url=fields.TEXT(stored=True),
             title_tokens=fields.TEXT(),  # Pre-processed title
-            content_tokens=fields.TEXT(),  # Pre-processed content
+            content_tokens=fields.TEXT(),  # Pre-processed content (searchable only)
             prefecture=fields.KEYWORD(stored=True, lowercase=True)  # Prefecture filter
         )
         
@@ -72,7 +72,7 @@ class WhooshSimpleJapanese:
         
         return ' '.join(tokens)
     
-    def add_document(self, doc_id: str, title: str, content: str, url: str = "", prefecture: str = ""):
+    def add_document(self, doc_id: str, title: str, content: str, introduction: str, url: str = "", prefecture: str = ""):
         """Add a single document to the index with prefecture metadata"""
         try:
             # Pre-process Japanese text
@@ -83,10 +83,10 @@ class WhooshSimpleJapanese:
             writer.add_document(
                 id=doc_id,
                 title=title,
-                content=content,
+                introduction=introduction,  # Store introduction for display
                 url=url,
                 title_tokens=title_tokens,
-                content_tokens=content_tokens,
+                content_tokens=content_tokens,  # Content is searchable but not stored
                 prefecture=prefecture.lower() if prefecture else ""
             )
             writer.commit()
@@ -113,10 +113,10 @@ class WhooshSimpleJapanese:
                 writer.add_document(
                     id=doc['id'],
                     title=doc['title'],
-                    content=doc['content'],
+                    introduction=doc.get('introduction', ''),  # Store introduction for display
                     url=doc.get('url', ''),
                     title_tokens=title_tokens,
-                    content_tokens=content_tokens,
+                    content_tokens=content_tokens,  # Content is searchable but not stored
                     prefecture=doc.get('prefecture', '').lower() if doc.get('prefecture') else ""
                 )
             
@@ -179,7 +179,7 @@ class WhooshSimpleJapanese:
                     search_results.append({
                         'id': result['id'],
                         'title': result['title'],
-                        'content': result['content'][:200] + '...' if len(result['content']) > 200 else result['content'],
+                        'content': result['introduction'],  # Show introduction instead of content
                         'url': result['url'],
                         'score': float(result.score) if result.score else 0.0,
                         'matched_terms': matched_terms
@@ -237,7 +237,7 @@ class WhooshSimpleJapanese:
                     search_results.append({
                         'id': result['id'],
                         'title': result['title'],
-                        'content': result['content'][:200] + '...' if len(result['content']) > 200 else result['content'],
+                        'content': result['introduction'],  # Show introduction instead of content
                         'url': result['url'],
                         'score': float(result.score) if result.score else 0.0,
                         'matched_terms': matched_terms
