@@ -26,11 +26,23 @@ Content-Type: application/x-www-form-urlencoded
 username=john_doe
 ```
 
-Response: Redirects with session cookie. That's it!
+**Sample Response:**
+```http
+HTTP/1.1 302 Found
+Location: /
+Set-Cookie: session=eyJ1c2VybmFtZSI6ImpvaG5fZG9lIn0...; HttpOnly; Path=/
+```
 
 ```http
 # Logout  
 GET /logout
+```
+
+**Sample Response:**
+```http
+HTTP/1.1 302 Found  
+Location: /login
+Set-Cookie: session=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/
 ```
 
 ---
@@ -58,6 +70,38 @@ GET /search?q=AI開発&prefecture=tokyo
 
 **Response:** HTML page with search results + pagination JavaScript
 
+**Sample Output Structure:**
+```javascript
+// Template receives this data
+{
+  query: "Python",
+  search_type: "auto", 
+  prefecture: "tokyo",
+  limit: 10,
+  results: [
+    {
+      id: "company_020",
+      title: "秋葉原IoT研究所",
+      content: "秋葉原のIoT研究所。エッジAI・5G・産業用IoTデバイス開発。Python/C++でのファームウェア開発...",
+      url: "https://akihabara-iot.lab",
+      score: 1.95,
+      matched_terms: ["python"]
+    },
+    {
+      id: "company_005", 
+      title: "Tokyo AI Solutions",
+      content: "AI・機械学習コンサルティング。Python/TensorFlow専門チーム...",
+      url: "https://tokyo-ai-solutions.com",
+      score: 1.87,
+      matched_terms: ["python"]
+    }
+  ],
+  total_found: 3,
+  search_time: 0.156,
+  username: "john_doe"
+}
+```
+
 ---
 
 ## 📊 Search History
@@ -79,6 +123,43 @@ GET /history?show_all=true // Up to 100 searches
 
 **Response:** HTML page with search history table
 
+**Sample Output Structure:**
+```javascript
+// Template receives this data
+{
+  searches: [
+    {
+      timestamp: "2024-01-15T10:30:45.123456",
+      query: "Python開発",
+      search_type: "auto",
+      prefecture: "tokyo",
+      results_count: 24,
+      search_time: 0.156
+    },
+    {
+      timestamp: "2024-01-15T10:25:12.789012", 
+      query: "機械学習",
+      search_type: "title",
+      prefecture: "",
+      results_count: 8,
+      search_time: 0.089
+    },
+    {
+      timestamp: "2024-01-15T10:20:33.456789",
+      query: "フィンテック",
+      search_type: "auto", 
+      prefecture: "osaka",
+      results_count: 12,
+      search_time: 0.134
+    }
+  ],
+  username: "john_doe",
+  show_all: false,
+  limit: 8,
+  total_searches: 156
+}
+```
+
 ---
 
 ## 🏠 Navigation
@@ -87,6 +168,28 @@ GET /history?show_all=true // Up to 100 searches
 GET /           # Home page (search form)
 GET /login      # Login form  
 GET /logout     # Destroys session, redirects to login
+```
+
+**Sample Outputs:**
+
+**Home Page (`GET /`):**
+```http
+HTTP/1.1 200 OK
+Content-Type: text/html
+
+<!-- Returns index.html template with: -->
+{
+  username: "john_doe"
+}
+```
+
+**Login Page (`GET /login`):**  
+```http
+HTTP/1.1 200 OK
+Content-Type: text/html
+
+<!-- Returns login.html template with login form -->
+<!-- If POST with username, redirects to / with session -->
 ```
 
 ---
