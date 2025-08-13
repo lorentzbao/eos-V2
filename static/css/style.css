@@ -36,7 +36,6 @@ body {
 
 .navbar-brand:hover {
     color: rgba(255, 255, 255, 0.9) !important;
-    transform: translateY(-1px);
     transition: var(--transition);
 }
 
@@ -49,7 +48,6 @@ body {
 
 .nav-link:hover {
     background-color: rgba(255, 255, 255, 0.1);
-    transform: translateY(-1px);
 }
 
 /* Main Container */
@@ -109,7 +107,6 @@ main.container {
 
 .btn-primary:hover {
     background: var(--brand-secondary);
-    transform: translateY(-2px);
     box-shadow: var(--shadow-medium);
 }
 
@@ -129,7 +126,6 @@ main.container {
     background: rgba(255, 255, 255, 0.1);
     border-color: white;
     color: white;
-    transform: translateY(-1px);
 }
 
 .btn-outline-secondary {
@@ -141,7 +137,6 @@ main.container {
 .btn-outline-secondary:hover {
     background: var(--brand-primary);
     color: white;
-    transform: translateY(-2px);
     box-shadow: var(--shadow-light);
 }
 
@@ -156,7 +151,6 @@ main.container {
 
 .card:hover {
     box-shadow: var(--shadow-medium);
-    transform: translateY(-2px);
 }
 
 .card-header {
@@ -182,7 +176,6 @@ main.container {
 
 .result-item:hover {
     box-shadow: var(--shadow-medium);
-    transform: translateY(-2px);
     border-color: var(--brand-primary);
 }
 
@@ -291,7 +284,6 @@ main.container {
     background: var(--brand-light);
     border-color: var(--brand-primary);
     color: var(--brand-primary);
-    transform: translateY(-1px);
 }
 
 .pagination .page-item.active .page-link {

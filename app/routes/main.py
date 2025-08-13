@@ -39,31 +39,30 @@ def history():
         return redirect(url_for('main.login'))
     
     username = session['username']
-    page = int(request.args.get('page', 1))
-    per_page = 20
     
-    # Get user's search history
-    all_searches = search_logger.get_user_searches(username, limit=1000)
+    # Get limit from query parameter, default to 10
+    limit = int(request.args.get('limit', 10))
+    show_all = request.args.get('show_all', 'false').lower() == 'true'
     
-    # Pagination
-    start = (page - 1) * per_page
-    end = start + per_page
-    searches = all_searches[start:end]
+    # If show_all is requested, get more entries
+    if show_all:
+        limit = 100  # Still cap at reasonable number for performance
     
-    # Calculate pagination info
-    total_searches = len(all_searches)
-    total_pages = (total_searches + per_page - 1) // per_page
-    has_prev = page > 1
-    has_next = page < total_pages
+    # Get user's search history (optimized for latest entries)
+    searches = search_logger.get_user_searches(username, limit=limit)
+    
+    # Get total count for statistics (this might be expensive for very large files)
+    total_searches = len(searches)
+    if show_all:
+        # For show_all, we might have hit the cap, so this is approximate
+        total_searches = f"{total_searches}+" if len(searches) == limit else str(total_searches)
     
     return render_template('history.html',
                          username=username,
                          searches=searches,
-                         page=page,
-                         total_pages=total_pages,
                          total_searches=total_searches,
-                         has_prev=has_prev,
-                         has_next=has_next)
+                         limit=limit,
+                         show_all=show_all)
 
 @main.route('/search')
 def search():

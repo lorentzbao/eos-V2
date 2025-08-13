@@ -17,8 +17,19 @@
 
         {% if searches %}
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">{{ username }}さんの検索履歴 ({{ total_searches }}件)</h5>
+                <div class="btn-group btn-group-sm">
+                    {% if not show_all %}
+                    <a href="{{ url_for('main.history', show_all='true') }}" class="btn btn-outline-primary">
+                        もっと見る (100件)
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('main.history') }}" class="btn btn-outline-secondary">
+                        最新10件のみ
+                    </a>
+                    {% endif %}
+                </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -70,39 +81,21 @@
             </div>
         </div>
 
-        <!-- Pagination -->
-        {% if total_pages > 1 %}
-        <nav aria-label="検索履歴ページネーション" class="mt-4">
-            <ul class="pagination justify-content-center">
-                {% if has_prev %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('main.history', page=page-1) }}">前へ</a>
-                </li>
-                {% endif %}
-
-                {% for p in range(1, total_pages + 1) %}
-                {% if p == page %}
-                <li class="page-item active">
-                    <span class="page-link">{{ p }}</span>
-                </li>
-                {% elif p <= 3 or p > total_pages - 3 or (p >= page - 2 and p <= page + 2) %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('main.history', page=p) }}">{{ p }}</a>
-                </li>
-                {% elif p == 4 or p == total_pages - 3 %}
-                <li class="page-item disabled">
-                    <span class="page-link">...</span>
-                </li>
-                {% endif %}
-                {% endfor %}
-
-                {% if has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('main.history', page=page+1) }}">次へ</a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
+        <!-- Show More Options -->
+        {% if searches and limit == 10 and searches|length == 10 %}
+        <div class="text-center mt-4">
+            <p class="text-muted mb-3">最新の10件を表示中</p>
+            <a href="{{ url_for('main.history', show_all='true') }}" class="btn btn-outline-primary">
+                📋 さらに多くの履歴を表示 (最大100件)
+            </a>
+        </div>
+        {% elif show_all %}
+        <div class="text-center mt-4">
+            <p class="text-muted mb-3">より多くの履歴を表示中 (最大{{ limit }}件)</p>
+            <a href="{{ url_for('main.history') }}" class="btn btn-outline-secondary">
+                🔄 最新10件のみに戻る
+            </a>
+        </div>
         {% endif %}
 
         {% else %}

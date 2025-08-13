@@ -32,14 +32,80 @@ class SearchLogger:
         except Exception as e:
             print(f"Failed to log search: {e}")
     
-    def get_user_searches(self, username: str, limit: int = 100) -> List[Dict]:
-        """Get search history for a specific user"""
+    def get_user_searches(self, username: str, limit: int = 10) -> List[Dict]:
+        """Get search history for a specific user - optimized for large files"""
         searches = []
         
         try:
             if not os.path.exists(self.log_file):
                 return searches
             
+            # Use reverse file reading for better performance on large files
+            searches = self._read_user_logs_reverse(username, limit)
+            
+        except Exception as e:
+            print(f"Failed to get user searches: {e}")
+            return []
+        
+        return searches
+    
+    def _read_user_logs_reverse(self, username: str, limit: int) -> List[Dict]:
+        """Read user logs in reverse order for efficiency"""
+        user_searches = []
+        
+        try:
+            # Read file in reverse order using seek
+            with open(self.log_file, 'rb') as f:
+                f.seek(0, 2)  # Go to end of file
+                file_size = f.tell()
+                
+                # Read file in chunks from the end
+                chunk_size = 8192
+                lines = []
+                position = file_size
+                
+                while position > 0 and len(user_searches) < limit:
+                    # Calculate chunk start position
+                    chunk_start = max(0, position - chunk_size)
+                    chunk_length = position - chunk_start
+                    
+                    # Read chunk
+                    f.seek(chunk_start)
+                    chunk = f.read(chunk_length).decode('utf-8', errors='ignore')
+                    
+                    # Split into lines and reverse
+                    chunk_lines = chunk.split('\n')
+                    
+                    # If we're not at the beginning, the first line might be incomplete
+                    if chunk_start > 0 and chunk_lines:
+                        chunk_lines = chunk_lines[1:]
+                    
+                    # Process lines in reverse order
+                    for line in reversed(chunk_lines):
+                        if line.strip():
+                            try:
+                                entry = json.loads(line.strip())
+                                if entry.get('username') == username:
+                                    user_searches.append(entry)
+                                    if len(user_searches) >= limit:
+                                        break
+                            except json.JSONDecodeError:
+                                continue
+                    
+                    position = chunk_start
+                
+        except Exception as e:
+            print(f"Error reading logs in reverse: {e}")
+            # Fallback to original method
+            return self._read_user_logs_fallback(username, limit)
+        
+        return user_searches
+    
+    def _read_user_logs_fallback(self, username: str, limit: int) -> List[Dict]:
+        """Fallback method for reading user logs"""
+        searches = []
+        
+        try:
             with open(self.log_file, 'r', encoding='utf-8') as f:
                 for line in f:
                     try:
@@ -54,7 +120,7 @@ class SearchLogger:
             return searches[:limit]
             
         except Exception as e:
-            print(f"Failed to get user searches: {e}")
+            print(f"Fallback method failed: {e}")
             return []
     
     def get_all_searches(self, limit: int = 500) -> List[Dict]:
