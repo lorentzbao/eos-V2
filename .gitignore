@@ -69,4 +69,8 @@ htmlcov/
 *.tmp
 *.bak
 *.swp
-*~.nibdata/search_logs.jsonl
+*~.nib
+
+# Search logs
+data/search_logs.jsonl
+data/search_logs/
