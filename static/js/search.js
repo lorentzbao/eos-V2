@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentSuggestionIndex = -1;
     let suggestions = [];
     let popularQueries = window.popularQueries || [];
+    let shouldShowDropdownOnFocus = true;
     
     if (searchInput && suggestionsDropdown && suggestionsList) {
         // Search suggestions functionality using cached data
@@ -90,8 +91,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Focus event - show popular searches instantly
         searchInput.addEventListener('focus', function() {
-            showDropdownIfHasData();
-            getSuggestions(this.value.trim());
+            if (shouldShowDropdownOnFocus) {
+                showDropdownIfHasData();
+                getSuggestions(this.value.trim());
+            } else {
+                // Reset flag after first focus on search results page
+                shouldShowDropdownOnFocus = true;
+            }
         });
         
         // Click event - ensure dropdown shows even on repeated clicks
@@ -102,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Helper function to show dropdown reliably
         function showDropdownIfHasData() {
-            if (popularQueries.length > 0) {
+            if (popularQueries.length > 0 && shouldShowDropdownOnFocus) {
                 suggestionsDropdown.style.display = 'block';
             }
         }
@@ -116,6 +122,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }));
             // Pre-render but keep hidden
             renderSuggestions();
+            suggestionsDropdown.style.display = 'none';
+        }
+        
+        // Disable dropdown on search results page when page loads with query
+        if (searchInput.value.trim() !== '' && window.location.pathname === '/search') {
+            shouldShowDropdownOnFocus = false;
             suggestionsDropdown.style.display = 'none';
         }
         
