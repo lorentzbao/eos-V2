@@ -3,6 +3,8 @@ import json
 import datetime
 from typing import List, Dict
 import glob
+import threading
+from collections import defaultdict
 
 class SearchLogger:
     """Log and track user search queries using per-user log files"""
@@ -10,6 +12,13 @@ class SearchLogger:
     def __init__(self, log_dir="data/search_logs"):
         self.log_dir = log_dir
         self._ensure_log_directory()
+        
+        # In-memory ranking tracker
+        self._query_counts = defaultdict(int)
+        self._rankings_lock = threading.RLock()
+        
+        # Initialize rankings from existing logs on startup
+        self._initialize_rankings()
     
     def _ensure_log_directory(self):
         """Create log directory if it doesn't exist"""
@@ -20,6 +29,34 @@ class SearchLogger:
         # Sanitize username for safe filename
         safe_username = "".join(c for c in username if c.isalnum() or c in "_-.")
         return os.path.join(self.log_dir, f"{safe_username}.jsonl")
+    
+    def _initialize_rankings(self):
+        """Initialize in-memory rankings from existing log files on startup"""
+        print("Initializing search rankings from existing logs...")
+        
+        try:
+            user_files = glob.glob(os.path.join(self.log_dir, "*.jsonl"))
+            total_queries_loaded = 0
+            
+            with self._rankings_lock:
+                for user_file in user_files:
+                    with open(user_file, 'r', encoding='utf-8') as f:
+                        for line in f:
+                            try:
+                                entry = json.loads(line.strip())
+                                query = entry.get('query', '').strip().lower()
+                                if query:
+                                    self._query_counts[query] += 1
+                                    total_queries_loaded += 1
+                            except json.JSONDecodeError:
+                                continue
+                
+            print(f"Loaded {total_queries_loaded} queries into rankings ({len(self._query_counts)} unique)")
+            
+        except Exception as e:
+            print(f"Error initializing rankings: {e}")
+            # Continue with empty rankings
+            self._query_counts = defaultdict(int)
     
     def log_search(self, username: str, query: str, search_type: str = "auto", 
                    results_count: int = 0, search_time: float = 0.0, prefecture: str = ""):
@@ -37,9 +74,17 @@ class SearchLogger:
             log_entry["prefecture"] = prefecture
         
         try:
+            # Write to file
             user_log_file = self._get_user_log_file(username)
             with open(user_log_file, 'a', encoding='utf-8') as f:
                 f.write(json.dumps(log_entry, ensure_ascii=False) + '\n')
+                
+            # Update in-memory rankings in real-time
+            query_key = query.strip().lower()
+            if query_key:
+                with self._rankings_lock:
+                    self._query_counts[query_key] += 1
+                    
         except Exception as e:
             print(f"Failed to log search for {username}: {e}")
     
@@ -164,31 +209,37 @@ class SearchLogger:
             return []
     
     def get_popular_queries(self, limit: int = 10) -> List[Dict]:
-        """Get most popular search queries across all users"""
-        query_counts = {}
-        
+        """Get most popular search queries across all users (real-time from memory)"""
         try:
-            # Get all user log files
-            user_files = glob.glob(os.path.join(self.log_dir, "*.jsonl"))
-            
-            for user_file in user_files:
-                with open(user_file, 'r', encoding='utf-8') as f:
-                    for line in f:
-                        try:
-                            entry = json.loads(line.strip())
-                            query = entry.get('query', '').strip().lower()
-                            if query:
-                                query_counts[query] = query_counts.get(query, 0) + 1
-                        except json.JSONDecodeError:
-                            continue
-            
-            # Sort by count and return top queries
-            popular = sorted(query_counts.items(), key=lambda x: x[1], reverse=True)
-            return [{"query": query, "count": count} for query, count in popular[:limit]]
-            
+            with self._rankings_lock:
+                # Sort by count and return top queries
+                popular = sorted(self._query_counts.items(), key=lambda x: x[1], reverse=True)
+                return [{"query": query, "count": count} for query, count in popular[:limit]]
+                
         except Exception as e:
             print(f"Failed to get popular queries: {e}")
             return []
+    
+    def get_rankings_stats(self) -> Dict:
+        """Get ranking statistics"""
+        try:
+            with self._rankings_lock:
+                total_queries = sum(self._query_counts.values())
+                unique_queries = len(self._query_counts)
+                
+                return {
+                    "total_queries": total_queries,
+                    "unique_queries": unique_queries,
+                    "top_query": max(self._query_counts.items(), key=lambda x: x[1]) if self._query_counts else None
+                }
+                
+        except Exception as e:
+            print(f"Failed to get ranking stats: {e}")
+            return {
+                "total_queries": 0,
+                "unique_queries": 0,
+                "top_query": None
+            }
     
     def get_user_stats(self) -> Dict:
         """Get statistics about users and searches"""

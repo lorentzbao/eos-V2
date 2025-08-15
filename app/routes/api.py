@@ -96,3 +96,4 @@ def api_optimize_index():
             return jsonify({'error': 'Failed to optimize index'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+

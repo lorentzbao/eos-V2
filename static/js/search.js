@@ -1,7 +1,165 @@
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.querySelector('input[name="q"]');
+    const suggestionsDropdown = document.getElementById('searchSuggestions');
+    const suggestionsList = document.getElementById('suggestionsList');
+    let currentSuggestionIndex = -1;
+    let suggestions = [];
+    let popularQueries = window.popularQueries || [];
     
-    if (searchInput) {
+    if (searchInput && suggestionsDropdown && suggestionsList) {
+        // Search suggestions functionality using cached data
+        function getSuggestions(query) {
+            const lowerQuery = query.toLowerCase();
+            
+            if (query.length === 0) {
+                // Show all popular queries when no input
+                suggestions = popularQueries.map(item => ({
+                    text: item.query,
+                    count: item.count,
+                    type: 'ranking'
+                }));
+            } else {
+                // Filter suggestions that match the query
+                suggestions = popularQueries
+                    .filter(item => item.query.toLowerCase().includes(lowerQuery))
+                    .map(item => ({
+                        text: item.query,
+                        count: item.count,
+                        type: 'ranking'
+                    }));
+            }
+            
+            renderSuggestions();
+        }
+        
+        function renderSuggestions() {
+            suggestionsList.innerHTML = '';
+            
+            if (suggestions.length === 0) {
+                suggestionsDropdown.style.display = 'none';
+                return;
+            }
+            
+            suggestions.forEach((suggestion, index) => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.innerHTML = `
+                    <div class="suggestion-text">
+                        <span class="suggestion-icon">🔍</span>
+                        <span>${suggestion.text}</span>
+                    </div>
+                    <span class="suggestion-count">${suggestion.count}</span>
+                `;
+                
+                item.addEventListener('click', function() {
+                    selectSuggestion(suggestion.text);
+                });
+                
+                suggestionsList.appendChild(item);
+            });
+            
+            // Always show dropdown when we have suggestions and input is focused
+            if (document.activeElement === searchInput) {
+                suggestionsDropdown.style.display = 'block';
+            }
+            currentSuggestionIndex = -1;
+        }
+        
+        function selectSuggestion(text) {
+            searchInput.value = text;
+            suggestionsDropdown.style.display = 'none';
+            searchInput.focus();
+        }
+        
+        function updateSuggestionSelection() {
+            const items = suggestionsList.querySelectorAll('.suggestion-item');
+            items.forEach((item, index) => {
+                if (index === currentSuggestionIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+        
+        // Input event handler - instant suggestions
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            getSuggestions(query); // Instant, no delay needed
+        });
+        
+        // Focus event - show popular searches instantly
+        searchInput.addEventListener('focus', function() {
+            showDropdownIfHasData();
+            getSuggestions(this.value.trim());
+        });
+        
+        // Click event - ensure dropdown shows even on repeated clicks
+        searchInput.addEventListener('click', function() {
+            showDropdownIfHasData();
+            getSuggestions(this.value.trim());
+        });
+        
+        // Helper function to show dropdown reliably
+        function showDropdownIfHasData() {
+            if (popularQueries.length > 0) {
+                suggestionsDropdown.style.display = 'block';
+            }
+        }
+        
+        // Initialize suggestions on page load for even faster first focus
+        if (popularQueries.length > 0) {
+            suggestions = popularQueries.map(item => ({
+                text: item.query,
+                count: item.count,
+                type: 'ranking'
+            }));
+            // Pre-render but keep hidden
+            renderSuggestions();
+            suggestionsDropdown.style.display = 'none';
+        }
+        
+        // Keyboard navigation
+        searchInput.addEventListener('keydown', function(e) {
+            const items = suggestionsList.querySelectorAll('.suggestion-item');
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                currentSuggestionIndex = Math.min(currentSuggestionIndex + 1, items.length - 1);
+                updateSuggestionSelection();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                currentSuggestionIndex = Math.max(currentSuggestionIndex - 1, -1);
+                updateSuggestionSelection();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (currentSuggestionIndex >= 0 && items[currentSuggestionIndex]) {
+                    const suggestionText = suggestions[currentSuggestionIndex].text;
+                    selectSuggestion(suggestionText);
+                    // Submit the form with the selected suggestion
+                    if (validateAndSubmit(this.form)) {
+                        this.form.submit();
+                    }
+                } else {
+                    // Normal form submission
+                    if (validateAndSubmit(this.form)) {
+                        this.form.submit();
+                    }
+                }
+            } else if (e.key === 'Escape') {
+                suggestionsDropdown.style.display = 'none';
+                currentSuggestionIndex = -1;
+            }
+        });
+        
+        // Click outside to close
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !suggestionsDropdown.contains(e.target)) {
+                suggestionsDropdown.style.display = 'none';
+                currentSuggestionIndex = -1;
+            }
+        });
+        
         // Prevent empty search submissions
         function validateAndSubmit(form) {
             const query = searchInput.value.trim();
@@ -16,16 +174,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             return true;
         }
-        
-        // Handle Enter key press
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                if (validateAndSubmit(this.form)) {
-                    this.form.submit();
-                }
-            }
-        });
         
         // Handle form submission (button click)
         const searchForm = searchInput.closest('form');

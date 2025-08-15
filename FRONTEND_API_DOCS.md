@@ -162,10 +162,78 @@ GET /history?show_all=true // Up to 100 searches
 
 ---
 
+## 🏆 Search Rankings & Suggestions
+
+### Rankings Page
+
+**Endpoint:** `GET /rankings`
+
+**Response:** HTML page showing popular keyword rankings with statistics
+
+**Sample Output Structure:**
+```javascript
+// Template receives this data
+{
+  queries: [
+    {
+      query: "python",
+      count: 12,
+      percentage: 35.3
+    },
+    {
+      query: "機械学習", 
+      count: 8,
+      percentage: 23.5
+    },
+    {
+      query: "ai",
+      count: 6, 
+      percentage: 17.6
+    }
+  ],
+  stats: {
+    total_queries: 34,
+    unique_queries: 15,
+    top_query: ["python", 12]
+  },
+  username: "john_doe"
+}
+```
+
+### Smart Search Suggestions
+
+**Auto-completion dropdowns** are embedded in search forms:
+
+**Features:**
+- Instant suggestions from popular search keywords
+- Google-style dropdown with keyboard navigation
+- No API calls needed (data embedded in templates)
+- Real-time filtering as user types
+
+**Implementation:**
+```javascript
+// Popular queries data is embedded in each page
+window.popularQueries = [
+  {"query": "python", "count": 12},
+  {"query": "機械学習", "count": 8},
+  {"query": "ai", "count": 6}
+];
+
+// Suggestions appear instantly on:
+// - Focus on search input
+// - Typing in search input  
+// - Clicking search input
+```
+
+---
+
 ## 🏠 Navigation
 
 ```http
-GET /           # Home page (search form)
+GET /           # Home page (search form with suggestions)
+GET /search     # Search results page (with suggestions)  
+GET /rankings   # Popular keyword rankings page
+GET /history    # User search history
 GET /login      # Login form  
 GET /logout     # Destroys session, redirects to login
 ```
@@ -196,13 +264,30 @@ Content-Type: text/html
 
 ## 📝 Frontend Integration
 
-### 1. Search Form Template
+### 1. Search Form Template with Auto-suggestions
 
 ```html
 <form action="/search" method="GET">
-  <!-- Search input -->
-  <input type="text" name="q" required 
-         placeholder="検索キーワードを入力...">
+  <div class="input-group position-relative">
+    <!-- Search input with suggestions -->
+    <input type="text" 
+           id="searchInput"
+           name="q" 
+           required
+           autocomplete="off"
+           placeholder="検索キーワードを入力...">
+    <button type="submit">検索</button>
+    
+    <!-- Auto-suggestions dropdown -->
+    <div id="searchSuggestions" class="suggestions-dropdown" style="display: none;">
+      <div class="suggestions-header">
+        <small class="text-muted">🏆 人気の検索キーワード</small>
+      </div>
+      <div id="suggestionsList">
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+  </div>
 
   <!-- Search type -->
   <select name="type">
@@ -227,9 +312,12 @@ Content-Type: text/html
     <option value="20">20件</option>
     <option value="50">50件</option>
   </select>
-
-  <button type="submit">検索</button>
 </form>
+
+<!-- Embed popular queries data -->
+<script>
+window.popularQueries = {{ popular_queries | tojson }};
+</script>
 ```
 
 ### 2. Empty Search Prevention
@@ -335,6 +423,13 @@ The `/history` endpoint provides:
 - Efficient reverse file reading (scales to GB+ logs)
 - User-specific search tracking
 - Scalable pagination (8 recent, up to 100 total)
+
+### Search Rankings & Suggestions *(Already Implemented)*
+- Real-time keyword popularity tracking
+- In-memory rankings with startup initialization
+- Google-style auto-suggestions with keyboard navigation
+- Rankings page with medal badges and progress bars
+- Zero-latency suggestions (data embedded in templates)
 
 ---
 

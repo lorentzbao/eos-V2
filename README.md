@@ -17,6 +17,8 @@ http://127.0.0.1:5000
 ✅ **Japanese Search** - Janome tokenization with proper Japanese text processing  
 ✅ **User Authentication** - Simple username-based login system  
 ✅ **Search History** - Track and view past searches with scalable pagination  
+✅ **Search Rankings** - Real-time popular keyword tracking and rankings page  
+✅ **Smart Suggestions** - Google-style dropdown with popular search terms  
 ✅ **Metadata Filtering** - Filter companies by prefecture (Tokyo, Osaka, etc.)  
 ✅ **Client-side Pagination** - Instant navigation through search results  
 ✅ **LRU Cache** - Built-in search result caching for instant repeat queries  
@@ -40,17 +42,22 @@ eos/
 
 1. **Login**: Enter any username to start
 2. **Search**: Enter Japanese keywords (e.g., "Python 開発", "AI")  
-3. **Filter**: Select prefecture to narrow results
-4. **Browse**: Use pagination to navigate through results
-5. **History**: View your search history with details
+3. **Suggestions**: See popular search terms as you type in Google-style dropdown
+4. **Filter**: Select prefecture to narrow results
+5. **Browse**: Use pagination to navigate through results
+6. **History**: View your search history with details
+7. **Rankings**: Check trending keywords on the rankings page (🏆 button)
 
 ## Search Features
 
 - **Basic search**: `機械学習` - finds all matching content
+- **Auto-suggestions**: Smart dropdown with popular searches as you type
 - **Title search**: Use "タイトルのみ" dropdown option
 - **Prefecture filter**: Filter by Tokyo, Osaka, Kyoto, etc.
 - **Smart pagination**: 10 results per page with instant navigation
 - **Match highlighting**: See which terms matched your query
+- **Rankings tracking**: Real-time keyword popularity with statistics
+- **Keyboard navigation**: Use arrow keys to navigate suggestions
 
 ## Sample Searches
 
@@ -68,6 +75,7 @@ For frontend developers:
 
 Quick reference:
 - `GET /search` - Search with pagination
+- `GET /rankings` - Popular keyword rankings
 - `POST /api/add_document` - Add company data
 - `GET /history` - User search history
 

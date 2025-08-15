@@ -10,8 +10,9 @@
         
         <div class="search-container">
             <form action="{{ url_for('main.search') }}" method="GET">
-                <div class="input-group mb-3">
+                <div class="input-group mb-3 position-relative">
                     <input type="text" 
+                           id="searchInput"
                            name="q" 
                            class="form-control form-control-lg" 
                            placeholder="検索キーワードを入力してください..."
@@ -19,6 +20,14 @@
                            required
                            autofocus>
                     <button class="btn btn-primary btn-lg" type="submit">検索</button>
+                    
+                    <!-- Search suggestions dropdown -->
+                    <div id="searchSuggestions" class="suggestions-dropdown" style="display: none;">
+                        <div class="suggestions-header">
+                            <small class="text-muted">🏆 人気の検索キーワード</small>
+                        </div>
+                        <div id="suggestionsList"></div>
+                    </div>
                 </div>
                 
                 <div class="row">
@@ -82,4 +91,9 @@
         </div>
     </div>
 </div>
+
+<script>
+// Embed popular queries data for instant dropdown
+window.popularQueries = {{ popular_queries | tojson }};
+</script>
 {% endblock %}

@@ -11,7 +11,13 @@ def index():
     """Main search page"""
     if 'username' not in session:
         return redirect(url_for('main.login'))
-    return render_template('index.html', username=session['username'])
+    
+    # Get popular queries for search suggestions
+    popular_queries = search_logger.get_popular_queries(limit=10)
+    
+    return render_template('index.html', 
+                         username=session['username'],
+                         popular_queries=popular_queries)
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -31,6 +37,32 @@ def logout():
     """Logout and clear session"""
     session.pop('username', None)
     return redirect(url_for('main.login'))
+
+@main.route('/rankings')
+def rankings():
+    """Search rankings page"""
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+    
+    username = session['username']
+    
+    # Get popular queries and stats
+    popular_queries = search_logger.get_popular_queries(limit=10)
+    ranking_stats = search_logger.get_rankings_stats()
+    
+    # Calculate percentages
+    total_queries = ranking_stats['total_queries']
+    for query_data in popular_queries:
+        if total_queries > 0:
+            query_data['percentage'] = round((query_data['count'] / total_queries) * 100, 1)
+        else:
+            query_data['percentage'] = 0.0
+    
+    return render_template('rankings.html',
+                         username=username,
+                         queries=popular_queries,
+                         stats=ranking_stats,
+                         total_queries=total_queries)
 
 @main.route('/history')
 def history():
@@ -83,6 +115,9 @@ def search():
     search_results = search_service.search(query, limit, search_type, prefecture)
     stats = search_service.get_stats()
     
+    # Get popular queries for search suggestions dropdown
+    popular_queries = search_logger.get_popular_queries(limit=10)
+    
     # Log the search query with detailed information
     search_logger.log_search(
         username, 
@@ -103,4 +138,5 @@ def search():
                          prefecture=prefecture,
                          limit=limit,
                          username=username,
-                         stats=stats)
+                         stats=stats,
+                         popular_queries=popular_queries)
