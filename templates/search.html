@@ -148,9 +148,16 @@
                 <small class="text-muted">
                     インデックス済み文書数: {{ stats.total_documents }} 件
                 </small>
-                <a href="{{ url_for('main.history') }}" class="btn btn-sm btn-outline-secondary">
-                    📊 検索履歴を見る
-                </a>
+                <div class="d-flex gap-2">
+                    {% if results %}
+                    <button id="downloadBtn" class="btn btn-sm btn-success">
+                        📥 CSV Download
+                    </button>
+                    {% endif %}
+                    <a href="{{ url_for('main.history') }}" class="btn btn-sm btn-outline-secondary">
+                        📊 検索履歴を見る
+                    </a>
+                </div>
             </div>
         </div>
         {% endif %}
@@ -278,5 +285,71 @@ function goToPage(page) {
 
 // Embed popular queries data for instant dropdown
 window.popularQueries = {{ popular_queries | tojson }};
+
+// CSV Download functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const downloadBtn = document.getElementById('downloadBtn');
+    
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function() {
+            const btn = this;
+            const originalHTML = btn.innerHTML;
+            
+            // Show loading state
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Preparing CSV...';
+            btn.disabled = true;
+            
+            // Get current search parameters
+            const searchParams = new URLSearchParams({
+                q: '{{ query }}',
+                type: '{{ search_type }}',
+                prefecture: '{{ prefecture }}'
+            });
+            
+            // Build download URL
+            const downloadUrl = `/api/download-csv?${searchParams.toString()}`;
+            
+            // Create temporary download link
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            
+            // Trigger download
+            link.click();
+            
+            // Clean up
+            document.body.removeChild(link);
+            
+            // Reset button after delay
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }, 3000);
+            
+            // Show success message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show mt-2';
+            alertDiv.innerHTML = `
+                <small>
+                    <strong>📥 ダウンロード開始!</strong> 
+                    CSVファイルのダウンロードが開始されました。
+                </small>
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insert after stats section
+            const statsSection = document.querySelector('.mt-5');
+            statsSection.parentNode.insertBefore(alertDiv, statsSection.nextSibling);
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 3000);
+        });
+    }
+});
 </script>
 {% endblock %}

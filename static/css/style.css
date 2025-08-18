@@ -434,3 +434,44 @@ main.container {
         right: 50px; /* Smaller button on mobile */
     }
 }
+
+/* Download Section Styling */
+.download-section {
+    background: var(--brand-light);
+    border: 1px solid rgba(0, 24, 113, 0.1);
+    border-radius: var(--border-radius);
+    padding: 16px 20px;
+}
+
+.download-section h6 {
+    color: var(--brand-primary);
+    font-weight: 600;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    transition: var(--transition);
+    box-shadow: var(--shadow-light);
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #218838 0%, #1da88a 100%);
+    box-shadow: var(--shadow-medium);
+    transform: translateY(-1px);
+}
+
+.btn-success:disabled {
+    background: #6c757d;
+    transform: none;
+    box-shadow: none;
+}
+
+/* CSV Download Alert */
+.alert-success {
+    border-left: 4px solid #28a745;
+    background: rgba(40, 167, 69, 0.1);
+    border-color: rgba(40, 167, 69, 0.3);
+}

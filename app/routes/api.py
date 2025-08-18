@@ -1,5 +1,9 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, Response, session
 from app.services.search_service import SearchService
+import csv
+import io
+from datetime import datetime
+import urllib.parse
 
 api = Blueprint('api', __name__, url_prefix='/api')
 search_service = SearchService()
@@ -96,4 +100,117 @@ def api_optimize_index():
             return jsonify({'error': 'Failed to optimize index'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@api.route('/download-csv')
+def download_csv():
+    """Download search results as CSV with cursor-based streaming"""
+    # Check authentication
+    if 'username' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    # Get search parameters
+    query = request.args.get('q', '').strip()
+    search_type = request.args.get('type', 'auto')
+    prefecture = request.args.get('prefecture', '')
+    
+    if not query:
+        return jsonify({'error': 'Query parameter required'}), 400
+    
+    def escape_csv_field(field):
+        """Properly escape CSV fields with quotes and commas"""
+        if field is None:
+            return ""
+        
+        field_str = str(field)
+        
+        # If field contains quotes, commas, or newlines, wrap in quotes and escape internal quotes
+        if '"' in field_str or ',' in field_str or '\n' in field_str or '\r' in field_str:
+            # Escape quotes by doubling them
+            field_str = field_str.replace('"', '""')
+            return f'"{field_str}"'
+        
+        return field_str
+    
+    def generate_csv_stream():
+        """Generate CSV data stream efficiently with proper UTF-8 handling"""
+        try:
+            # Use Python's CSV writer for proper encoding
+            output = io.StringIO()
+            
+            # UTF-8 BOM for Excel compatibility
+            yield '\ufeff'
+            
+            # Create CSV writer
+            fieldnames = ['ID', 'Title', 'Content', 'URL', 'Score', 'Prefecture', 'Matched_Terms']
+            writer = csv.DictWriter(output, fieldnames=fieldnames)
+            
+            # Write header
+            writer.writeheader()
+            yield output.getvalue()
+            output.seek(0)
+            output.truncate(0)
+            
+            # Single search to get all results - most efficient approach
+            search_results = search_service.search(query, limit=10000, search_type=search_type, prefecture=prefecture)
+            results = search_results.get('results', [])
+            
+            batch = []
+            batch_size = 100  # Process in batches to manage memory
+            record_count = 0
+            
+            for result in results:
+                # Format result data
+                result_data = {
+                    'ID': result.get('id', ''),
+                    'Title': result.get('title', ''),
+                    'Content': result.get('content', '')[:500],  # Limit content length
+                    'URL': result.get('url', ''),
+                    'Score': round(result.get('score', 0), 3),
+                    'Prefecture': prefecture if prefecture else 'all',
+                    'Matched_Terms': '|'.join(result.get('matched_terms', []))
+                }
+                
+                batch.append(result_data)
+                record_count += 1
+                
+                # Process batch when full
+                if len(batch) >= batch_size:
+                    for item in batch:
+                        writer.writerow(item)
+                    
+                    yield output.getvalue()
+                    output.seek(0)
+                    output.truncate(0)
+                    batch = []  # Clear memory
+                    
+            # Process remaining items in final batch
+            for item in batch:
+                writer.writerow(item)
+                
+            if batch:  # If there were remaining items
+                yield output.getvalue()
+                output.seek(0)
+                output.truncate(0)
+                
+            # No summary needed per user request
+            
+        except Exception as e:
+            error_msg = f"\n# Error occurred during export: {str(e)}\n"
+            yield error_msg
+    
+    # Generate simple filename with timestamp
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f"search_results_{timestamp}.csv"
+    
+    # Set response headers for download with proper encoding
+    headers = {
+        'Content-Disposition': f'attachment; filename="{filename}"',
+        'Content-Type': 'text/csv; charset=utf-8'
+    }
+    
+    return Response(
+        generate_csv_stream(), 
+        headers=headers,
+        mimetype='text/csv'
+    )
 
