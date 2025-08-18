@@ -1,7 +1,9 @@
-from flask import Blueprint, request, jsonify, Response, session
+from flask import Blueprint, request, jsonify, Response, session, send_file
 from app.services.search_service import SearchService
 import csv
 import io
+import os
+import hashlib
 from datetime import datetime
 import urllib.parse
 
@@ -101,9 +103,14 @@ def api_optimize_index():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+def get_cache_key(query, search_type, prefecture):
+    """Generate unique cache key for search parameters"""
+    params = f"{query}:{search_type}:{prefecture}"
+    return hashlib.md5(params.encode('utf-8')).hexdigest()
+
 @api.route('/download-csv')
 def download_csv():
-    """Download search results as CSV with cursor-based streaming"""
+    """Download search results as CSV with file-based caching"""
     # Check authentication
     if 'username' not in session:
         return jsonify({'error': 'Authentication required'}), 401
@@ -116,29 +123,31 @@ def download_csv():
     if not query:
         return jsonify({'error': 'Query parameter required'}), 400
     
-    def escape_csv_field(field):
-        """Properly escape CSV fields with quotes and commas"""
-        if field is None:
-            return ""
-        
-        field_str = str(field)
-        
-        # If field contains quotes, commas, or newlines, wrap in quotes and escape internal quotes
-        if '"' in field_str or ',' in field_str or '\n' in field_str or '\r' in field_str:
-            # Escape quotes by doubling them
-            field_str = field_str.replace('"', '""')
-            return f'"{field_str}"'
-        
-        return field_str
+    # Generate cache key and file path
+    cache_key = get_cache_key(query, search_type, prefecture)
+    # Use absolute path from project root
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    cache_dir = os.path.join(project_root, "data", "csv_cache")
+    cache_file = os.path.join(cache_dir, f"{cache_key}.csv")
     
-    def generate_csv_stream():
-        """Generate CSV data stream efficiently with proper UTF-8 handling"""
+    # Check if cached file exists
+    if os.path.exists(cache_file):
+        # Generate filename for download
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"search_results_{timestamp}.csv"
+        
+        # Serve cached file immediately
+        return send_file(cache_file, as_attachment=True, download_name=filename)
+    
+    # File doesn't exist, generate and cache it
+    def generate_csv_content():
+        """Generate CSV content and save to cache file"""
         try:
+            # Create cache directory if it doesn't exist
+            os.makedirs(cache_dir, exist_ok=True)
+            
             # Use Python's CSV writer for proper encoding
             output = io.StringIO()
-            
-            # UTF-8 BOM for Excel compatibility
-            yield '\ufeff'
             
             # Create CSV writer
             fieldnames = ['ID', 'Title', 'Content', 'URL', 'Score', 'Prefecture', 'Matched_Terms']
@@ -146,18 +155,12 @@ def download_csv():
             
             # Write header
             writer.writeheader()
-            yield output.getvalue()
-            output.seek(0)
-            output.truncate(0)
             
             # Single search to get all results - most efficient approach
             search_results = search_service.search(query, limit=10000, search_type=search_type, prefecture=prefecture)
             results = search_results.get('results', [])
             
-            batch = []
-            batch_size = 100  # Process in batches to manage memory
-            record_count = 0
-            
+            # Write all results
             for result in results:
                 # Format result data
                 result_data = {
@@ -170,47 +173,31 @@ def download_csv():
                     'Matched_Terms': '|'.join(result.get('matched_terms', []))
                 }
                 
-                batch.append(result_data)
-                record_count += 1
-                
-                # Process batch when full
-                if len(batch) >= batch_size:
-                    for item in batch:
-                        writer.writerow(item)
-                    
-                    yield output.getvalue()
-                    output.seek(0)
-                    output.truncate(0)
-                    batch = []  # Clear memory
-                    
-            # Process remaining items in final batch
-            for item in batch:
-                writer.writerow(item)
-                
-            if batch:  # If there were remaining items
-                yield output.getvalue()
-                output.seek(0)
-                output.truncate(0)
-                
-            # No summary needed per user request
+                writer.writerow(result_data)
+            
+            # Get CSV content
+            csv_content = output.getvalue()
+            
+            # Save to cache file with UTF-8 BOM for Excel compatibility
+            with open(cache_file, 'w', encoding='utf-8-sig', newline='') as f:
+                f.write(csv_content)
+            
+            return csv_content
             
         except Exception as e:
-            error_msg = f"\n# Error occurred during export: {str(e)}\n"
-            yield error_msg
+            # If error occurs, create a simple error CSV
+            error_csv = f"Error,{str(e)}\n"
+            with open(cache_file, 'w', encoding='utf-8-sig', newline='') as f:
+                f.write(error_csv)
+            return error_csv
     
-    # Generate simple filename with timestamp
+    # Generate and cache the CSV
+    generate_csv_content()
+    
+    # Generate filename for download
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = f"search_results_{timestamp}.csv"
     
-    # Set response headers for download with proper encoding
-    headers = {
-        'Content-Disposition': f'attachment; filename="{filename}"',
-        'Content-Type': 'text/csv; charset=utf-8'
-    }
-    
-    return Response(
-        generate_csv_stream(), 
-        headers=headers,
-        mimetype='text/csv'
-    )
+    # Serve the newly created cached file
+    return send_file(cache_file, as_attachment=True, download_name=filename)
 

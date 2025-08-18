@@ -74,3 +74,4 @@ htmlcov/
 # Search logs
 data/search_logs.jsonl
 data/search_logs/
+data/csv_cache/
