@@ -130,8 +130,10 @@ def search():
     
     return render_template('search.html', 
                          query=query,
-                         results=search_results['results'],
+                         results=search_results['results'],  # Keep for backward compatibility
+                         grouped_results=search_results.get('grouped_results', []),  # New grouped structure
                          total_found=search_results['total_found'],
+                         total_companies=search_results.get('total_companies', 0),
                          search_time=search_results['search_time'],
                          processed_query=search_results['processed_query'],
                          search_type=search_type,

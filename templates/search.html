@@ -63,7 +63,7 @@
         <div class="search-stats mb-3">
             <small class="text-muted">
                 "{{ query }}" の検索結果{% if prefecture %} ({{ prefecture }}のみ){% endif %}: 
-                <strong>{{ total_found }}</strong> 件見つかりました
+                <strong>{{ total_found }}</strong> 件 ({{ total_companies }} 社) 見つかりました
                 {% if search_time %}
                 ({{ search_time }}秒)
                 {% endif %}
@@ -76,13 +76,55 @@
         {% endif %}
 
         <!-- Search Results -->
-        {% if results %}
+        {% if grouped_results %}
         <div class="search-results" id="searchResults">
-            <!-- Results will be populated by JavaScript for company grouping -->
+            {% for company in grouped_results %}
+            <div class="result-item mb-4 p-3 border rounded bg-white">
+                <div class="company-header">
+                    <h5 class="company-title">{{ company.company_name }}</h5>
+                    <div class="company-details">
+                        {% if company.prefecture %}{{ company.prefecture }}{% endif %}
+                        {% if company.company_tel %} • {{ company.company_tel }}{% endif %}
+                        {% if company.company_industry %} • {{ company.company_industry }}{% endif %}
+                    </div>
+                </div>
+                
+                <div class="company-urls">
+                    {% for url in company.urls %}
+                    <div class="url-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                {% if url.url %}
+                                <div class="url-title">
+                                    <a href="{{ url.url }}" target="_blank">
+                                        {{ url.url_name }}
+                                    </a>
+                                </div>
+                                {% else %}
+                                <div class="url-title">{{ url.url_name }}</div>
+                                {% endif %}
+                                {% if url.content %}
+                                <div class="url-content">{{ url.content }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            {% if url.matched_terms %}
+                            <div class="matched-terms-sidebar">
+                                {% for term in url.matched_terms %}
+                                <span class="badge bg-primary">{{ term }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
         </div>
         
         <!-- JavaScript Pagination Controls -->
-        {% if results %}
+        {% if grouped_results %}
         <nav id="pagination" class="mt-4" style="display: none;">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <small class="text-muted" id="pagination-info">
@@ -117,7 +159,7 @@
                     インデックス済み文書数: {{ stats.total_documents }} 件
                 </small>
                 <div class="d-flex gap-2">
-                    {% if results %}
+                    {% if grouped_results %}
                     <button id="downloadBtn" class="btn btn-sm btn-outline-secondary">
                         📥 CSV Download
                     </button>
@@ -133,109 +175,20 @@
 </div>
 
 <script>
-// JavaScript Pagination
-let allResults = []; 
+// JavaScript Pagination - Simplified without grouping logic
 let currentPage = 1;
 const itemsPerPage = 10;
 
-{% if results %}
-// Load all results from backend
-allResults = {{ results | tojson }};
-
-// Initialize pagination on page load
+{% if grouped_results %}
+// Initialize pagination on page load for pre-grouped results
 document.addEventListener('DOMContentLoaded', function() {
-    groupAndDisplayResults();
-    // Check if we need pagination based on company count after grouping
-    setTimeout(() => {
-        const totalCompanies = document.querySelectorAll('.result-item').length;
-        if (totalCompanies > itemsPerPage) {
-            document.getElementById('pagination').style.display = 'block';
-        }
-        showPage(1);
-    }, 100);
+    // Check if we need pagination based on company count
+    const totalCompanies = document.querySelectorAll('.result-item').length;
+    if (totalCompanies > itemsPerPage) {
+        document.getElementById('pagination').style.display = 'block';
+    }
+    showPage(1);
 });
-
-// Group results by company and display them
-function groupAndDisplayResults() {
-    const searchResultsContainer = document.getElementById('searchResults');
-    if (!searchResultsContainer || !allResults.length) return;
-    
-    // Group results by company name
-    const companyGroups = {};
-    
-    allResults.forEach(result => {
-        const companyNumber = result.company_number || result.id || 'unknown';
-        const companyName = result.company_name || result.title || 'Unknown Company';
-        if (!companyGroups[companyNumber]) {
-            companyGroups[companyNumber] = {
-                company_name: companyName,
-                company_number: companyNumber,
-                company_tel: result.company_tel || '',
-                company_industry: result.company_industry || '',
-                prefecture: result.prefecture || '',
-                urls: []
-            };
-        }
-        
-        companyGroups[companyNumber].urls.push({
-            url: result.url || '',
-            url_name: result.url_name || result.title || '',
-            content: result.content || result.introduction || '',
-            matched_terms: result.matched_terms || [],
-            score: result.score || 0,
-            id: result.id || ''
-        });
-    });
-    
-    // Generate HTML for grouped results
-    let html = '';
-    Object.values(companyGroups).forEach(company => {
-        html += `
-            <div class="result-item mb-4 p-3 border rounded bg-white">
-                <div class="company-header">
-                    <h5 class="company-title">${company.company_name}</h5>
-                    <div class="company-details">
-                        ${company.prefecture ? `${company.prefecture}` : ''}
-                        ${company.company_tel ? ` • ${company.company_tel}` : ''}
-                        ${company.company_industry ? ` • ${company.company_industry}` : ''}
-                    </div>
-                </div>
-                
-                <div class="company-urls">`;
-        
-        company.urls.forEach(url => {
-            html += `
-                    <div class="url-item">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="flex-grow-1">
-                                ${url.url ? `
-                                <div class="url-title">
-                                    <a href="${url.url}" target="_blank">
-                                        ${url.url_name}
-                                    </a>
-                                </div>
-                                ` : `<div class="url-title">${url.url_name}</div>`}
-                                ${url.content ? `<div class="url-content">${url.content}</div>` : ''}
-                            </div>
-                            
-                            ${url.matched_terms && url.matched_terms.length > 0 ? `
-                            <div class="matched-terms-sidebar">
-                                ${url.matched_terms.map(term => 
-                                    `<span class="badge bg-primary">${term}</span>`
-                                ).join('')}
-                            </div>
-                            ` : ''}
-                        </div>
-                    </div>`;
-        });
-        
-        html += `
-                </div>
-            </div>`;
-    });
-    
-    searchResultsContainer.innerHTML = html;
-}
 
 function showPage(page) {
     currentPage = page;

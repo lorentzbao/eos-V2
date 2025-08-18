@@ -34,6 +34,7 @@ class SearchService:
         if not query.strip():
             return {
                 'results': [],
+                'grouped_results': [],
                 'total_found': 0,
                 'query': query,
                 'processed_query': '',
@@ -46,11 +47,17 @@ class SearchService:
         # Use cached search
         try:
             results, processed_query = self._cached_search(query, limit, search_type, prefecture, sort_by)
+            
+            # Group results by company on the Python side
+            grouped_results = self._group_by_company(results)
+            
             search_time = time.time() - start_time
             
             return {
-                'results': results,
+                'results': results,  # Keep original for backward compatibility
+                'grouped_results': grouped_results,  # New grouped structure
                 'total_found': len(results),
+                'total_companies': len(grouped_results),
                 'query': query,
                 'processed_query': processed_query,
                 'search_time': round(search_time, 3)
@@ -59,12 +66,54 @@ class SearchService:
         except Exception as e:
             return {
                 'results': [],
+                'grouped_results': [],
                 'total_found': 0,
+                'total_companies': 0,
                 'query': query,
                 'processed_query': '',
                 'search_time': 0,
                 'error': str(e)
             }
+    
+    def _group_by_company(self, results: List[Dict]) -> List[Dict]:
+        """
+        Group search results by company_number for better performance
+        Returns a list of company objects with nested URLs
+        """
+        if not results:
+            return []
+        
+        company_groups = {}
+        
+        for result in results:
+            company_number = result.get('company_number') or result.get('id', 'unknown')
+            company_name = result.get('company_name') or result.get('title', 'Unknown Company')
+            
+            if company_number not in company_groups:
+                company_groups[company_number] = {
+                    'company_name': company_name,
+                    'company_number': company_number,
+                    'company_tel': result.get('company_tel', ''),
+                    'company_industry': result.get('company_industry', ''),
+                    'prefecture': result.get('prefecture', ''),
+                    'urls': []
+                }
+            
+            # Add URL data to the company group
+            company_groups[company_number]['urls'].append({
+                'url': result.get('url', ''),
+                'url_name': result.get('url_name') or result.get('title', ''),
+                'content': result.get('content') or result.get('introduction', ''),
+                'matched_terms': result.get('matched_terms', []),
+                'score': result.get('score', 0),
+                'id': result.get('id', '')
+            })
+        
+        # Convert to list and sort by company_number for consistent ordering
+        grouped_companies = list(company_groups.values())
+        grouped_companies.sort(key=lambda x: x['company_number'])
+        
+        return grouped_companies
     
     def add_document(self, doc_id: str, title: str, content: str, introduction: str, url: str = "", prefecture: str = ""):
         result = self.search_engine.add_document(doc_id, title, content, introduction, url, prefecture)
