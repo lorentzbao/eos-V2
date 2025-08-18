@@ -18,6 +18,14 @@ uv run python run.py
 
 Simple username-based sessions. All search endpoints require login.
 
+## 🔤 Japanese Text Normalization
+
+**Important:** The backend automatically normalizes Japanese text queries:
+- Full-width spaces (　) → Half-width spaces ( )
+- Queries like "研究　開発" and "研究 開発" are treated identically
+- This ensures consistent search history and ranking tracking
+- Normalization applies to search queries, history, and CSV exports
+
 ```http
 # Login
 POST /login
@@ -72,35 +80,85 @@ GET /search?q=AI開発&prefecture=tokyo
 
 **Sample Output Structure:**
 ```javascript
-// Template receives this data
+// Template receives company-grouped data
 {
   query: "Python",
   search_type: "auto", 
   prefecture: "tokyo",
   limit: 10,
-  results: [
+  grouped_results: [
     {
-      id: "company_020",
-      title: "秋葉原IoT研究所",
-      content: "秋葉原のIoT研究所。エッジAI・5G・産業用IoTデバイス開発。Python/C++でのファームウェア開発...",
-      url: "https://akihabara-iot.lab",
-      score: 1.95,
-      matched_terms: ["python"]
-    },
-    {
-      id: "company_005", 
-      title: "Tokyo AI Solutions",
-      content: "AI・機械学習コンサルティング。Python/TensorFlow専門チーム...",
-      url: "https://tokyo-ai-solutions.com",
-      score: 1.87,
-      matched_terms: ["python"]
+      company_name: "株式会社東京テクノロジー",
+      company_number: "1010001000001",
+      company_tel: "03-1234-5678",
+      company_industry: "情報通信業",
+      prefecture: "tokyo",
+      urls: [
+        {
+          url: "https://tokyo-tech.co.jp",
+          url_name: "メインサイト",
+          content: "東京を拠点とするIT企業です。Python、Java、React開発チームを募集中...",
+          matched_terms: ["python"],
+          score: 1.95,
+          id: "url_001"
+        },
+        {
+          url: "https://tokyo-tech.co.jp/careers",
+          url_name: "採用情報",
+          content: "Python開発エンジニア募集。機械学習プロジェクトにも参加可能...",
+          matched_terms: ["python"],
+          score: 1.87,
+          id: "url_002"
+        }
+      ]
     }
   ],
-  total_found: 3,
+  total_found: 5,
+  total_companies: 2,
   search_time: 0.156,
   username: "john_doe"
 }
 ```
+
+---
+
+## 📥 CSV Export API
+
+**Endpoint:** `GET /api/download-csv`
+
+**Authentication:** Required (user must be logged in)
+
+**Parameters:**
+```javascript
+{
+  q: "search query",        // Required, same as search
+  type: "auto",             // Optional: "auto" (default) or "title"  
+  prefecture: "tokyo"       // Optional: prefecture filter
+}
+```
+
+**Examples:**
+```http
+GET /api/download-csv?q=Python&prefecture=tokyo
+GET /api/download-csv?q=機械学習&type=title
+```
+
+**Response:** CSV file download with UTF-8 BOM encoding
+
+**CSV Structure:**
+```csv
+Company_Number,Company_Name,Company_Tel,Company_Industry,Prefecture,URL_Name,URL,Content,Matched_Terms,ID
+1010001000001,株式会社東京テクノロジー,03-1234-5678,情報通信業,tokyo,メインサイト,https://tokyo-tech.co.jp,東京を拠点とするIT企業です...,python,url_001
+1010001000001,株式会社東京テクノロジー,03-1234-5678,情報通信業,tokyo,採用情報,https://tokyo-tech.co.jp/careers,Python開発エンジニア募集...,python,url_002
+```
+
+**Features:**
+- File-based caching for performance (repeated queries serve cached files instantly)
+- Company-focused structure (company information repeated for each URL)
+- Sorted by company_number for consistent grouping
+- Matched terms separated by `|` for multiple matches
+- Content truncated to 500 characters
+- UTF-8 BOM for Excel compatibility
 
 ---
 
@@ -409,24 +467,39 @@ The `/history` endpoint provides:
 
 ## ✨ Built-in Features
 
+### Company Grouping *(Already Implemented)*
+- Python-side intelligent grouping of multiple URLs per company
+- Clean company cards showing company info with nested URL items  
+- Optimized performance without client-side processing overhead
+- CSV exports maintain company structure with flattened URL data
+
 ### JavaScript Pagination *(Already Implemented)*
-- Results automatically paginated at 10 items per page
+- Company cards paginated at 10 companies per page (not individual URLs)
 - No server requests needed for page navigation
 - Smart pagination with numbered buttons + ellipsis
+- Cached pagination calculations for better performance
 
 ### Japanese Search *(Already Implemented)*  
 - Proper Japanese tokenization with Janome
+- Full-width/half-width space normalization (研究　開発 = 研究 開発)
 - OR-based search (multiple keywords expand results)
-- Prefecture metadata filtering
+- Prefecture metadata filtering with company-aware results
 
 ### Search History *(Already Implemented)*
 - Efficient reverse file reading (scales to GB+ logs)
-- User-specific search tracking
+- User-specific search tracking with normalized queries
+- Consistent history (full-width and half-width spaces treated identically)
 - Scalable pagination (8 recent, up to 100 total)
 
+### CSV Export *(Already Implemented)*  
+- Authenticated download endpoint with file-based caching
+- Company-focused structure with repeated company info per URL
+- UTF-8 BOM encoding for Excel compatibility
+- Sorted by company_number for consistent grouping
+
 ### Search Rankings & Suggestions *(Already Implemented)*
-- Real-time keyword popularity tracking
-- In-memory rankings with startup initialization
+- Real-time keyword popularity tracking with text normalization
+- In-memory rankings with startup initialization from existing logs
 - Google-style auto-suggestions with keyboard navigation
 - Rankings page with medal badges and progress bars
 - Zero-latency suggestions (data embedded in templates)
@@ -438,13 +511,14 @@ The `/history` endpoint provides:
 1. **Style the existing templates** in `/templates/`
 2. **Customize CSS** in `/static/css/style.css`  
 3. **Add JavaScript features** if needed
-4. **Test with sample data** (25+ companies included)
+4. **Test with sample data** (100+ URL records across 47 companies included)
 
 ### Sample Searches to Try:
-- `Python` - Python development companies
-- `AI` - Artificial intelligence companies  
+- `Python` - Python development companies (shows company grouping)
+- `AI` or `人工知能` - Artificial intelligence companies  
 - `フィンテック` - Fintech companies
 - `ゲーム` - Gaming companies
+- `研究　開発` or `研究 開発` - R&D companies (demonstrates text normalization)
 
 ---
 
@@ -460,4 +534,4 @@ uv run python load_sample_data.py
 # Access at http://127.0.0.1:5000
 ```
 
-**That's it!** The backend handles authentication, search, pagination, and history. You just need to style the frontend.
+**That's it!** The backend handles authentication, search with company grouping, CSV exports, Japanese text normalization, pagination, and history. You just need to style the frontend.
