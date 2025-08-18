@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+from typing import List, Dict
 from functools import lru_cache
 from .whoosh_simple import WhooshSimpleJapanese
 from .query_processor import QueryProcessor
@@ -33,9 +33,9 @@ class SearchService:
     def search(self, query: str, limit: int = 10, search_type: str = "auto", prefecture: str = "", sort_by: str = "") -> Dict:
         if not query.strip():
             return {
-                'results': [],
                 'grouped_results': [],
                 'total_found': 0,
+                'total_companies': 0,
                 'query': query,
                 'processed_query': '',
                 'search_time': 0
@@ -54,8 +54,7 @@ class SearchService:
             search_time = time.time() - start_time
             
             return {
-                'results': results,  # Keep original for backward compatibility
-                'grouped_results': grouped_results,  # New grouped structure
+                'grouped_results': grouped_results,
                 'total_found': len(results),
                 'total_companies': len(grouped_results),
                 'query': query,
@@ -65,7 +64,6 @@ class SearchService:
         
         except Exception as e:
             return {
-                'results': [],
                 'grouped_results': [],
                 'total_found': 0,
                 'total_companies': 0,

@@ -1,11 +1,10 @@
-from flask import Blueprint, request, jsonify, Response, session, send_file
+from flask import Blueprint, request, jsonify, session, send_file
 from app.services.search_service import SearchService
 import csv
 import io
 import os
 import hashlib
 from datetime import datetime
-import urllib.parse
 
 api = Blueprint('api', __name__, url_prefix='/api')
 search_service = SearchService()
@@ -36,7 +35,9 @@ def api_add_document():
             data['id'], 
             data['title'], 
             data['content'], 
-            data.get('url', '')
+            data.get('content', ''),  # Use content as introduction since no separate field
+            data.get('url', ''),
+            data.get('prefecture', '')
         )
         if success:
             return jsonify({'success': True, 'message': 'Document added successfully'})
@@ -158,25 +159,26 @@ def download_csv():
             
             # Single search to get all results - most efficient approach with company_number sorting
             search_results = search_service.search(query, limit=10000, search_type=search_type, prefecture=prefecture, sort_by="company_number")
-            results = search_results.get('results', [])
+            grouped_results = search_results.get('grouped_results', [])
             
-            # Write all results
-            for result in results:
-                # Format result data with company-focused structure
-                result_data = {
-                    'Company_Number': result.get('company_number', ''),
-                    'Company_Name': result.get('company_name', ''),
-                    'Company_Tel': result.get('company_tel', ''),
-                    'Company_Industry': result.get('company_industry', ''),
-                    'Prefecture': result.get('prefecture', ''),
-                    'URL_Name': result.get('url_name', ''),
-                    'URL': result.get('url', ''),
-                    'Content': result.get('content', '')[:500],  # Limit content length
-                    'Matched_Terms': '|'.join(result.get('matched_terms', [])),
-                    'ID': result.get('id', '')
-                }
-                
-                writer.writerow(result_data)
+            # Write all results by flattening grouped results
+            for company in grouped_results:
+                for url in company.get('urls', []):
+                    # Format result data with company-focused structure
+                    result_data = {
+                        'Company_Number': company.get('company_number', ''),
+                        'Company_Name': company.get('company_name', ''),
+                        'Company_Tel': company.get('company_tel', ''),
+                        'Company_Industry': company.get('company_industry', ''),
+                        'Prefecture': company.get('prefecture', ''),
+                        'URL_Name': url.get('url_name', ''),
+                        'URL': url.get('url', ''),
+                        'Content': url.get('content', '')[:500],  # Limit content length
+                        'Matched_Terms': '|'.join(url.get('matched_terms', [])),
+                        'ID': url.get('id', '')
+                    }
+                    
+                    writer.writerow(result_data)
             
             # Get CSV content
             csv_content = output.getvalue()

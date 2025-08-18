@@ -9,6 +9,8 @@ class QueryProcessor:
     
     def normalize_query(self, query: str) -> str:
         query = query.strip()
+        # Convert full-width space to half-width space
+        query = query.replace('　', ' ')
         query = re.sub(r'\s+', ' ', query)
         return query
     

@@ -243,13 +243,7 @@ class WhooshSimpleJapanese:
                     from whoosh.query import Term
                     filter_query = Term("prefecture", prefecture.lower())
                 
-                # Add sorting if specified
-                sort_facet = None
-                if sort_by == "company_number":
-                    from whoosh.sorting import FieldFacet
-                    sort_facet = FieldFacet("company_number")
-                
-                results = searcher.search(query, limit=limit, terms=True, filter=filter_query, sortedby=sort_facet)
+                results = searcher.search(query, limit=limit, terms=True, filter=filter_query)
                 
                 search_results = []
                 for result in results:

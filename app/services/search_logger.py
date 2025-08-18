@@ -5,12 +5,14 @@ from typing import List, Dict
 import glob
 import threading
 from collections import defaultdict
+from .query_processor import QueryProcessor
 
 class SearchLogger:
     """Log and track user search queries using per-user log files"""
     
     def __init__(self, log_dir="data/search_logs"):
         self.log_dir = log_dir
+        self.query_processor = QueryProcessor()
         self._ensure_log_directory()
         
         # In-memory ranking tracker
@@ -44,9 +46,11 @@ class SearchLogger:
                         for line in f:
                             try:
                                 entry = json.loads(line.strip())
-                                query = entry.get('query', '').strip().lower()
-                                if query:
-                                    self._query_counts[query] += 1
+                                query = entry.get('query', '')
+                                # Normalize query for consistent ranking
+                                normalized_query = self.query_processor.normalize_query(query).lower()
+                                if normalized_query:
+                                    self._query_counts[normalized_query] += 1
                                     total_queries_loaded += 1
                             except json.JSONDecodeError:
                                 continue
@@ -61,9 +65,12 @@ class SearchLogger:
     def log_search(self, username: str, query: str, search_type: str = "auto", 
                    results_count: int = 0, search_time: float = 0.0, prefecture: str = ""):
         """Log a search query by user with detailed information"""
+        # Normalize query for consistent tracking
+        normalized_query = self.query_processor.normalize_query(query)
+        
         log_entry = {
             "timestamp": datetime.datetime.now().isoformat(),
-            "query": query,
+            "query": normalized_query,
             "search_type": search_type,
             "results_count": results_count,
             "search_time": round(search_time, 3)
@@ -80,7 +87,7 @@ class SearchLogger:
                 f.write(json.dumps(log_entry, ensure_ascii=False) + '\n')
                 
             # Update in-memory rankings in real-time
-            query_key = query.strip().lower()
+            query_key = normalized_query.strip().lower()
             if query_key:
                 with self._rankings_lock:
                     self._query_counts[query_key] += 1
