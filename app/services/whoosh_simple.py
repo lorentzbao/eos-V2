@@ -143,8 +143,8 @@ class WhooshSimpleJapanese:
                 pass
             return False
     
-    def search(self, query_string: str, limit: int = 10, prefecture: str = "") -> List[Dict]:
-        """Search in title and content with highlighting support and prefecture filtering"""
+    def search(self, query_string: str, limit: int = 10, prefecture: str = "", sort_by: str = "") -> List[Dict]:
+        """Search in title and content with highlighting support, prefecture filtering, and sorting"""
         if not query_string.strip():
             return []
         
@@ -172,7 +172,13 @@ class WhooshSimpleJapanese:
                     from whoosh.query import Term
                     filter_query = Term("prefecture", prefecture.lower())
                 
-                results = searcher.search(query, limit=limit, terms=True, filter=filter_query)
+                # Add sorting if specified
+                sort_facet = None
+                if sort_by == "company_number":
+                    from whoosh.sorting import FieldFacet
+                    sort_facet = FieldFacet("company_number")
+                
+                results = searcher.search(query, limit=limit, terms=True, filter=filter_query, sortedby=sort_facet)
                 
                 search_results = []
                 for result in results:
@@ -237,7 +243,13 @@ class WhooshSimpleJapanese:
                     from whoosh.query import Term
                     filter_query = Term("prefecture", prefecture.lower())
                 
-                results = searcher.search(query, limit=limit, terms=True, filter=filter_query)
+                # Add sorting if specified
+                sort_facet = None
+                if sort_by == "company_number":
+                    from whoosh.sorting import FieldFacet
+                    sort_facet = FieldFacet("company_number")
+                
+                results = searcher.search(query, limit=limit, terms=True, filter=filter_query, sortedby=sort_facet)
                 
                 search_results = []
                 for result in results:

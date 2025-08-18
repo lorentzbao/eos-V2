@@ -9,7 +9,7 @@ class SearchService:
         self.query_processor = QueryProcessor()
     
     @lru_cache(maxsize=128)
-    def _cached_search(self, query: str, limit: int, search_type: str, prefecture: str) -> tuple:
+    def _cached_search(self, query: str, limit: int, search_type: str, prefecture: str, sort_by: str = "") -> tuple:
         """
         Cached search implementation using LRU cache.
         Returns tuple to make it hashable and cacheable.
@@ -24,13 +24,13 @@ class SearchService:
             if search_type == "title" or processed['search_type'] == 'title':
                 results = self.search_engine.search_in_title(query, limit, prefecture)
             else:
-                results = self.search_engine.search(query, limit, prefecture)
+                results = self.search_engine.search(query, limit, prefecture, sort_by)
             
             return (results, processed_query)
         except Exception:
             return ([], processed_query)
     
-    def search(self, query: str, limit: int = 10, search_type: str = "auto", prefecture: str = "") -> Dict:
+    def search(self, query: str, limit: int = 10, search_type: str = "auto", prefecture: str = "", sort_by: str = "") -> Dict:
         if not query.strip():
             return {
                 'results': [],
@@ -45,7 +45,7 @@ class SearchService:
         
         # Use cached search
         try:
-            results, processed_query = self._cached_search(query, limit, search_type, prefecture)
+            results, processed_query = self._cached_search(query, limit, search_type, prefecture, sort_by)
             search_time = time.time() - start_time
             
             return {

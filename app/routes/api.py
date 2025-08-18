@@ -149,28 +149,31 @@ def download_csv():
             # Use Python's CSV writer for proper encoding
             output = io.StringIO()
             
-            # Create CSV writer
-            fieldnames = ['ID', 'Title', 'Content', 'URL', 'Score', 'Prefecture', 'Matched_Terms']
+            # Create CSV writer with company-focused field order
+            fieldnames = ['Company_Number', 'Company_Name', 'Company_Tel', 'Company_Industry', 'Prefecture', 'URL_Name', 'URL', 'Content', 'Matched_Terms', 'ID']
             writer = csv.DictWriter(output, fieldnames=fieldnames)
             
             # Write header
             writer.writeheader()
             
-            # Single search to get all results - most efficient approach
-            search_results = search_service.search(query, limit=10000, search_type=search_type, prefecture=prefecture)
+            # Single search to get all results - most efficient approach with company_number sorting
+            search_results = search_service.search(query, limit=10000, search_type=search_type, prefecture=prefecture, sort_by="company_number")
             results = search_results.get('results', [])
             
             # Write all results
             for result in results:
-                # Format result data
+                # Format result data with company-focused structure
                 result_data = {
-                    'ID': result.get('id', ''),
-                    'Title': result.get('title', ''),
-                    'Content': result.get('content', '')[:500],  # Limit content length
+                    'Company_Number': result.get('company_number', ''),
+                    'Company_Name': result.get('company_name', ''),
+                    'Company_Tel': result.get('company_tel', ''),
+                    'Company_Industry': result.get('company_industry', ''),
+                    'Prefecture': result.get('prefecture', ''),
+                    'URL_Name': result.get('url_name', ''),
                     'URL': result.get('url', ''),
-                    'Score': round(result.get('score', 0), 3),
-                    'Prefecture': prefecture if prefecture else 'all',
-                    'Matched_Terms': '|'.join(result.get('matched_terms', []))
+                    'Content': result.get('content', '')[:500],  # Limit content length
+                    'Matched_Terms': '|'.join(result.get('matched_terms', [])),
+                    'ID': result.get('id', '')
                 }
                 
                 writer.writerow(result_data)
