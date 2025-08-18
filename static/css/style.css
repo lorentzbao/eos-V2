@@ -476,81 +476,113 @@ main.container {
     border-color: rgba(40, 167, 69, 0.3);
 }
 
-/* Company Grouping Styles */
+/* Company Grouping Styles - Clear Hierarchy */
+.company-header {
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+    background: #fafafa;
+    padding: 1rem;
+    margin: -1rem -1rem 1rem -1rem;
+    border-radius: 8px 8px 0 0;
+}
+
 .company-title {
-    font-weight: 600;
-    color: var(--brand-primary);
+    font-weight: 700;
+    color: #222;
     margin-bottom: 0.5rem;
-    font-size: 1.25rem;
+    font-size: 1.15rem;
 }
 
 .company-details {
-    min-width: 200px;
-    text-align: right;
+    font-size: 0.85rem;
+    color: #777;
+    font-weight: 500;
 }
 
 .company-urls {
-    margin-top: 1rem;
-    padding-left: 1rem;
-    border-left: 2px solid var(--brand-light);
+    margin-top: 0.5rem;
 }
 
 .url-item {
-    background: rgba(0, 24, 113, 0.02);
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 0.75rem;
-    border-left: 3px solid var(--brand-primary) !important;
-    transition: var(--transition);
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f5f5f5;
+    margin-left: 1rem;
+    position: relative;
 }
 
-.url-item:hover {
-    background: rgba(0, 24, 113, 0.04);
-    box-shadow: var(--shadow-light);
+.url-item:before {
+    content: "•";
+    position: absolute;
+    left: -1rem;
+    color: #ccc;
+    font-weight: bold;
 }
 
 .url-item:last-child {
-    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
 }
 
 .url-title {
     font-weight: 500;
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
-    color: var(--brand-primary);
+    font-size: 0.95rem;
+    margin-bottom: 0.4rem;
 }
 
 .url-title a {
     color: var(--brand-primary);
-    transition: var(--transition);
     text-decoration: none;
+    transition: color 0.2s;
 }
 
 .url-title a:hover {
     color: var(--brand-secondary);
-    text-decoration: underline !important;
+    text-decoration: underline;
 }
 
 .url-content {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     line-height: 1.4;
+    color: #666;
     margin-bottom: 0.5rem;
-    color: #6c757d;
+}
+
+.matched-terms-sidebar {
+    background: none;
+    padding: 0;
+    min-width: auto;
+}
+
+.matched-terms-sidebar .badge {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    margin-right: 6px;
+    margin-bottom: 6px;
 }
 
 /* Mobile responsive for company grouping */
 @media (max-width: 768px) {
-    .company-details {
-        text-align: left;
-        min-width: auto;
-        margin-top: 0.5rem;
+    .company-header {
+        margin: -1rem -0.5rem 1rem -0.5rem;
+        padding: 0.75rem;
     }
     
-    .company-urls {
-        padding-left: 0.5rem;
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 0.75rem;
     }
     
     .url-item {
-        padding: 0.75rem;
+        padding: 0.75rem 0;
+        margin-left: 0.75rem;
+    }
+    
+    .url-item:before {
+        left: -0.75rem;
+    }
+    
+    .matched-terms-sidebar {
+        margin-top: 0.5rem;
     }
 }

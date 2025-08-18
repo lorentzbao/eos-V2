@@ -191,43 +191,37 @@ function groupAndDisplayResults() {
     let html = '';
     Object.values(companyGroups).forEach(company => {
         html += `
-            <div class="result-item mb-4 p-3 border rounded">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="flex-grow-1">
-                        <h5 class="company-title mb-2">${company.company_name}</h5>
-                        ${company.prefecture ? `<small class="text-muted">📍 ${company.prefecture}</small>` : ''}
-                    </div>
-                    <div class="company-details text-end">
-                        ${company.company_tel ? `<small class="text-muted d-block">📞 ${company.company_tel}</small>` : ''}
-                        ${company.company_industry ? `<small class="text-muted d-block">🏢 ${company.company_industry}</small>` : ''}
+            <div class="result-item mb-4 p-3 border rounded bg-white">
+                <div class="company-header">
+                    <h5 class="company-title">${company.company_name}</h5>
+                    <div class="company-details">
+                        ${company.prefecture ? `${company.prefecture}` : ''}
+                        ${company.company_tel ? ` • ${company.company_tel}` : ''}
+                        ${company.company_industry ? ` • ${company.company_industry}` : ''}
                     </div>
                 </div>
                 
-                <!-- URLs for this company -->
                 <div class="company-urls">`;
         
         company.urls.forEach(url => {
             html += `
-                    <div class="url-item border-start border-3 border-primary ps-3 mb-3">
+                    <div class="url-item">
                         <div class="d-flex justify-content-between align-items-start">
-                            <div class="flex-grow-1 me-3">
+                            <div class="flex-grow-1">
                                 ${url.url ? `
-                                <h6 class="url-title mb-1">
-                                    <a href="${url.url}" target="_blank" class="text-decoration-none">
+                                <div class="url-title">
+                                    <a href="${url.url}" target="_blank">
                                         ${url.url_name}
                                     </a>
-                                </h6>
-                                <small class="text-success d-block mb-2">${url.url}</small>
-                                ` : `<h6 class="url-title mb-1">${url.url_name}</h6>`}
-                                ${url.content ? `<p class="url-content text-muted mb-1 small">${url.content}</p>` : ''}
+                                </div>
+                                ` : `<div class="url-title">${url.url_name}</div>`}
+                                ${url.content ? `<div class="url-content">${url.content}</div>` : ''}
                             </div>
                             
-                            <!-- Matched Terms for this URL -->
                             ${url.matched_terms && url.matched_terms.length > 0 ? `
                             <div class="matched-terms-sidebar">
-                                <small class="text-muted d-block mb-1">マッチした語句:</small>
                                 ${url.matched_terms.map(term => 
-                                    `<span class="badge bg-primary me-1 mb-1">${term}</span>`
+                                    `<span class="badge bg-primary">${term}</span>`
                                 ).join('')}
                             </div>
                             ` : ''}
