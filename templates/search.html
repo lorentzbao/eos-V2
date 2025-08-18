@@ -77,40 +77,8 @@
 
         <!-- Search Results -->
         {% if results %}
-        <div class="search-results">
-            {% for result in results %}
-            <div class="result-item mb-4 p-3 border rounded">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1 me-3">
-                        <h5 class="result-title">
-                            {% if result.url %}
-                            <a href="{{ result.url }}" target="_blank" class="text-decoration-none">
-                                {{ result.title }}
-                            </a>
-                            {% else %}
-                            {{ result.title }}
-                            {% endif %}
-                            <small class="text-muted">(スコア: {{ "%.3f"|format(result.score) }})</small>
-                        </h5>
-                        <p class="result-content text-muted mb-2">{{ result.content }}</p>
-                        {% if result.url %}
-                        <small class="text-success">{{ result.url }}</small>
-                        {% endif %}
-                        <small class="text-muted d-block">ID: {{ result.id }}</small>
-                    </div>
-                    
-                    <!-- Matched Terms Badges on the right -->
-                    {% if result.matched_terms %}
-                    <div class="matched-terms-sidebar">
-                        <small class="text-muted d-block mb-1">マッチした語句:</small>
-                        {% for term in result.matched_terms %}
-                        <span class="badge bg-primary me-1 mb-1">{{ term }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
+        <div class="search-results" id="searchResults">
+            <!-- Results will be populated by JavaScript for company grouping -->
         </div>
         
         <!-- JavaScript Pagination Controls -->
@@ -176,18 +144,111 @@ allResults = {{ results | tojson }};
 
 // Initialize pagination on page load
 document.addEventListener('DOMContentLoaded', function() {
-    if (allResults.length > itemsPerPage) {
-        document.getElementById('pagination').style.display = 'block';
-    }
-    showPage(1);
+    groupAndDisplayResults();
+    // Check if we need pagination based on company count after grouping
+    setTimeout(() => {
+        const totalCompanies = document.querySelectorAll('.result-item').length;
+        if (totalCompanies > itemsPerPage) {
+            document.getElementById('pagination').style.display = 'block';
+        }
+        showPage(1);
+    }, 100);
 });
+
+// Group results by company and display them
+function groupAndDisplayResults() {
+    const searchResultsContainer = document.getElementById('searchResults');
+    if (!searchResultsContainer || !allResults.length) return;
+    
+    // Group results by company name
+    const companyGroups = {};
+    
+    allResults.forEach(result => {
+        const companyNumber = result.company_number || result.id || 'unknown';
+        const companyName = result.company_name || result.title || 'Unknown Company';
+        if (!companyGroups[companyNumber]) {
+            companyGroups[companyNumber] = {
+                company_name: companyName,
+                company_number: companyNumber,
+                company_tel: result.company_tel || '',
+                company_industry: result.company_industry || '',
+                prefecture: result.prefecture || '',
+                urls: []
+            };
+        }
+        
+        companyGroups[companyNumber].urls.push({
+            url: result.url || '',
+            url_name: result.url_name || result.title || '',
+            content: result.content || result.introduction || '',
+            matched_terms: result.matched_terms || [],
+            score: result.score || 0,
+            id: result.id || ''
+        });
+    });
+    
+    // Generate HTML for grouped results
+    let html = '';
+    Object.values(companyGroups).forEach(company => {
+        html += `
+            <div class="result-item mb-4 p-3 border rounded">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="flex-grow-1">
+                        <h5 class="company-title mb-2">${company.company_name}</h5>
+                        ${company.prefecture ? `<small class="text-muted">📍 ${company.prefecture}</small>` : ''}
+                    </div>
+                    <div class="company-details text-end">
+                        ${company.company_tel ? `<small class="text-muted d-block">📞 ${company.company_tel}</small>` : ''}
+                        ${company.company_industry ? `<small class="text-muted d-block">🏢 ${company.company_industry}</small>` : ''}
+                    </div>
+                </div>
+                
+                <!-- URLs for this company -->
+                <div class="company-urls">`;
+        
+        company.urls.forEach(url => {
+            html += `
+                    <div class="url-item border-start border-3 border-primary ps-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1 me-3">
+                                ${url.url ? `
+                                <h6 class="url-title mb-1">
+                                    <a href="${url.url}" target="_blank" class="text-decoration-none">
+                                        ${url.url_name}
+                                    </a>
+                                </h6>
+                                <small class="text-success d-block mb-2">${url.url}</small>
+                                ` : `<h6 class="url-title mb-1">${url.url_name}</h6>`}
+                                ${url.content ? `<p class="url-content text-muted mb-1 small">${url.content}</p>` : ''}
+                            </div>
+                            
+                            <!-- Matched Terms for this URL -->
+                            ${url.matched_terms && url.matched_terms.length > 0 ? `
+                            <div class="matched-terms-sidebar">
+                                <small class="text-muted d-block mb-1">マッチした語句:</small>
+                                ${url.matched_terms.map(term => 
+                                    `<span class="badge bg-primary me-1 mb-1">${term}</span>`
+                                ).join('')}
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>`;
+        });
+        
+        html += `
+                </div>
+            </div>`;
+    });
+    
+    searchResultsContainer.innerHTML = html;
+}
 
 function showPage(page) {
     currentPage = page;
     const startIndex = (page - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     
-    // Hide all result items
+    // Hide all result items (now company cards)
     const resultItems = document.querySelectorAll('.result-item');
     resultItems.forEach((item, index) => {
         if (index >= startIndex && index < endIndex) {
@@ -197,14 +258,14 @@ function showPage(page) {
         }
     });
     
-    // Update pagination info
-    const totalResults = allResults.length;
-    const totalPages = Math.ceil(totalResults / itemsPerPage);
+    // Update pagination info - count companies, not individual URLs
+    const totalCompanies = document.querySelectorAll('.result-item').length;
+    const totalPages = Math.ceil(totalCompanies / itemsPerPage);
     const showingStart = startIndex + 1;
-    const showingEnd = Math.min(endIndex, totalResults);
+    const showingEnd = Math.min(endIndex, totalCompanies);
     
     document.getElementById('pagination-info').textContent = 
-        `${showingStart}-${showingEnd} / ${totalResults} 件を表示 (ページ ${page} / ${totalPages})`;
+        `${showingStart}-${showingEnd} / ${totalCompanies} 社を表示 (ページ ${page} / ${totalPages})`;
     
     // Generate pagination buttons
     generatePaginationButtons(page, totalPages);
@@ -270,7 +331,8 @@ function generatePaginationButtons(currentPage, totalPages) {
 }
 
 function changePage(direction) {
-    const totalPages = Math.ceil(allResults.length / itemsPerPage);
+    const totalCompanies = document.querySelectorAll('.result-item').length;
+    const totalPages = Math.ceil(totalCompanies / itemsPerPage);
     let newPage = currentPage + direction;
     
     if (newPage >= 1 && newPage <= totalPages) {

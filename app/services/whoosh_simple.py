@@ -26,7 +26,13 @@ class WhooshSimpleJapanese:
             url=fields.TEXT(stored=True),
             title_tokens=fields.TEXT(),  # Pre-processed title
             content_tokens=fields.TEXT(),  # Pre-processed content (searchable only)
-            prefecture=fields.KEYWORD(stored=True, lowercase=True)  # Prefecture filter
+            prefecture=fields.KEYWORD(stored=True, lowercase=True),  # Prefecture filter
+            # Company grouping fields
+            company_name=fields.TEXT(stored=True),
+            company_number=fields.KEYWORD(stored=True),
+            company_tel=fields.TEXT(stored=True),
+            company_industry=fields.TEXT(stored=True),
+            url_name=fields.TEXT(stored=True)
         )
         
         self.ix = None
@@ -117,7 +123,13 @@ class WhooshSimpleJapanese:
                     url=doc.get('url', ''),
                     title_tokens=title_tokens,
                     content_tokens=content_tokens,  # Content is searchable but not stored
-                    prefecture=doc.get('prefecture', '').lower() if doc.get('prefecture') else ""
+                    prefecture=doc.get('prefecture', '').lower() if doc.get('prefecture') else "",
+                    # Company grouping fields
+                    company_name=doc.get('company_name', ''),
+                    company_number=doc.get('company_number', ''),
+                    company_tel=doc.get('company_tel', ''),
+                    company_industry=doc.get('company_industry', ''),
+                    url_name=doc.get('url_name', '')
                 )
             
             writer.commit()
@@ -182,7 +194,14 @@ class WhooshSimpleJapanese:
                         'content': result['introduction'],  # Show introduction instead of content
                         'url': result['url'],
                         'score': float(result.score) if result.score else 0.0,
-                        'matched_terms': matched_terms
+                        'matched_terms': matched_terms,
+                        # Add company-specific fields for grouping
+                        'company_name': result.get('company_name', ''),
+                        'company_number': result.get('company_number', ''),
+                        'company_tel': result.get('company_tel', ''),
+                        'company_industry': result.get('company_industry', ''),
+                        'url_name': result.get('url_name', ''),
+                        'prefecture': result.get('prefecture', '')
                     })
                 
                 return search_results
@@ -240,7 +259,14 @@ class WhooshSimpleJapanese:
                         'content': result['introduction'],  # Show introduction instead of content
                         'url': result['url'],
                         'score': float(result.score) if result.score else 0.0,
-                        'matched_terms': matched_terms
+                        'matched_terms': matched_terms,
+                        # Add company-specific fields for grouping
+                        'company_name': result.get('company_name', ''),
+                        'company_number': result.get('company_number', ''),
+                        'company_tel': result.get('company_tel', ''),
+                        'company_industry': result.get('company_industry', ''),
+                        'url_name': result.get('url_name', ''),
+                        'prefecture': result.get('prefecture', '')
                     })
                 
                 return search_results
