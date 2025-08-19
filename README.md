@@ -121,25 +121,31 @@ POST /api/clear_index
 POST /api/optimize_index
 ```
 
-### 6. **Batch CSV Loading**
+### 6. **Data Import**
+```bash
+# Load sample data
+uv run python load_sample_data.py
+
+# Or via API for individual records
+POST /api/add_document     # Single record
+POST /api/add_documents    # Batch records
+```
+
+**Custom CSV Loading:**
 ```python
-# Load CSV data
+# Load your own CSV data
 import csv
 from app.services.search_service import SearchService
 
 def load_csv_data(csv_file_path):
     search_service = SearchService()
-    companies = []
-    
     with open(csv_file_path, 'r', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        companies = list(reader)
+        companies = list(csv.DictReader(f))
     
     search_service.clear_index()
     success = search_service.add_documents_batch(companies)
     print(f"Loaded {len(companies)} records: {success}")
 
-# Usage
 load_csv_data('company_data.csv')
 ```
 
@@ -227,18 +233,16 @@ uv run python load_sample_data.py
 http://127.0.0.1:5000
 ```
 
-## 📊 Custom Data Import
+## 📊 CSV Data Format
 
-### **CSV Format Specification**
-
-Required columns for company data import:
+**Required columns for custom data import:**
 
 ```csv
 id,company_number,company_name,company_tel,company_industry,prefecture,url_name,url,content,title
 url_001,1010001000001,株式会社東京テクノロジー,03-1234-5678,情報通信業,tokyo,メインサイト,https://tokyo-tech.co.jp,東京を拠点とするIT企業です...,株式会社東京テクノロジー - メインサイト
 ```
 
-### **Field Requirements**
+**Field descriptions:**
 - `id` - Unique URL identifier  
 - `company_number` - Company registration number (grouping key)
 - `company_name` - Japanese company name
@@ -250,11 +254,7 @@ url_001,1010001000001,株式会社東京テクノロジー,03-1234-5678,情報�
 - `content` - Searchable text content
 - `title` - Display title (company + URL name)
 
-### **Import Instructions**
-
-1. **Prepare CSV file** with UTF-8 encoding
-2. **Multiple URLs per company** using same `company_number` 
-3. **Load via Python script** (see Batch CSV Loading above)
-4. **Or use API endpoints** for individual records
-
-**Ready to use:** Sample data included (100+ records, 47 companies)
+**Import tips:**
+- Use UTF-8 encoding for Japanese text
+- Multiple URLs per company share same `company_number`
+- Ready to use with included sample data (100+ records, 47 companies)
