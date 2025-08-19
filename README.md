@@ -131,7 +131,25 @@ POST /api/add_document     # Single record
 POST /api/add_documents    # Batch records
 ```
 
-**Custom CSV Loading:**
+**Custom CSV Format:**
+```csv
+id,company_number,company_name,company_tel,company_industry,prefecture,url_name,url,content,title
+url_001,1010001000001,株式会社東京テクノロジー,03-1234-5678,情報通信業,tokyo,メインサイト,https://tokyo-tech.co.jp,東京を拠点とするIT企業です...,株式会社東京テクノロジー - メインサイト
+```
+
+**Field requirements:**
+- `id` - Unique URL identifier  
+- `company_number` - Company registration number (grouping key)
+- `company_name` - Japanese company name
+- `company_tel` - Contact telephone
+- `company_industry` - Industry category  
+- `prefecture` - Location code (tokyo, osaka, kyoto, etc.)
+- `url_name` - URL description (メインサイト, 採用情報, etc.)
+- `url` - Full company page URL
+- `content` - Searchable text content
+- `title` - Display title (company + URL name)
+
+**Loading Script:**
 ```python
 # Load your own CSV data
 import csv
@@ -148,6 +166,11 @@ def load_csv_data(csv_file_path):
 
 load_csv_data('company_data.csv')
 ```
+
+**Import tips:**
+- Use UTF-8 encoding for Japanese text
+- Multiple URLs per company share same `company_number`
+- Ready to use with included sample data (100+ records, 47 companies)
 
 ---
 
@@ -233,28 +256,3 @@ uv run python load_sample_data.py
 http://127.0.0.1:5000
 ```
 
-## 📊 CSV Data Format
-
-**Required columns for custom data import:**
-
-```csv
-id,company_number,company_name,company_tel,company_industry,prefecture,url_name,url,content,title
-url_001,1010001000001,株式会社東京テクノロジー,03-1234-5678,情報通信業,tokyo,メインサイト,https://tokyo-tech.co.jp,東京を拠点とするIT企業です...,株式会社東京テクノロジー - メインサイト
-```
-
-**Field descriptions:**
-- `id` - Unique URL identifier  
-- `company_number` - Company registration number (grouping key)
-- `company_name` - Japanese company name
-- `company_tel` - Contact telephone
-- `company_industry` - Industry category  
-- `prefecture` - Location code (tokyo, osaka, kyoto, etc.)
-- `url_name` - URL description (メインサイト, 採用情報, etc.)
-- `url` - Full company page URL
-- `content` - Searchable text content
-- `title` - Display title (company + URL name)
-
-**Import tips:**
-- Use UTF-8 encoding for Japanese text
-- Multiple URLs per company share same `company_number`
-- Ready to use with included sample data (100+ records, 47 companies)
