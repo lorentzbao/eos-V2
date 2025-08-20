@@ -485,7 +485,7 @@ main.container {
 
 .company-title {
     font-weight: 600;
-    color: #333;
+    color: var(--brand-primary);
     margin-bottom: 0.25rem;
     font-size: 1.1rem;
 }
@@ -517,11 +517,12 @@ main.container {
 }
 
 .url-title a {
-    color: var(--brand-primary);
+    color: #333;
     text-decoration: none;
 }
 
 .url-title a:hover {
+    color: #000;
     text-decoration: underline;
 }
 
