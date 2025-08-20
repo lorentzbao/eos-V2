@@ -46,23 +46,17 @@ def rankings():
     
     username = session['username']
     
-    # Get popular queries and stats
+    # Get popular queries, keywords and stats
     popular_queries = search_logger.get_popular_queries(limit=10)
+    popular_keywords = search_logger.get_popular_keywords(limit=10)
     ranking_stats = search_logger.get_rankings_stats()
     
-    # Calculate percentages
-    total_queries = ranking_stats['total_queries']
-    for query_data in popular_queries:
-        if total_queries > 0:
-            query_data['percentage'] = round((query_data['count'] / total_queries) * 100, 1)
-        else:
-            query_data['percentage'] = 0.0
     
     return render_template('rankings.html',
                          username=username,
                          queries=popular_queries,
-                         stats=ranking_stats,
-                         total_queries=total_queries)
+                         keywords=popular_keywords,
+                         stats=ranking_stats)
 
 @main.route('/history')
 def history():
@@ -103,16 +97,16 @@ def search():
         return redirect(url_for('main.login'))
     
     query = request.args.get('q', '')
-    search_type = request.args.get('type', 'auto')
     limit = int(request.args.get('limit', 10))
     prefecture = request.args.get('prefecture', '')
+    cust_status = request.args.get('cust_status', '')
     username = session['username']
     
     # Handle empty or whitespace-only queries
     if not query or not query.strip():
         return redirect(url_for('main.index'))
     
-    search_results = search_service.search(query, limit, search_type, prefecture)
+    search_results = search_service.search(query, limit, prefecture, cust_status)
     stats = search_service.get_stats()
     
     # Get popular queries for search suggestions dropdown
@@ -122,10 +116,10 @@ def search():
     search_logger.log_search(
         username, 
         query, 
-        search_type, 
         search_results['total_found'], 
         search_results['search_time'],
-        prefecture
+        prefecture,
+        cust_status
     )
     
     return render_template('search.html', 
@@ -135,8 +129,8 @@ def search():
                          total_companies=search_results.get('total_companies', 0),
                          search_time=search_results['search_time'],
                          processed_query=search_results['processed_query'],
-                         search_type=search_type,
                          prefecture=prefecture,
+                         cust_status=cust_status,
                          limit=limit,
                          username=username,
                          stats=stats,

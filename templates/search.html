@@ -28,12 +28,6 @@
                 
                 <div class="row">
                     <div class="col-md-4">
-                        <select name="type" class="form-select">
-                            <option value="auto" {% if search_type == 'auto' %}selected{% endif %}>すべて検索</option>
-                            <option value="title" {% if search_type == 'title' %}selected{% endif %}>タイトルのみ</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
                         <select name="prefecture" class="form-select">
                             <option value="" {% if not prefecture %}selected{% endif %}>すべての地域</option>
                             <option value="tokyo" {% if prefecture == 'tokyo' %}selected{% endif %}>東京都</option>
@@ -45,6 +39,13 @@
                             <option value="hokkaido" {% if prefecture == 'hokkaido' %}selected{% endif %}>北海道</option>
                             <option value="sendai" {% if prefecture == 'sendai' %}selected{% endif %}>宮城県</option>
                             <option value="hiroshima" {% if prefecture == 'hiroshima' %}selected{% endif %}>広島県</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="cust_status" class="form-select">
+                            <option value="" {% if not cust_status %}selected{% endif %}>すべての顧客区分</option>
+                            <option value="白地" {% if cust_status == '白地' %}selected{% endif %}>白地</option>
+                            <option value="新規" {% if cust_status == '新規' %}selected{% endif %}>新規</option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -81,11 +82,26 @@
             {% for company in grouped_results %}
             <div class="result-item mb-4 p-3 border rounded bg-white">
                 <div class="company-header">
-                    <h5 class="company-title">{{ company.company_name }}</h5>
-                    <div class="company-details">
-                        {% if company.prefecture %}{{ company.prefecture }}{% endif %}
-                        {% if company.company_tel %} • {{ company.company_tel }}{% endif %}
-                        {% if company.company_industry %} • {{ company.company_industry }}{% endif %}
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h5 class="company-title">{{ company.company_name_kj or company.company_name }}</h5>
+                            <div class="company-details">
+                                {% if company.jcn %}<small class="text-muted me-2">JCN: {{ company.jcn }}</small>{% endif %}
+                                <br>
+                                {% if company.duns_large_class_name %}{{ company.duns_large_class_name }}{% endif %}
+                                {% if company.duns_middle_class_name %} • {{ company.duns_middle_class_name }}{% endif %}
+                                <br>
+                                {% if company.prefecture %}{{ company.prefecture }}{% endif %}
+                                {% if company.city %} {{ company.city }}{% endif %}
+                                {% if company.employee %} • 従業員: {{ company.employee }}人{% endif %}
+                                {% if company.curr_setlmnt_taking_amt %} • 売上: {{ company.curr_setlmnt_taking_amt }}{% endif %}
+                            </div>
+                        </div>
+                        {% if company.cust_status %}
+                        <div class="company-badges">
+                            <span class="badge bg-secondary">{{ company.cust_status }}</span>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 
@@ -302,8 +318,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Get current search parameters
             const searchParams = new URLSearchParams({
                 q: '{{ query }}',
-                type: '{{ search_type }}',
-                prefecture: '{{ prefecture }}'
+                prefecture: '{{ prefecture }}',
+                cust_status: '{{ cust_status }}'
             });
             
             // Build download URL

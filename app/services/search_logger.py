@@ -15,8 +15,9 @@ class SearchLogger:
         self.query_processor = QueryProcessor()
         self._ensure_log_directory()
         
-        # In-memory ranking tracker
+        # In-memory ranking tracker for both queries and keywords
         self._query_counts = defaultdict(int)
+        self._keyword_counts = defaultdict(int)
         self._rankings_lock = threading.RLock()
         
         # Initialize rankings from existing logs on startup
@@ -32,6 +33,24 @@ class SearchLogger:
         safe_username = "".join(c for c in username if c.isalnum() or c in "_-.")
         return os.path.join(self.log_dir, f"{safe_username}.jsonl")
     
+    def _extract_keywords(self, query: str) -> List[str]:
+        """Extract individual keywords from a query using Japanese tokenization"""
+        try:
+            # Use the same tokenization as the search engine
+            keywords = []
+            tokens = self.query_processor.tokenize_japanese(query)
+            
+            for token in tokens:
+                # Filter out very short tokens and common particles
+                if len(token) >= 2 and token not in ['の', 'を', 'は', 'が', 'に', 'で', 'と', 'から', 'まで', 'より']:
+                    keywords.append(token.lower())
+            
+            return keywords
+        except Exception as e:
+            print(f"Error extracting keywords from '{query}': {e}")
+            # Fallback to simple space splitting
+            return [word.strip().lower() for word in query.split() if len(word.strip()) >= 2]
+    
     def _initialize_rankings(self):
         """Initialize in-memory rankings from existing log files on startup"""
         print("Initializing search rankings from existing logs...")
@@ -39,6 +58,7 @@ class SearchLogger:
         try:
             user_files = glob.glob(os.path.join(self.log_dir, "*.jsonl"))
             total_queries_loaded = 0
+            total_keywords_loaded = 0
             
             with self._rankings_lock:
                 for user_file in user_files:
@@ -50,20 +70,30 @@ class SearchLogger:
                                 # Normalize query for consistent ranking
                                 normalized_query = self.query_processor.normalize_query(query).lower()
                                 if normalized_query:
+                                    # Track full query
                                     self._query_counts[normalized_query] += 1
                                     total_queries_loaded += 1
+                                    
+                                    # Extract and track individual keywords
+                                    keywords = self._extract_keywords(normalized_query)
+                                    for keyword in keywords:
+                                        if keyword:
+                                            self._keyword_counts[keyword] += 1
+                                            total_keywords_loaded += 1
                             except json.JSONDecodeError:
                                 continue
                 
-            print(f"Loaded {total_queries_loaded} queries into rankings ({len(self._query_counts)} unique)")
+            print(f"Loaded {total_queries_loaded} queries and {total_keywords_loaded} keywords into rankings")
+            print(f"Unique queries: {len(self._query_counts)}, Unique keywords: {len(self._keyword_counts)}")
             
         except Exception as e:
             print(f"Error initializing rankings: {e}")
             # Continue with empty rankings
             self._query_counts = defaultdict(int)
+            self._keyword_counts = defaultdict(int)
     
-    def log_search(self, username: str, query: str, search_type: str = "auto", 
-                   results_count: int = 0, search_time: float = 0.0, prefecture: str = ""):
+    def log_search(self, username: str, query: str, results_count: int = 0, 
+                   search_time: float = 0.0, prefecture: str = "", cust_status: str = ""):
         """Log a search query by user with detailed information"""
         # Normalize query for consistent tracking
         normalized_query = self.query_processor.normalize_query(query)
@@ -71,7 +101,6 @@ class SearchLogger:
         log_entry = {
             "timestamp": datetime.datetime.now().isoformat(),
             "query": normalized_query,
-            "search_type": search_type,
             "results_count": results_count,
             "search_time": round(search_time, 3)
         }
@@ -79,6 +108,10 @@ class SearchLogger:
         # Only include prefecture if it's specified
         if prefecture:
             log_entry["prefecture"] = prefecture
+        
+        # Only include cust_status if it's specified
+        if cust_status:
+            log_entry["cust_status"] = cust_status
         
         try:
             # Write to file
@@ -90,7 +123,14 @@ class SearchLogger:
             query_key = normalized_query.strip().lower()
             if query_key:
                 with self._rankings_lock:
+                    # Track full query
                     self._query_counts[query_key] += 1
+                    
+                    # Extract and track individual keywords
+                    keywords = self._extract_keywords(query_key)
+                    for keyword in keywords:
+                        if keyword:
+                            self._keyword_counts[keyword] += 1
                     
         except Exception as e:
             print(f"Failed to log search for {username}: {e}")
@@ -227,17 +267,34 @@ class SearchLogger:
             print(f"Failed to get popular queries: {e}")
             return []
     
+    def get_popular_keywords(self, limit: int = 10) -> List[Dict]:
+        """Get most popular individual keywords across all users (real-time from memory)"""
+        try:
+            with self._rankings_lock:
+                # Sort by count and return top keywords
+                popular = sorted(self._keyword_counts.items(), key=lambda x: x[1], reverse=True)
+                return [{"keyword": keyword, "count": count} for keyword, count in popular[:limit]]
+                
+        except Exception as e:
+            print(f"Failed to get popular keywords: {e}")
+            return []
+    
     def get_rankings_stats(self) -> Dict:
-        """Get ranking statistics"""
+        """Get ranking statistics for both queries and keywords"""
         try:
             with self._rankings_lock:
                 total_queries = sum(self._query_counts.values())
                 unique_queries = len(self._query_counts)
+                total_keywords = sum(self._keyword_counts.values())
+                unique_keywords = len(self._keyword_counts)
                 
                 return {
                     "total_queries": total_queries,
                     "unique_queries": unique_queries,
-                    "top_query": max(self._query_counts.items(), key=lambda x: x[1]) if self._query_counts else None
+                    "top_query": max(self._query_counts.items(), key=lambda x: x[1]) if self._query_counts else None,
+                    "total_keywords": total_keywords,
+                    "unique_keywords": unique_keywords,
+                    "top_keyword": max(self._keyword_counts.items(), key=lambda x: x[1]) if self._keyword_counts else None
                 }
                 
         except Exception as e:
@@ -245,7 +302,10 @@ class SearchLogger:
             return {
                 "total_queries": 0,
                 "unique_queries": 0,
-                "top_query": None
+                "top_query": None,
+                "total_keywords": 0,
+                "unique_keywords": 0,
+                "top_keyword": None
             }
     
     def get_user_stats(self) -> Dict:

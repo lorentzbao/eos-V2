@@ -38,8 +38,7 @@
                             <tr>
                                 <th>検索時刻</th>
                                 <th>検索クエリ</th>
-                                <th>検索タイプ</th>
-                                <th>地域フィルター</th>
+                                <th>フィルター</th>
                                 <th>結果数</th>
                                 <th>検索時間</th>
                                 <th>アクション</th>
@@ -58,13 +57,14 @@
                                     <strong>{{ search['query'] }}</strong>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary">{{ search['search_type'] }}</span>
-                                </td>
-                                <td>
                                     {% if search.get('prefecture') %}
-                                    <span class="badge bg-info">{{ search['prefecture'] }}</span>
-                                    {% else %}
-                                    <small class="text-muted">すべて</small>
+                                    <span class="badge bg-info">地域: {{ search['prefecture'] }}</span>
+                                    {% endif %}
+                                    {% if search.get('cust_status') %}
+                                    <span class="badge bg-warning ms-1">顧客: {{ search['cust_status'] }}</span>
+                                    {% endif %}
+                                    {% if not search.get('prefecture') and not search.get('cust_status') %}
+                                    <small class="text-muted">フィルターなし</small>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -78,7 +78,7 @@
                                     <small class="text-muted">{{ search.get('search_time', 0) }}秒</small>
                                 </td>
                                 <td>
-                                    <a href="{{ url_for('main.search', q=search['query'], type=search['search_type'], prefecture=search.get('prefecture', '')) }}" 
+                                    <a href="{{ url_for('main.search', q=search['query'], prefecture=search.get('prefecture', ''), cust_status=search.get('cust_status', '')) }}" 
                                        class="btn btn-sm btn-outline-primary">再検索</a>
                                 </td>
                             </tr>
