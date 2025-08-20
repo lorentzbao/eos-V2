@@ -476,47 +476,33 @@ main.container {
     border-color: rgba(40, 167, 69, 0.3);
 }
 
-/* Company Grouping Styles - Clear Hierarchy */
+/* Company Grouping Styles - Clean Master Branch Style */
 .company-header {
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
-    border-bottom: 2px solid #f0f0f0;
-    background: #fafafa;
-    padding: 1rem;
-    margin: -1rem -1rem 1rem -1rem;
-    border-radius: 8px 8px 0 0;
+    padding: 0 0 0.75rem 0;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
 }
 
 .company-title {
-    font-weight: 700;
-    color: #222;
-    margin-bottom: 0.5rem;
-    font-size: 1.15rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.25rem;
+    font-size: 1.1rem;
 }
 
 .company-details {
-    font-size: 0.85rem;
-    color: #777;
-    font-weight: 500;
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: normal;
 }
 
 .company-urls {
-    margin-top: 0.5rem;
+    margin-top: 0;
 }
 
 .url-item {
-    padding: 0.75rem 0;
-    border-bottom: 1px solid #f5f5f5;
-    margin-left: 1rem;
-    position: relative;
-}
-
-.url-item:before {
-    content: "•";
-    position: absolute;
-    left: -1rem;
-    color: #ccc;
-    font-weight: bold;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f8f9fa;
 }
 
 .url-item:last-child {
@@ -525,26 +511,24 @@ main.container {
 }
 
 .url-title {
-    font-weight: 500;
-    font-size: 0.95rem;
-    margin-bottom: 0.4rem;
+    font-weight: normal;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
 }
 
 .url-title a {
     color: var(--brand-primary);
     text-decoration: none;
-    transition: color 0.2s;
 }
 
 .url-title a:hover {
-    color: var(--brand-secondary);
     text-decoration: underline;
 }
 
 .url-content {
-    font-size: 0.85rem;
-    line-height: 1.4;
-    color: #666;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #6c757d;
     margin-bottom: 0.5rem;
 }
 
@@ -556,33 +540,6 @@ main.container {
 
 .matched-terms-sidebar .badge {
     font-size: 0.75rem;
-    padding: 3px 8px;
-    margin-right: 6px;
-    margin-bottom: 6px;
-}
-
-/* Mobile responsive for company grouping */
-@media (max-width: 768px) {
-    .company-header {
-        margin: -1rem -0.5rem 1rem -0.5rem;
-        padding: 0.75rem;
-    }
-    
-    .d-flex.justify-content-between {
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-    
-    .url-item {
-        padding: 0.75rem 0;
-        margin-left: 0.75rem;
-    }
-    
-    .url-item:before {
-        left: -0.75rem;
-    }
-    
-    .matched-terms-sidebar {
-        margin-top: 0.5rem;
-    }
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
 }
