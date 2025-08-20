@@ -13,13 +13,14 @@ search_service = SearchService()
 def api_search():
     """API endpoint for search queries"""
     query = request.args.get('q', '')
-    search_type = request.args.get('type', 'auto')
     limit = int(request.args.get('limit', 10))
+    prefecture = request.args.get('prefecture', '')
+    cust_status = request.args.get('cust_status', '')
     
     if not query:
         return jsonify({'error': 'Query parameter required'}), 400
     
-    results = search_service.search(query, limit, search_type)
+    results = search_service.search(query, limit, prefecture, cust_status)
     return jsonify(results)
 
 @api.route('/add_document', methods=['POST'])
@@ -104,9 +105,9 @@ def api_optimize_index():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-def get_cache_key(query, search_type, prefecture):
+def get_cache_key(query, prefecture, cust_status):
     """Generate unique cache key for search parameters"""
-    params = f"{query}:{search_type}:{prefecture}"
+    params = f"{query}:{prefecture}:{cust_status}"
     return hashlib.md5(params.encode('utf-8')).hexdigest()
 
 @api.route('/download-csv')
@@ -118,14 +119,14 @@ def download_csv():
     
     # Get search parameters
     query = request.args.get('q', '').strip()
-    search_type = request.args.get('type', 'auto')
     prefecture = request.args.get('prefecture', '')
+    cust_status = request.args.get('cust_status', '')
     
     if not query:
         return jsonify({'error': 'Query parameter required'}), 400
     
     # Generate cache key and file path
-    cache_key = get_cache_key(query, search_type, prefecture)
+    cache_key = get_cache_key(query, prefecture, cust_status)
     # Use absolute path from project root
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     cache_dir = os.path.join(project_root, "data", "csv_cache")
@@ -150,32 +151,45 @@ def download_csv():
             # Use Python's CSV writer for proper encoding
             output = io.StringIO()
             
-            # Create CSV writer with company-focused field order
-            fieldnames = ['Company_Number', 'Company_Name', 'Company_Tel', 'Company_Industry', 'Prefecture', 'URL_Name', 'URL', 'Content', 'Matched_Terms', 'ID']
+            # Create CSV writer with enterprise data field order (lowercase)
+            fieldnames = [
+                'jcn', 'cust_status', 'company_name_kj', 'company_address_all', 
+                'duns_large_class_name', 'duns_middle_class_name', 'curr_setlmnt_taking_amt', 'employee',
+                'prefecture', 'city', 'district_finalized_cd', 'branch_name_cd', 
+                'main_domain_url', 'url_name', 'url', 'content', 'matched_terms', 'id'
+            ]
             writer = csv.DictWriter(output, fieldnames=fieldnames)
             
             # Write header
             writer.writeheader()
             
-            # Single search to get all results - most efficient approach with company_number sorting
-            search_results = search_service.search(query, limit=10000, search_type=search_type, prefecture=prefecture, sort_by="company_number")
+            # Single search to get all results - most efficient approach with JCN sorting
+            search_results = search_service.search(query, limit=10000, prefecture=prefecture, cust_status=cust_status, sort_by="jcn")
             grouped_results = search_results.get('grouped_results', [])
             
             # Write all results by flattening grouped results
             for company in grouped_results:
                 for url in company.get('urls', []):
-                    # Format result data with company-focused structure
+                    # Format result data with enterprise structure (lowercase keys)
                     result_data = {
-                        'Company_Number': company.get('company_number', ''),
-                        'Company_Name': company.get('company_name', ''),
-                        'Company_Tel': company.get('company_tel', ''),
-                        'Company_Industry': company.get('company_industry', ''),
-                        'Prefecture': company.get('prefecture', ''),
-                        'URL_Name': url.get('url_name', ''),
-                        'URL': url.get('url', ''),
-                        'Content': url.get('content', '')[:500],  # Limit content length
-                        'Matched_Terms': '|'.join(url.get('matched_terms', [])),
-                        'ID': url.get('id', '')
+                        'jcn': company.get('jcn', ''),
+                        'cust_status': company.get('cust_status', ''),
+                        'company_name_kj': company.get('company_name_kj', ''),
+                        'company_address_all': company.get('company_address_all', ''),
+                        'duns_large_class_name': company.get('duns_large_class_name', ''),
+                        'duns_middle_class_name': company.get('duns_middle_class_name', ''),
+                        'curr_setlmnt_taking_amt': company.get('curr_setlmnt_taking_amt', ''),
+                        'employee': company.get('employee', ''),
+                        'prefecture': company.get('prefecture', ''),
+                        'city': company.get('city', ''),
+                        'district_finalized_cd': company.get('district_finalized_cd', ''),
+                        'branch_name_cd': company.get('branch_name_cd', ''),
+                        'main_domain_url': company.get('main_domain_url', ''),
+                        'url_name': url.get('url_name', ''),
+                        'url': url.get('url', ''),
+                        'content': url.get('content', '')[:500],  # Limit content length
+                        'matched_terms': '|'.join(url.get('matched_terms', [])),
+                        'id': url.get('id', '')
                     }
                     
                     writer.writerow(result_data)

@@ -9,7 +9,7 @@ class SearchService:
         self.query_processor = QueryProcessor()
     
     @lru_cache(maxsize=128)
-    def _cached_search(self, query: str, limit: int, search_type: str, prefecture: str, sort_by: str = "") -> tuple:
+    def _cached_search(self, query: str, limit: int, prefecture: str, cust_status: str, sort_by: str = "") -> tuple:
         """
         Cached search implementation using LRU cache.
         Returns tuple to make it hashable and cacheable.
@@ -21,16 +21,13 @@ class SearchService:
             return ([], processed_query)
         
         try:
-            if search_type == "title" or processed['search_type'] == 'title':
-                results = self.search_engine.search_in_title(query, limit, prefecture)
-            else:
-                results = self.search_engine.search(query, limit, prefecture, sort_by)
-            
+            # Only content search is available now with prefecture and cust_status filtering
+            results = self.search_engine.search(query, limit, prefecture, cust_status, sort_by)
             return (results, processed_query)
         except Exception:
             return ([], processed_query)
     
-    def search(self, query: str, limit: int = 10, search_type: str = "auto", prefecture: str = "", sort_by: str = "") -> Dict:
+    def search(self, query: str, limit: int = 10, prefecture: str = "", cust_status: str = "", sort_by: str = "") -> Dict:
         if not query.strip():
             return {
                 'grouped_results': [],
@@ -46,7 +43,7 @@ class SearchService:
         
         # Use cached search
         try:
-            results, processed_query = self._cached_search(query, limit, search_type, prefecture, sort_by)
+            results, processed_query = self._cached_search(query, limit, prefecture, cust_status, sort_by)
             
             # Group results by company on the Python side
             grouped_results = self._group_by_company(results)
@@ -75,8 +72,8 @@ class SearchService:
     
     def _group_by_company(self, results: List[Dict]) -> List[Dict]:
         """
-        Group search results by company_number for better performance
-        Returns a list of company objects with nested URLs
+        Group search results by JCN (法人番号) for enterprise data
+        Returns a list of company objects with comprehensive corporate info and nested URLs
         """
         if not results:
             return []
@@ -84,21 +81,42 @@ class SearchService:
         company_groups = {}
         
         for result in results:
-            company_number = result.get('company_number') or result.get('id', 'unknown')
-            company_name = result.get('company_name') or result.get('title', 'Unknown Company')
+            # Use JCN as primary key for company grouping
+            jcn = result.get('jcn', 'unknown')
+            company_name = result.get('company_name_kj', 'Unknown Company')
             
-            if company_number not in company_groups:
-                company_groups[company_number] = {
-                    'company_name': company_name,
-                    'company_number': company_number,
-                    'company_tel': result.get('company_tel', ''),
-                    'company_industry': result.get('company_industry', ''),
+            if jcn not in company_groups:
+                company_groups[jcn] = {
+                    # Corporate identification
+                    'jcn': jcn,
+                    'company_name_kj': company_name,
+                    'cust_status': result.get('cust_status', ''),
+                    
+                    # Address information
+                    'company_address_all': result.get('company_address_all', ''),
                     'prefecture': result.get('prefecture', ''),
+                    'city': result.get('city', ''),
+                    
+                    # Industry classification
+                    'duns_large_class_name': result.get('duns_large_class_name', ''),
+                    'duns_middle_class_name': result.get('duns_middle_class_name', ''),
+                    
+                    # Financial data
+                    'curr_setlmnt_taking_amt': result.get('curr_setlmnt_taking_amt', ''),
+                    'employee': result.get('employee', ''),
+                    
+                    # Organization codes
+                    'district_finalized_cd': result.get('district_finalized_cd', ''),
+                    'branch_name_cd': result.get('branch_name_cd', ''),
+                    
+                    # Website information
+                    'main_domain_url': result.get('main_domain_url', ''),
+                    
                     'urls': []
                 }
             
             # Add URL data to the company group
-            company_groups[company_number]['urls'].append({
+            company_groups[jcn]['urls'].append({
                 'url': result.get('url', ''),
                 'url_name': result.get('url_name') or result.get('title', ''),
                 'content': result.get('content') or result.get('introduction', ''),
@@ -107,14 +125,25 @@ class SearchService:
                 'id': result.get('id', '')
             })
         
-        # Convert to list and sort by company_number for consistent ordering
+        # Convert to list and sort by JCN for consistent ordering
         grouped_companies = list(company_groups.values())
-        grouped_companies.sort(key=lambda x: x['company_number'])
+        grouped_companies.sort(key=lambda x: x['jcn'])
         
         return grouped_companies
     
-    def add_document(self, doc_id: str, title: str, content: str, introduction: str, url: str = "", prefecture: str = ""):
-        result = self.search_engine.add_document(doc_id, title, content, introduction, url, prefecture)
+    def add_document(self, doc_id: str, url: str = "", content: str = "", 
+                   jcn: str = "", cust_status: str = "", company_name_kj: str = "",
+                   company_address_all: str = "", prefecture: str = "", city: str = "",
+                   duns_large_class_name: str = "", duns_middle_class_name: str = "",
+                   curr_setlmnt_taking_amt: int = 0, employee: int = 0,
+                   district_finalized_cd: str = "", branch_name_cd: str = "",
+                   main_domain_url: str = "", url_name: str = ""):
+        result = self.search_engine.add_document(
+            doc_id, url, content, jcn, cust_status, company_name_kj,
+            company_address_all, prefecture, city, duns_large_class_name, 
+            duns_middle_class_name, curr_setlmnt_taking_amt, employee,
+            district_finalized_cd, branch_name_cd, main_domain_url, url_name
+        )
         # Clear cache when documents are added
         self._cached_search.cache_clear()
         return result

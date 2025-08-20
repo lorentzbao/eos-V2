@@ -86,9 +86,9 @@ def load_sample_companies():
     for query, description in test_queries:
         results = search_service.search(query, limit=3)
         print(f"'{query}' ({description}): {results['total_found']} results")
-        if results['results']:
-            for result in results['results'][:2]:  # Show top 2
-                print(f"  • {result['title']}")
+        if results['grouped_results']:
+            for company in results['grouped_results'][:2]:  # Show top 2
+                print(f"  • {company['company_name_kj']}")
     
     # Test prefecture filtering
     print(f"\n🏷️  Testing Prefecture Filtering:")
@@ -102,7 +102,28 @@ def load_sample_companies():
     
     for prefecture, description in prefecture_tests:
         results = search_service.search("開発", prefecture=prefecture, limit=5)
-        print(f"{prefecture} '{description}': {results['total_found']} development companies")
+        print(f"{prefecture} '{description}': {results['total_companies']} development companies")
+    
+    # Test customer status filtering
+    print(f"\n🎯 Testing Customer Status Filtering:")
+    print("-" * 40)
+    
+    cust_status_tests = [
+        ("白地", "New territory customers"),
+        ("新規", "New customers")
+    ]
+    
+    for cust_status, description in cust_status_tests:
+        results = search_service.search("システム", cust_status=cust_status, limit=5)
+        print(f"{cust_status} '{description}': {results['total_companies']} system companies")
+    
+    # Test combined filtering
+    print(f"\n🔍 Testing Combined Filtering:")
+    print("-" * 32)
+    results = search_service.search("開発", prefecture="tokyo", cust_status="白地", limit=5)
+    print(f"Tokyo + 白地: {results['total_companies']} companies")
+    results = search_service.search("システム", prefecture="osaka", cust_status="新規", limit=5)
+    print(f"Osaka + 新規: {results['total_companies']} companies")
     
     print(f"\n🎉 Sample data loading complete!")
     print(f"💡 You can now test the search engine with comprehensive data")

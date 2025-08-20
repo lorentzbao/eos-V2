@@ -131,23 +131,31 @@ POST /api/add_document     # Single record
 POST /api/add_documents    # Batch records
 ```
 
-**Custom CSV Format:**
+**Enterprise CSV Format:**
 ```csv
-id,company_number,company_name,company_tel,company_industry,prefecture,url_name,url,content,title
-url_001,1010001000001,株式会社東京テクノロジー,03-1234-5678,情報通信業,tokyo,メインサイト,https://tokyo-tech.co.jp,東京を拠点とするIT企業です...,株式会社東京テクノロジー - メインサイト
+id,jcn,cust_status,company_name_kj,company_address_all,duns_large_class_name,duns_middle_class_name,curr_setlmnt_taking_amt,employee,prefecture,city,district_finalized_cd,branch_name_cd,main_domain_url,url_name,url,content,title
+url_001,1010001000001,優良顧客,株式会社東京テクノロジー,東京都港区虎ノ門1-1-1,情報通信業,ソフトウェア業,500000000,250,tokyo,港区,TK001,BR001,https://tokyo-tech.co.jp,メインサイト,https://tokyo-tech.co.jp/index.html,東京を拠点とするIT企業です...,株式会社東京テクノロジー - メインサイト
 ```
 
-**Field requirements:**
-- `id` - Unique URL identifier  
-- `company_number` - Company registration number (grouping key)
-- `company_name` - Japanese company name
-- `company_tel` - Contact telephone
-- `company_industry` - Industry category  
-- `prefecture` - Location code (tokyo, osaka, kyoto, etc.)
-- `url_name` - URL description (メインサイト, 採用情報, etc.)
-- `url` - Full company page URL
+**Enterprise Field Requirements:**
+- `id` - Unique URL identifier
+- `jcn` - 法人番号 (Corporate Number, grouping key)
+- `cust_status` - 顧客区分 (Customer status)
+- `company_name_kj` - 漢字名 (Company name in Kanji)
+- `company_address_all` - 住所 (Full address)
+- `duns_large_class_name` - 業種大分類 (Major industry classification)
+- `duns_middle_class_name` - 業種中分類 (Minor industry classification)
+- `curr_setlmnt_taking_amt` - 売上高 (Revenue)
+- `employee` - 従業員数 (Employee count)
+- `prefecture` - 都道府県 (Prefecture code)
+- `city` - 市区町村 (City/Ward)
+- `district_finalized_cd` - 事業本部コード (District code)
+- `branch_name_cd` - 支店コード (Branch code)
+- `main_domain_url` - ホームページURL (Main website URL)
+- `url_name` - URL description (page type)
+- `url` - 当該url (Specific page URL)
 - `content` - Searchable text content
-- `title` - Display title (company + URL name)
+- `title` - Display title
 
 **Loading Script:**
 ```python
