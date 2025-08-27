@@ -75,8 +75,10 @@ python scripts/delete_index.py
 
 ## 📚 Documentation
 
-- **[API Reference](./FRONTEND_API_DOCS.md)** - Complete API documentation
-- **[Index Management](./scripts/README.md)** - CSV import/export, index utilities
+- **[API Reference](./FRONTEND_API_DOCS.md)** - Complete frontend API documentation
+- **[Scripts Documentation](./scripts/README.md)** - Index management, CSV processing, and utility scripts
+- **[Tokenized Format Specification](./scripts/TOKENIZED_FORMAT.md)** - Two-step tokenization workflow format
+- **[Sample Data Guide](./data/README.md)** - Testing data and development examples
 
 ## 🔧 Development
 
