@@ -43,56 +43,29 @@ class JapaneseTokenizer:
     
     def tokenize_text(self, text: str) -> dict:
         """
-        Tokenize Japanese text and return detailed token information
-        Returns both processed tokens and original analysis for debugging
+        Tokenize Japanese text and return essential token information
+        Returns processed tokens without verbose debugging details
         """
         if not text:
             return {
                 'content_tokens': '',
-                'original_text': text,
-                'token_count': 0,
-                'tokens_detail': []
+                'token_count': 0
             }
         
         tokens = []
-        tokens_detail = []
         
         for token in self.tokenizer.tokenize(text):
             word = token.surface.lower().strip()
             pos = token.part_of_speech.split(',')[0]
-            features = token.part_of_speech.split(',')
-            
-            # Store detailed token info for debugging/analysis
-            token_info = {
-                'surface': token.surface,
-                'reading': features[7] if len(features) > 7 else '',
-                'pos': pos,
-                'pos_detail': features[1] if len(features) > 1 else '',
-                'included': False,
-                'reason': ''
-            }
             
             # Include meaningful parts of speech
             if pos in ['名詞', '動詞', '形容詞', '副詞'] and len(word) > 1:
                 if word not in self.stop_words:
                     tokens.append(word)
-                    token_info['included'] = True
-                    token_info['reason'] = 'meaningful_pos'
-                else:
-                    token_info['reason'] = 'stop_word'
-            else:
-                if len(word) <= 1:
-                    token_info['reason'] = 'too_short'
-                else:
-                    token_info['reason'] = 'excluded_pos'
-            
-            tokens_detail.append(token_info)
         
         return {
             'content_tokens': ' '.join(tokens),
-            'original_text': text,
-            'token_count': len(tokens),
-            'tokens_detail': tokens_detail
+            'token_count': len(tokens)
         }
 
 
@@ -160,13 +133,6 @@ def process_batch_tokenization(tokenizer: JapaneseTokenizer, batch: List[Dict], 
         # Add tokenization results
         tokenized_record['content_tokens'] = content_analysis['content_tokens']
         tokenized_record['token_count'] = content_analysis['token_count']
-        
-        # Store detailed tokenization for debugging (optional)
-        tokenized_record['tokenization_info'] = {
-            'tokens_detail': content_analysis['tokens_detail'],
-            'original_length': len(content_analysis['original_text']),
-            'tokenized_length': len(content_analysis['content_tokens'])
-        }
         
         tokenized_records.append(tokenized_record)
         

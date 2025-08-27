@@ -73,31 +73,7 @@ Each batch file contains an array of tokenized records:
     
     // Tokenization results (added)
     "content_tokens": "東京 拠点 企業 python java react 開発 チーム 募集",
-    "token_count": 9,
-    
-    // Detailed tokenization info (for debugging/analysis)
-    "tokenization_info": {
-      "tokens_detail": [
-        {
-          "surface": "東京",
-          "reading": "トウキョウ",
-          "pos": "名詞",
-          "pos_detail": "固有名詞",
-          "included": true,
-          "reason": "meaningful_pos"
-        },
-        {
-          "surface": "を",
-          "reading": "ヲ",
-          "pos": "助詞",
-          "pos_detail": "格助詞",
-          "included": false,
-          "reason": "excluded_pos"
-        }
-      ],
-      "original_length": 67,
-      "tokenized_length": 41
-    }
+    "token_count": 9
   }
 ]
 ```
@@ -121,25 +97,6 @@ All original CSV fields are preserved in the tokenized format, including:
 ### Tokenization Results (added)
 - `content_tokens` - Space-separated meaningful tokens for searching
 - `token_count` - Number of tokens extracted
-- `tokenization_info` - Detailed analysis (optional, for debugging)
-
-### Tokenization Details Structure
-```json
-{
-  "tokens_detail": [
-    {
-      "surface": "東京",        // Original word surface
-      "reading": "トウキョウ",    // Phonetic reading
-      "pos": "名詞",            // Part of speech
-      "pos_detail": "固有名詞",  // Detailed POS
-      "included": true,         // Whether included in tokens
-      "reason": "meaningful_pos" // Why included/excluded
-    }
-  ],
-  "original_length": 67,       // Character count of original text
-  "tokenized_length": 41       // Character count of tokenized text
-}
-```
 
 ## Tokenization Rules
 

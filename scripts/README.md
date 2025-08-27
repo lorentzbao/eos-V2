@@ -69,7 +69,7 @@ python scripts/create_index.py --tokenized-dir data/tokenized/ --index-dir data/
 **Benefits of Two-Step Approach:**
 - ✅ **Preprocessing flexibility** - Modify tokens before indexing
 - ✅ **Performance** - Reuse tokenized data for multiple indexes  
-- ✅ **Debugging** - Inspect tokenization results before indexing
+- ✅ **Efficiency** - Compact format, faster index creation
 - ✅ **Reproducibility** - Consistent tokenization across runs
 
 ### 3. `delete_index.py` - Delete Existing Index
@@ -139,7 +139,7 @@ data/tokenized/
 
 **Key Features:**
 - **Pre-tokenized content** - Japanese text already processed
-- **Debugging information** - Detailed token analysis included
+- **Efficient format** - Clean, minimal JSON structure
 - **Batch processing** - Efficient handling of large datasets
 - **Reusable** - Create multiple indexes from same tokenized data
 
