@@ -4,35 +4,75 @@ This folder contains utility scripts for managing Whoosh search indexes in the E
 
 ## Scripts Overview
 
-### 1. `create_index.py` - Create New Index
-Creates a new Whoosh search index from a CSV file containing enterprise data.
+### Two-Step Processing Workflow (Recommended)
+
+For optimal performance and preprocessing flexibility, use this **two-step approach**:
+
+1. **`tokenize_csv.py`** - Preprocess and tokenize Japanese text
+2. **`create_index.py`** - Create search index from tokenized data
+
+### 1. `tokenize_csv.py` - Tokenize Japanese Text ⭐
+Preprocesses CSV files and creates intermediate tokenized files for index creation.
 
 **Usage:**
 ```bash
-python scripts/create_index.py <csv_file> [options]
+python scripts/tokenize_csv.py <csv_file> [options]
 ```
 
 **Options:**
-- `--batch-size BATCH_SIZE` : Number of records per batch (default: 500)
+- `--batch-size BATCH_SIZE` : Records per batch (default: 500)
+- `--output-dir OUTPUT_DIR` : Output directory (default: data/tokenized)
+- `--clear-output` : Clear output directory before processing
+
+**Examples:**
+```bash
+# Basic tokenization
+python scripts/tokenize_csv.py data/companies.csv
+
+# Large dataset with custom output
+python scripts/tokenize_csv.py data/large_dataset.csv --batch-size 1000 --output-dir data/preprocessed
+
+# Clean previous results
+python scripts/tokenize_csv.py data/companies.csv --clear-output
+```
+
+### 2. `create_index.py` - Create New Index
+Creates a Whoosh search index from CSV files OR pre-tokenized data.
+
+**Usage:**
+```bash
+# From CSV (one-step: tokenization + indexing)
+python scripts/create_index.py <csv_file> [options]
+
+# From tokenized data (two-step: indexing only) ⭐ RECOMMENDED
+python scripts/create_index.py --tokenized-dir <tokenized_dir> [options]
+```
+
+**Options:**
+- `--batch-size BATCH_SIZE` : Records per batch for CSV input (default: 500)
 - `--index-dir INDEX_DIR` : Index directory path (default: data/whoosh_index)
 - `--clear-existing` : Clear existing index before creating new one
 
 **Examples:**
 ```bash
-# Basic usage
+# Two-step approach (recommended)
+python scripts/tokenize_csv.py data/companies.csv
+python scripts/create_index.py --tokenized-dir data/tokenized/
+
+# One-step approach (direct from CSV)
 python scripts/create_index.py data/companies.csv
 
-# Large dataset with bigger batches
-python scripts/create_index.py data/large_dataset.csv --batch-size 1000
-
-# Custom index directory
-python scripts/create_index.py data/companies.csv --index-dir data/custom_index
-
-# Replace existing index
-python scripts/create_index.py data/companies.csv --clear-existing
+# Custom configurations
+python scripts/create_index.py --tokenized-dir data/tokenized/ --index-dir data/custom_index
 ```
 
-### 2. `delete_index.py` - Delete Existing Index
+**Benefits of Two-Step Approach:**
+- ✅ **Preprocessing flexibility** - Modify tokens before indexing
+- ✅ **Performance** - Reuse tokenized data for multiple indexes  
+- ✅ **Debugging** - Inspect tokenization results before indexing
+- ✅ **Reproducibility** - Consistent tokenization across runs
+
+### 3. `delete_index.py` - Delete Existing Index
 Permanently deletes a Whoosh search index. **Use with caution!**
 
 **Usage:**
@@ -57,7 +97,7 @@ python scripts/delete_index.py --index-dir data/old_index --force
 python scripts/delete_index.py --stats-only
 ```
 
-### 3. `add_to_index.py` - Add Documents to Existing Index
+### 4. `add_to_index.py` - Add Documents to Existing Index
 Adds new documents from a CSV file to an existing search index.
 
 **Usage:**
@@ -85,6 +125,25 @@ python scripts/add_to_index.py data/incremental.csv --no-duplicate-check
 # Test run without changes
 python scripts/add_to_index.py data/test.csv --dry-run
 ```
+
+## Intermediate Tokenized Format
+
+The two-step workflow creates intermediate JSON files for maximum flexibility:
+
+```
+data/tokenized/
+├── tokenization_summary.json       # Processing metadata
+├── tokenized_batch_0001.json      # Tokenized data batch 1
+└── tokenized_batch_0002.json      # Tokenized data batch 2
+```
+
+**Key Features:**
+- **Pre-tokenized content** - Japanese text already processed
+- **Debugging information** - Detailed token analysis included
+- **Batch processing** - Efficient handling of large datasets
+- **Reusable** - Create multiple indexes from same tokenized data
+
+**Format Details:** See [TOKENIZED_FORMAT.md](./TOKENIZED_FORMAT.md) for complete specification.
 
 ## CSV File Format
 

@@ -24,6 +24,67 @@ from typing import List, Dict
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.services.search_service import SearchService
+import json
+import glob
+
+
+def read_tokenized_batches(tokenized_dir: str) -> List[List[Dict]]:
+    """Read pre-tokenized JSON files from directory"""
+    print(f"📖 Reading tokenized files from: {tokenized_dir}")
+    
+    if not os.path.exists(tokenized_dir):
+        print(f"❌ Error: Tokenized directory does not exist: {tokenized_dir}")
+        return []
+    
+    # Find all tokenized batch files
+    batch_files = glob.glob(os.path.join(tokenized_dir, "tokenized_batch_*.json"))
+    batch_files.sort()  # Ensure consistent order
+    
+    if not batch_files:
+        print(f"❌ Error: No tokenized batch files found in {tokenized_dir}")
+        print("Expected files like: tokenized_batch_0001.json")
+        return []
+    
+    batches = []
+    total_records = 0
+    
+    try:
+        # Read summary if available for validation
+        summary_file = os.path.join(tokenized_dir, "tokenization_summary.json")
+        if os.path.exists(summary_file):
+            with open(summary_file, 'r', encoding='utf-8') as f:
+                summary = json.load(f)
+                print(f"📋 Found tokenization summary:")
+                print(f"   📊 Expected records: {summary['processing_info']['total_records']}")
+                print(f"   📦 Expected batches: {summary['processing_info']['total_batches']}")
+                print(f"   🔧 Tokenizer: {summary['tokenization_settings']['tokenizer']}")
+        
+        for batch_file in batch_files:
+            with open(batch_file, 'r', encoding='utf-8') as f:
+                batch_data = json.load(f)
+                
+                if not isinstance(batch_data, list):
+                    print(f"⚠️  Warning: {batch_file} does not contain a list")
+                    continue
+                
+                # Validate that records have required fields
+                if batch_data:
+                    required_fields = ['id', 'content_tokens']
+                    first_record = batch_data[0]
+                    missing_fields = [field for field in required_fields if field not in first_record]
+                    if missing_fields:
+                        print(f"⚠️  Warning: {batch_file} missing fields: {missing_fields}")
+                        continue
+                
+                batches.append(batch_data)
+                total_records += len(batch_data)
+        
+        print(f"✅ Successfully loaded {total_records} tokenized records from {len(batches)} batch files")
+        return batches
+        
+    except Exception as e:
+        print(f"❌ Error reading tokenized files: {e}")
+        return []
 
 
 def read_csv_batch(csv_file: str, batch_size: int) -> List[List[Dict]]:
@@ -81,7 +142,7 @@ def convert_to_int(value: str, default: int = 0) -> int:
         return default
 
 
-def process_batch(search_service: SearchService, batch: List[Dict], batch_num: int) -> bool:
+def process_batch(search_service: SearchService, batch: List[Dict], batch_num: int, is_tokenized: bool = False) -> bool:
     """Process a single batch of documents"""
     print(f"📝 Processing batch {batch_num} ({len(batch)} records)...")
     
@@ -91,7 +152,6 @@ def process_batch(search_service: SearchService, batch: List[Dict], batch_num: i
         doc = {
             'id': row.get('id', ''),
             'url': row.get('url', ''),
-            'content': row.get('content', ''),
             
             # Enterprise corporate identification
             'jcn': row.get('jcn', ''),
@@ -120,6 +180,15 @@ def process_batch(search_service: SearchService, batch: List[Dict], batch_num: i
             'url_name': row.get('url_name', '')
         }
         
+        # Handle content differently based on whether it's pre-tokenized
+        if is_tokenized:
+            # Use pre-tokenized content tokens directly
+            doc['content_tokens'] = row.get('content_tokens', '')
+            doc['content'] = row.get('content', '')  # Keep original for display if available
+        else:
+            # Use original content (will be tokenized by search service)
+            doc['content'] = row.get('content', '')
+        
         documents.append(doc)
     
     # Add batch to search service
@@ -146,15 +215,25 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
+  # From CSV file (with tokenization)
   python scripts/create_index.py data/companies.csv
   python scripts/create_index.py data/large_dataset.csv --batch-size 1000
   python scripts/create_index.py data/test.csv --batch-size 100 --index-dir data/test_index
+  
+  # From pre-tokenized files (faster, allows preprocessing)
+  python scripts/create_index.py --tokenized-dir data/tokenized/
+  python scripts/create_index.py --tokenized-dir data/tokenized/ --index-dir data/custom_index
         """
     )
     
-    parser.add_argument('csv_file', help='Path to CSV file containing enterprise data')
+    # Input source - either CSV file or tokenized directory
+    input_group = parser.add_mutually_exclusive_group(required=True)
+    input_group.add_argument('csv_file', nargs='?', help='Path to CSV file containing enterprise data')
+    input_group.add_argument('--tokenized-dir', type=str, 
+                           help='Directory containing tokenized JSON files from tokenize_csv.py')
+    
     parser.add_argument('--batch-size', type=int, default=500, 
-                       help='Number of records to process per batch (default: 500)')
+                       help='Number of records to process per batch (for CSV input only, default: 500)')
     parser.add_argument('--index-dir', type=str, default='data/whoosh_index',
                        help='Directory for the search index (default: data/whoosh_index)')
     parser.add_argument('--clear-existing', action='store_true',
@@ -163,18 +242,26 @@ Examples:
     args = parser.parse_args()
     
     # Validate arguments
-    if not os.path.exists(args.csv_file):
+    if args.csv_file and not os.path.exists(args.csv_file):
         print(f"❌ Error: CSV file does not exist: {args.csv_file}")
         sys.exit(1)
     
-    if args.batch_size <= 0:
+    if args.tokenized_dir and not os.path.exists(args.tokenized_dir):
+        print(f"❌ Error: Tokenized directory does not exist: {args.tokenized_dir}")
+        sys.exit(1)
+    
+    if args.csv_file and args.batch_size <= 0:
         print("❌ Error: Batch size must be a positive integer")
         sys.exit(1)
     
     print("🚀 EOS Index Creation Script")
     print("=" * 50)
-    print(f"📂 CSV File: {args.csv_file}")
-    print(f"📦 Batch Size: {args.batch_size}")
+    if args.csv_file:
+        print(f"📂 Input: CSV File - {args.csv_file}")
+        print(f"📦 Batch Size: {args.batch_size}")
+    else:
+        print(f"📂 Input: Tokenized Directory - {args.tokenized_dir}")
+        print(f"📦 Batch Size: Determined by tokenized files")
     print(f"🗂️  Index Directory: {args.index_dir}")
     print()
     
@@ -196,12 +283,19 @@ Examples:
         print(f"❌ Error initializing search service: {e}")
         sys.exit(1)
     
-    # Read CSV file in batches
+    # Read input data
     start_time = time.time()
-    batches = read_csv_batch(args.csv_file, args.batch_size)
+    if args.csv_file:
+        print("🔄 Reading and tokenizing CSV file...")
+        batches = read_csv_batch(args.csv_file, args.batch_size)
+        input_type = "CSV"
+    else:
+        print("🔄 Reading pre-tokenized files...")
+        batches = read_tokenized_batches(args.tokenized_dir)
+        input_type = "Tokenized"
     
     if not batches:
-        print("❌ No data to process. Exiting.")
+        print(f"❌ No {input_type.lower()} data to process. Exiting.")
         sys.exit(1)
     
     # Process each batch
@@ -213,8 +307,9 @@ Examples:
     print(f"📦 Total batches: {len(batches)}")
     print()
     
+    is_tokenized = (input_type == "Tokenized")
     for i, batch in enumerate(batches, 1):
-        if process_batch(search_service, batch, i):
+        if process_batch(search_service, batch, i, is_tokenized):
             successful_batches += 1
         
         # Show progress
