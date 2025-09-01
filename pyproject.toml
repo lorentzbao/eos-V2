@@ -8,6 +8,7 @@ dependencies = [
     "beautifulsoup4==4.12.2",
     "flask==2.3.3",
     "janome==0.4.2",
+    "pandas>=2.3.2",
     "requests==2.31.0",
     "whoosh==2.7.4",
 ]

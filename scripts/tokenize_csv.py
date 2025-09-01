@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """
-CSV Tokenization Script for EOS Search Engine
+Tokenization Script for EOS Search Engine
 
-Tokenizes Japanese text content in CSV files and creates intermediate files
-for index creation. This allows for preprocessing, debugging, and reusing
-tokenized data without re-tokenizing.
+Tokenizes Japanese text content from CSV files or JSON folders and creates intermediate files
+for index creation. Supports merging additional company information from DataFrames.
 
 Usage:
-    python scripts/tokenize_csv.py <csv_file> [--batch-size BATCH_SIZE] [--output-dir OUTPUT_DIR]
+    # From CSV file
+    python scripts/tokenize_csv.py --csv-file <csv_file> [options]
+    
+    # From JSON folder with DataFrame merging
+    python scripts/tokenize_csv.py --json-folder <json_folder> --dataframe-file <csv_file> [options]
 
-Example:
-    python scripts/tokenize_csv.py data/companies.csv --batch-size 1000
-    python scripts/tokenize_csv.py data/companies.csv --output-dir data/tokenized/
+Examples:
+    python scripts/tokenize_csv.py --csv-file data/companies.csv --batch-size 1000
+    python scripts/tokenize_csv.py --json-folder data/sample_companies/ --dataframe-file data/company_info.csv
 """
 
 import argparse
@@ -20,10 +23,12 @@ import os
 import sys
 import time
 import json
-from typing import List, Dict, Tuple
+import glob
+from typing import List, Dict, Tuple, Optional
 from janome.tokenizer import Tokenizer
 from multiprocessing import Pool, cpu_count, Manager
 import multiprocessing as mp
+import pandas as pd
 
 # Add the parent directory to the path to import app modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -67,6 +72,127 @@ class JapaneseTokenizer:
             'content_tokens': ' '.join(tokens),
             'token_count': len(tokens)
         }
+
+
+def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None) -> List[Dict]:
+    """Read JSON files from folder and optionally merge with DataFrame"""
+    print(f"📖 Reading JSON files from folder: {json_folder}")
+    
+    if not os.path.exists(json_folder):
+        print(f"❌ Error: JSON folder does not exist: {json_folder}")
+        return []
+    
+    # Find all JSON files in the folder
+    json_files = glob.glob(os.path.join(json_folder, "*.json"))
+    if not json_files:
+        print(f"❌ Error: No JSON files found in {json_folder}")
+        return []
+    
+    print(f"📁 Found {len(json_files)} JSON files")
+    
+    # Load DataFrame if provided and convert to dictionary for fast lookup
+    df_dict = None
+    if dataframe_file:
+        try:
+            df_data = pd.read_csv(dataframe_file)
+            # Convert to dictionary with jcn as key for O(1) lookup
+            df_data['jcn'] = df_data['jcn'].astype(str)
+            df_dict = df_data.set_index('jcn').to_dict('index')
+            print(f"📊 Loaded DataFrame with {len(df_data)} records from {dataframe_file}")
+            print(f"🔑 Created lookup dictionary with {len(df_dict)} JCN keys")
+        except Exception as e:
+            print(f"⚠️  Warning: Could not load DataFrame: {e}")
+            df_dict = None
+    
+    records = []
+    total_files = len(json_files)
+    
+    for i, json_file in enumerate(json_files, 1):
+        try:
+            with open(json_file, 'r', encoding='utf-8') as f:
+                json_data = json.load(f)
+            
+            # Convert JSON structure to URL-based records (one per URL)
+            url_records = convert_json_to_records(json_data, df_dict)
+            records.extend(url_records)
+            
+            if i % 100 == 0:
+                print(f"   📝 Processed {i}/{total_files} JSON files")
+                
+        except Exception as e:
+            print(f"⚠️  Warning: Could not process {json_file}: {e}")
+            continue
+    
+    print(f"✅ Successfully loaded {len(records)} records from JSON files")
+    return records
+
+
+def convert_json_to_records(json_data: Dict, df_dict: Optional[Dict] = None) -> List[Dict]:
+    """Convert JSON structure to multiple URL-based records"""
+    try:
+        # Extract basic company information from JSON
+        jcn = str(json_data.get('jcn', ''))
+        if not jcn:
+            return []
+            
+        # Base company information to be shared across all URL records
+        base_info = {
+            'jcn': jcn,
+            'company_name_kj': json_data.get('company_name', {}).get('kj', ''),
+            'company_address_all': json_data.get('company_address', {}).get('all', ''),
+            'prefecture': json_data.get('company_address', {}).get('prefecture', ''),
+            'city': json_data.get('company_address', {}).get('city', ''),
+            'employee': json_data.get('company_info', {}).get('employee') or 0,
+            'main_domain_url': json_data.get('homepage', {}).get('main_domain', {}).get('url', ''),
+        }
+        
+        # Merge with DataFrame dictionary if provided (O(1) lookup)
+        if df_dict is not None and jcn in df_dict:
+            df_record = df_dict[jcn]
+            # Merge additional fields from DataFrame
+            for col, value in df_record.items():
+                if col not in base_info and pd.notna(value):
+                    base_info[col] = value
+        
+        records = []
+        homepage = json_data.get('homepage', {})
+        
+        # Create record for main domain
+        main_domain = homepage.get('main_domain', {})
+        if main_domain.get('url'):
+            main_record = base_info.copy()
+            main_record.update({
+                'id': f"{jcn}_main",
+                'url': main_domain['url'],
+                'url_name': 'メインサイト',
+                'content': f"{base_info['company_name_kj']} {main_domain['url']}".strip()
+            })
+            records.append(main_record)
+        
+        # Create records for each sub-domain
+        sub_domains = homepage.get('sub_domain', [])
+        for i, sub_domain in enumerate(sub_domains):
+            if sub_domain.get('url'):
+                sub_record = base_info.copy()
+                
+                # Build content from tags
+                tags = sub_domain.get('tags', [])
+                content_parts = [base_info['company_name_kj']]
+                content_parts.extend(tags)
+                
+                sub_record.update({
+                    'id': f"{jcn}_sub_{i+1}",
+                    'url': sub_domain['url'],
+                    'url_name': ' '.join(tags) if tags else f'サブページ{i+1}',
+                    'content': ' '.join(filter(None, content_parts))
+                })
+                records.append(sub_record)
+        
+        return records
+        
+    except Exception as e:
+        print(f"⚠️  Warning: Error converting JSON record: {e}")
+        return []
 
 
 def read_csv_batch(csv_file: str, batch_size: int) -> List[List[Dict]]:
@@ -134,6 +260,10 @@ def process_batch_tokenization(tokenizer: JapaneseTokenizer, batch: List[Dict], 
         tokenized_record['content_tokens'] = content_analysis['content_tokens']
         tokenized_record['token_count'] = content_analysis['token_count']
         
+        # Remove original content to save space (keeping only tokenized version)
+        if 'content' in tokenized_record:
+            del tokenized_record['content']
+        
         tokenized_records.append(tokenized_record)
         
         # Progress indicator for large batches
@@ -200,53 +330,102 @@ def create_processing_summary(output_dir: str, total_batches: int, total_records
         return None
 
 
+def get_output_dir(csv_file: str = None, json_folder: str = None, output_dir: str = None) -> str:
+    """Generate output directory based on input source"""
+    if output_dir:
+        # User specified explicit output directory
+        return output_dir
+    
+    if json_folder:
+        # Auto-generate from JSON folder name
+        folder_name = os.path.basename(json_folder.rstrip('/'))
+        return f"data/{folder_name}/tokenized"
+    elif csv_file:
+        # Auto-generate from CSV filename
+        csv_name = os.path.splitext(os.path.basename(csv_file))[0]
+        return f"data/{csv_name}/tokenized"
+    else:
+        # Fallback
+        return "data/tokenized"
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description='Tokenize Japanese text in CSV files for index creation',
+        description='Tokenize Japanese text from CSV files or JSON folders for index creation',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python scripts/tokenize_csv.py data/companies.csv
-  python scripts/tokenize_csv.py data/large_dataset.csv --batch-size 1000
-  python scripts/tokenize_csv.py data/test.csv --output-dir data/tokenized/
+  # From CSV file
+  python scripts/tokenize_csv.py --csv-file data/companies.csv
+  python scripts/tokenize_csv.py --csv-file data/large_dataset.csv --batch-size 1000
+  
+  # From JSON folder with DataFrame merging
+  python scripts/tokenize_csv.py --json-folder data/sample_companies/ --dataframe-file data/company_info.csv
+  python scripts/tokenize_csv.py --json-folder data/companies_json/ --output-dir data/custom/
         """
     )
     
-    parser.add_argument('csv_file', help='Path to CSV file containing enterprise data')
+    # Input source - either CSV file or JSON folder
+    input_group = parser.add_mutually_exclusive_group(required=True)
+    input_group.add_argument('--csv-file', type=str, help='Path to CSV file containing enterprise data')
+    input_group.add_argument('--json-folder', type=str, help='Path to folder containing JSON files with company data')
+    
+    parser.add_argument('--dataframe-file', type=str, 
+                       help='Path to CSV file with additional company information to merge (used with --json-folder)')
     parser.add_argument('--batch-size', type=int, default=500, 
                        help='Number of records to process per batch (default: 500)')
-    parser.add_argument('--output-dir', type=str, default='data/tokenized',
-                       help='Directory for tokenized output files (default: data/tokenized)')
+    parser.add_argument('--output-dir', type=str,
+                       help='Directory for tokenized output files. If not specified, auto-generates based on input source')
     parser.add_argument('--clear-output', action='store_true',
                        help='Clear output directory before processing')
     
     args = parser.parse_args()
     
     # Validate arguments
-    if not os.path.exists(args.csv_file):
+    if args.csv_file and not os.path.exists(args.csv_file):
         print(f"❌ Error: CSV file does not exist: {args.csv_file}")
+        sys.exit(1)
+        
+    if args.json_folder and not os.path.exists(args.json_folder):
+        print(f"❌ Error: JSON folder does not exist: {args.json_folder}")
+        sys.exit(1)
+        
+    if args.dataframe_file and not os.path.exists(args.dataframe_file):
+        print(f"❌ Error: DataFrame file does not exist: {args.dataframe_file}")
+        sys.exit(1)
+        
+    if args.dataframe_file and not args.json_folder:
+        print("❌ Error: --dataframe-file can only be used with --json-folder")
         sys.exit(1)
     
     if args.batch_size <= 0:
         print("❌ Error: Batch size must be a positive integer")
         sys.exit(1)
     
-    print("🔄 EOS CSV Tokenization Script")
+    # Determine output directory
+    output_dir = get_output_dir(args.csv_file, args.json_folder, args.output_dir)
+    
+    print("🔄 EOS Tokenization Script")
     print("=" * 50)
-    print(f"📂 Input CSV: {args.csv_file}")
+    if args.csv_file:
+        print(f"📂 Input: CSV File - {args.csv_file}")
+    else:
+        print(f"📂 Input: JSON Folder - {args.json_folder}")
+        if args.dataframe_file:
+            print(f"📊 DataFrame: {args.dataframe_file}")
     print(f"📦 Batch Size: {args.batch_size}")
-    print(f"📁 Output Directory: {args.output_dir}")
+    print(f"📁 Output Directory: {output_dir}")
     print()
     
     # Setup output directory
-    if args.clear_output and os.path.exists(args.output_dir):
+    if args.clear_output and os.path.exists(output_dir):
         import shutil
-        print(f"🗑️  Clearing output directory: {args.output_dir}")
-        shutil.rmtree(args.output_dir)
+        print(f"🗑️  Clearing output directory: {output_dir}")
+        shutil.rmtree(output_dir)
     
-    if not os.path.exists(args.output_dir):
-        os.makedirs(args.output_dir)
-        print(f"📁 Created output directory: {args.output_dir}")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
+        print(f"📁 Created output directory: {output_dir}")
     
     # Initialize tokenizer
     print("🔧 Initializing Japanese tokenizer...")
@@ -254,12 +433,28 @@ Examples:
     print("✅ Tokenizer ready")
     print()
     
-    # Read CSV file in batches
+    # Read input data
     start_time = time.time()
-    batches = read_csv_batch(args.csv_file, args.batch_size)
+    if args.csv_file:
+        # Read CSV file in batches
+        batches = read_csv_batch(args.csv_file, args.batch_size)
+        input_type = "CSV"
+    else:
+        # Read JSON folder and create batches
+        records = read_json_folder(args.json_folder, args.dataframe_file)
+        if not records:
+            print("❌ No data to process. Exiting.")
+            sys.exit(1)
+        
+        # Create batches from records
+        batches = []
+        for i in range(0, len(records), args.batch_size):
+            batch = records[i:i + args.batch_size]
+            batches.append(batch)
+        input_type = "JSON"
     
     if not batches:
-        print("❌ No data to process. Exiting.")
+        print(f"❌ No {input_type.lower()} data to process. Exiting.")
         sys.exit(1)
     
     total_records = sum(len(batch) for batch in batches)
@@ -267,6 +462,7 @@ Examples:
     print(f"🔄 Starting tokenization...")
     print(f"📊 Total records: {total_records}")
     print(f"📦 Total batches: {len(batches)}")
+    print(f"📝 Input type: {input_type}")
     print()
     
     # Process each batch
@@ -277,7 +473,7 @@ Examples:
         
         if tokenized_records:
             # Save tokenized batch
-            saved_file = save_tokenized_batch(tokenized_records, args.output_dir, i)
+            saved_file = save_tokenized_batch(tokenized_records, output_dir, i)
             if saved_file:
                 successful_batches += 1
         
@@ -295,16 +491,22 @@ Examples:
     print(f"⏱️  Total time: {elapsed_total:.2f} seconds")
     print(f"✅ Successful batches: {successful_batches}/{len(batches)}")
     print(f"📝 Records processed: {total_records}")
-    print(f"📁 Output directory: {args.output_dir}")
+    print(f"📁 Output directory: {output_dir}")
     
     # Create summary file
-    create_processing_summary(args.output_dir, len(batches), total_records, elapsed_total)
+    create_processing_summary(output_dir, len(batches), total_records, elapsed_total)
     
     if successful_batches == len(batches):
         print("🎉 Tokenization completed successfully!")
         print()
         print("📋 Next steps:")
-        print(f"   python scripts/create_index.py --tokenized-dir {args.output_dir}")
+        if args.csv_file:
+            print(f"   python scripts/create_index.py --tokenized-dir {output_dir}")
+        else:
+            print(f"   python scripts/create_index.py --tokenized-dir {output_dir}")
+            print(f"   # Tokenized from JSON folder: {args.json_folder}")
+            if args.dataframe_file:
+                print(f"   # Merged with DataFrame: {args.dataframe_file}")
     else:
         failed_batches = len(batches) - successful_batches
         print(f"⚠️  Tokenization completed with {failed_batches} failed batches")
