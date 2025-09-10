@@ -134,10 +134,14 @@ def read_csv_batch(csv_file: str, batch_size: int) -> List[List[Dict]]:
         return []
 
 
-def convert_to_int(value: str, default: int = 0) -> int:
-    """Safely convert string to integer"""
+def convert_to_int(value, default: int = 0) -> int:
+    """Safely convert string or int to integer"""
     try:
-        return int(value) if value and value.strip() else default
+        if isinstance(value, int):
+            return value
+        if isinstance(value, str):
+            return int(value) if value and value.strip() else default
+        return default
     except (ValueError, TypeError):
         return default
 
@@ -209,6 +213,28 @@ def process_batch(search_service: SearchService, batch: List[Dict], batch_num: i
         return False
 
 
+def get_index_dir(csv_file: str = None, tokenized_dir: str = None, index_dir: str = None) -> str:
+    """Generate index directory based on input source"""
+    if index_dir:
+        # User specified explicit index directory
+        return index_dir
+    
+    if tokenized_dir:
+        # Extract base folder from tokenized path
+        # data/xxx/tokenized -> data/xxx/index
+        base_path = os.path.dirname(tokenized_dir.rstrip('/'))
+        return os.path.join(base_path, 'index')
+    
+    elif csv_file:
+        # Auto-generate from CSV filename
+        csv_name = os.path.splitext(os.path.basename(csv_file))[0]
+        return f"data/{csv_name}/index"
+    
+    else:
+        # Fallback
+        return "data/whoosh_index"
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Create Whoosh search index from CSV file',
@@ -234,8 +260,8 @@ Examples:
     
     parser.add_argument('--batch-size', type=int, default=500, 
                        help='Number of records to process per batch (for CSV input only, default: 500)')
-    parser.add_argument('--index-dir', type=str, default='data/whoosh_index',
-                       help='Directory for the search index (default: data/whoosh_index)')
+    parser.add_argument('--index-dir', type=str,
+                       help='Directory for the search index. If not specified, auto-generates based on input source')
     parser.add_argument('--clear-existing', action='store_true',
                        help='Clear existing index before creating new one')
     
@@ -254,6 +280,9 @@ Examples:
         print("❌ Error: Batch size must be a positive integer")
         sys.exit(1)
     
+    # Determine index directory
+    index_dir = get_index_dir(args.csv_file, args.tokenized_dir, args.index_dir)
+    
     print("🚀 EOS Index Creation Script")
     print("=" * 50)
     if args.csv_file:
@@ -262,12 +291,12 @@ Examples:
     else:
         print(f"📂 Input: Tokenized Directory - {args.tokenized_dir}")
         print(f"📦 Batch Size: Determined by tokenized files")
-    print(f"🗂️  Index Directory: {args.index_dir}")
+    print(f"🗂️  Index Directory: {index_dir}")
     print()
     
     # Initialize search service
     try:
-        search_service = SearchService(args.index_dir)
+        search_service = SearchService(index_dir)
         
         # Clear existing index if requested
         if args.clear_existing:
@@ -333,7 +362,7 @@ Examples:
     
     if successful_batches == len(batches):
         print("🎉 Index creation completed successfully!")
-        print(f"💾 Index saved to: {args.index_dir}")
+        print(f"💾 Index saved to: {index_dir}")
     else:
         failed_batches = len(batches) - successful_batches
         print(f"⚠️  Index creation completed with {failed_batches} failed batches")

@@ -1,15 +1,18 @@
 # EOS - Japanese Enterprise Search Engine
 
-Modern Flask-based search engine for Japanese companies with intelligent grouping and advanced text processing.
+Modern Flask-based search engine for Japanese companies with intelligent grouping, advanced text processing, and HTML content extraction.
 
 ## 🚀 Quick Start
 
 ```bash
-# Install and run
+# Install dependencies
+uv add flask janome whoosh beautifulsoup4 pandas hydra-core
+
+# Start with default configuration
 uv run python run.py
 
-# Load sample data
-python scripts/create_index.py data/sample_companies.csv
+# Or with custom configuration
+uv run python run.py index.dir=data/custom/index
 
 # Open browser
 http://127.0.0.1:5000
@@ -20,11 +23,15 @@ http://127.0.0.1:5000
 ## 📋 Key Features
 
 - **Enterprise Search** - Japanese company search with intelligent URL grouping
+- **HTML Content Extraction** - Extract and tokenize content from HTML files with configurable length limits
+- **Flexible Input Sources** - Support for CSV files and JSON folder structures
+- **Two-Step Tokenization** - Separate tokenization and indexing for preprocessing flexibility
 - **Customer Filtering** - Filter by customer status (白地/既存) and prefecture
 - **Auto-suggestions** - Google-style dropdown with popular search terms
 - **Search Analytics** - Track user searches, popular keywords, and rankings
 - **CSV Export** - Download search results in enterprise format
 - **OR Search Logic** - Multiple keywords return results with ANY matching terms
+- **Hydra Configuration** - Flexible configuration management system
 
 ## 📖 Usage
 
@@ -47,15 +54,40 @@ Query: "研究　開発"      # Normalized automatically
 http://127.0.0.1:5000/api/download-csv?q=Python&prefecture=tokyo&cust_status=白地
 ```
 
-## 🛠️ Index Management
+## 🛠️ Data Processing & Index Management
 
-For creating, deleting, and managing search indexes, see: **[scripts/README.md](./scripts/README.md)**
+### **Two-Step Tokenization Workflow (Recommended)**
 
-**Quick Commands:**
 ```bash
-# Create index from CSV
-python scripts/create_index.py data/sample_companies.csv
+# Step 1: Tokenize data with HTML content extraction
+python scripts/tokenize_csv.py --json-folder data/test_json_companies --max-content-length 10000
 
+# Step 2: Create index from tokenized data
+python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized
+
+# Alternative: Process CSV files
+python scripts/tokenize_csv.py --csv-file data/sample_companies.csv
+python scripts/create_index.py --tokenized-dir data/sample_companies/tokenized
+```
+
+### **Input Sources**
+
+```bash
+# JSON folder with company data and HTML content
+python scripts/tokenize_csv.py --json-folder data/companies_json/ --dataframe-file data/additional_info.csv
+
+# CSV file (traditional method)
+python scripts/tokenize_csv.py --csv-file data/companies.csv --batch-size 1000
+
+# Custom output directories
+python scripts/tokenize_csv.py --json-folder data/companies/ --output-dir data/custom_output/
+```
+
+### **Index Management**
+
+For detailed documentation, see: **[scripts/README.md](./scripts/README.md)**
+
+```bash
 # Add more data to existing index
 python scripts/add_to_index.py data/new_companies.csv
 
@@ -69,29 +101,52 @@ python scripts/delete_index.py
 ## 🏗️ Technical Stack
 
 - **Backend:** Flask + Whoosh (Japanese full-text search) + Janome (tokenization)
+- **HTML Processing:** BeautifulSoup4 for content extraction from HTML files
+- **Data Processing:** Pandas for DataFrame operations and data merging
+- **Configuration:** Hydra for flexible configuration management
 - **Frontend:** Bootstrap 5 + JavaScript (pagination, auto-suggestions)
-- **Data:** Enterprise CSV format with JCN-based company grouping
-- **Performance:** LRU cache + file-based CSV export caching
+- **Data Formats:** CSV files and JSON folder structures with URL-based record generation
+- **Performance:** LRU cache + file-based CSV export caching + O(1) dictionary lookups for data merging
 
 ## 📚 Documentation
 
+- **[Configuration Guide](./CONFIGURATION.md)** - Hydra configuration system and deployment options
 - **[API Reference](./FRONTEND_API_DOCS.md)** - Complete frontend API documentation
-- **[Scripts Documentation](./scripts/README.md)** - Index management, CSV processing, and utility scripts
+- **[Scripts Documentation](./scripts/README.md)** - Index management, tokenization, and utility scripts
 - **[Tokenized Format Specification](./scripts/TOKENIZED_FORMAT.md)** - Two-step tokenization workflow format
 - **[Sample Data Guide](./data/README.md)** - Testing data and development examples
 
 ## 🔧 Development
 
 ```bash
-# Install dependencies  
-pip install Flask==3.0.0 Janome==0.5.0 Whoosh==2.7.4
+# Install all dependencies
+uv add flask janome whoosh beautifulsoup4 pandas hydra-core
 
-# Run development server
+# Run development server with default config
 uv run python run.py
 
-# Load sample data
-python scripts/create_index.py data/sample_companies.csv
+# Run with custom configuration
+uv run python run.py app.debug=false index.dir=data/production/index
+
+# Process sample data
+python scripts/tokenize_csv.py --json-folder data/test_json_companies
+python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized
 ```
 
-**Sample Data:** 25 records across 11 companies with diverse industries (AI/ML, fintech, healthcare, agriculture)
+### **Configuration Management**
+
+The project uses Hydra for flexible configuration:
+
+```bash
+# Default configuration (conf/config.yaml)
+uv run python run.py
+
+# Override specific settings
+uv run python run.py app.debug=false index.dir=data/custom/
+
+# Use different config file
+uv run python run.py --config-path custom/path --config-name custom_config
+```
+
+**Sample Data:** Includes JSON company data with HTML content files for testing HTML extraction functionality
 

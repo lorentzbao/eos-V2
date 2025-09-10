@@ -29,6 +29,7 @@ from janome.tokenizer import Tokenizer
 from multiprocessing import Pool, cpu_count, Manager
 import multiprocessing as mp
 import pandas as pd
+from bs4 import BeautifulSoup
 
 # Add the parent directory to the path to import app modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -74,7 +75,7 @@ class JapaneseTokenizer:
         }
 
 
-def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None) -> List[Dict]:
+def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None, max_content_length: int = 10000) -> List[Dict]:
     """Read JSON files from folder and optionally merge with DataFrame"""
     print(f"📖 Reading JSON files from folder: {json_folder}")
     
@@ -113,7 +114,7 @@ def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None) -> 
                 json_data = json.load(f)
             
             # Convert JSON structure to URL-based records (one per URL)
-            url_records = convert_json_to_records(json_data, df_dict)
+            url_records = convert_json_to_records(json_data, df_dict, max_content_length)
             records.extend(url_records)
             
             if i % 100 == 0:
@@ -127,7 +128,43 @@ def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None) -> 
     return records
 
 
-def convert_json_to_records(json_data: Dict, df_dict: Optional[Dict] = None) -> List[Dict]:
+def extract_text_from_html(html_path: str, max_length: int = 10000) -> str:
+    """Extract text content from HTML file"""
+    try:
+        if not html_path or not os.path.exists(html_path):
+            return ""
+        
+        with open(html_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        
+        # Parse HTML and extract text
+        soup = BeautifulSoup(html_content, 'html.parser')
+        
+        # Remove script and style elements
+        for script in soup(["script", "style"]):
+            script.decompose()
+        
+        # Get text and clean it up
+        text = soup.get_text()
+        
+        # Clean up whitespace
+        lines = (line.strip() for line in text.splitlines())
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        text = ' '.join(chunk for chunk in chunks if chunk)
+        
+        # Truncate if too long
+        if len(text) > max_length:
+            text = text[:max_length]
+            print(f"   📏 Truncated HTML content from {html_path} to {max_length} characters")
+        
+        return text
+        
+    except Exception as e:
+        print(f"⚠️  Warning: Could not extract text from {html_path}: {e}")
+        return ""
+
+
+def convert_json_to_records(json_data: Dict, df_dict: Optional[Dict] = None, max_content_length: int = 10000) -> List[Dict]:
     """Convert JSON structure to multiple URL-based records"""
     try:
         # Extract basic company information from JSON
@@ -161,11 +198,24 @@ def convert_json_to_records(json_data: Dict, df_dict: Optional[Dict] = None) -> 
         main_domain = homepage.get('main_domain', {})
         if main_domain.get('url'):
             main_record = base_info.copy()
+            
+            # Extract content from HTML if available
+            html_path = main_domain.get('html_path', '')
+            html_content = extract_text_from_html(html_path, max_content_length) if html_path else ""
+            
+            # Combine company name with HTML content
+            content_parts = [base_info['company_name_kj']]
+            if html_content:
+                content_parts.append(html_content)
+            else:
+                # Fallback to URL if no HTML content
+                content_parts.append(main_domain['url'])
+            
             main_record.update({
                 'id': f"{jcn}_main",
                 'url': main_domain['url'],
                 'url_name': 'メインサイト',
-                'content': f"{base_info['company_name_kj']} {main_domain['url']}".strip()
+                'content': ' '.join(filter(None, content_parts))
             })
             records.append(main_record)
         
@@ -175,10 +225,20 @@ def convert_json_to_records(json_data: Dict, df_dict: Optional[Dict] = None) -> 
             if sub_domain.get('url'):
                 sub_record = base_info.copy()
                 
-                # Build content from tags
+                # Extract content from HTML if available
+                html_path = sub_domain.get('html_path', '')
+                html_content = extract_text_from_html(html_path, max_content_length) if html_path else ""
+                
+                # Build content from HTML or tags
                 tags = sub_domain.get('tags', [])
                 content_parts = [base_info['company_name_kj']]
-                content_parts.extend(tags)
+                
+                if html_content:
+                    # Use HTML content if available
+                    content_parts.append(html_content)
+                else:
+                    # Fallback to tags if no HTML content
+                    content_parts.extend(tags)
                 
                 sub_record.update({
                     'id': f"{jcn}_sub_{i+1}",
@@ -378,6 +438,8 @@ Examples:
                        help='Directory for tokenized output files. If not specified, auto-generates based on input source')
     parser.add_argument('--clear-output', action='store_true',
                        help='Clear output directory before processing')
+    parser.add_argument('--max-content-length', type=int, default=10000,
+                       help='Maximum content length for tokenization (default: 10000 characters)')
     
     args = parser.parse_args()
     
@@ -441,7 +503,7 @@ Examples:
         input_type = "CSV"
     else:
         # Read JSON folder and create batches
-        records = read_json_folder(args.json_folder, args.dataframe_file)
+        records = read_json_folder(args.json_folder, args.dataframe_file, args.max_content_length)
         if not records:
             print("❌ No data to process. Exiting.")
             sys.exit(1)

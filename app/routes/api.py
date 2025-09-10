@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session, send_file
+from flask import Blueprint, request, jsonify, session, send_file, current_app
 from app.services.search_service import SearchService
 import csv
 import io
@@ -7,7 +7,11 @@ import hashlib
 from datetime import datetime
 
 api = Blueprint('api', __name__, url_prefix='/api')
-search_service = SearchService()
+
+def get_search_service():
+    """Get SearchService with configured index directory"""
+    index_dir = current_app.config.get('INDEX_DIR', 'data/whoosh_index')
+    return SearchService(index_dir)
 
 @api.route('/search')
 def api_search():
@@ -20,7 +24,7 @@ def api_search():
     if not query:
         return jsonify({'error': 'Query parameter required'}), 400
     
-    results = search_service.search(query, limit, prefecture, cust_status)
+    results = get_search_service().search(query, limit, prefecture, cust_status)
     return jsonify(results)
 
 @api.route('/add_document', methods=['POST'])
@@ -32,7 +36,7 @@ def api_add_document():
         return jsonify({'error': 'Missing required fields: id, title, content'}), 400
     
     try:
-        success = search_service.add_document(
+        success = get_search_service().add_document(
             data['id'], 
             data['title'], 
             data['content'], 
@@ -65,7 +69,7 @@ def api_add_documents():
             return jsonify({'error': f'Document {i}: Missing required fields: id, title, content'}), 400
     
     try:
-        success = search_service.add_documents_batch(documents)
+        success = get_search_service().add_documents_batch(documents)
         if success:
             return jsonify({
                 'success': True, 
@@ -79,13 +83,13 @@ def api_add_documents():
 @api.route('/stats')
 def api_stats():
     """API endpoint to get search engine statistics"""
-    return jsonify(search_service.get_stats())
+    return jsonify(get_search_service().get_stats())
 
 @api.route('/clear_index', methods=['POST'])
 def api_clear_index():
     """API endpoint to clear the search index"""
     try:
-        success = search_service.clear_index()
+        success = get_search_service().clear_index()
         if success:
             return jsonify({'success': True, 'message': 'Index cleared successfully'})
         else:
@@ -97,7 +101,7 @@ def api_clear_index():
 def api_optimize_index():
     """API endpoint to optimize the search index"""
     try:
-        success = search_service.optimize_index()
+        success = get_search_service().optimize_index()
         if success:
             return jsonify({'success': True, 'message': 'Index optimized successfully'})
         else:
@@ -164,7 +168,7 @@ def download_csv():
             writer.writeheader()
             
             # Single search to get all results - most efficient approach with JCN sorting
-            search_results = search_service.search(query, limit=10000, prefecture=prefecture, cust_status=cust_status, sort_by="jcn")
+            search_results = get_search_service().search(query, limit=10000, prefecture=prefecture, cust_status=cust_status, sort_by="jcn")
             grouped_results = search_results.get('grouped_results', [])
             
             # Write all results by flattening grouped results

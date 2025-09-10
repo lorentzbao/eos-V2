@@ -1,10 +1,14 @@
-from flask import Blueprint, render_template, request, session, redirect, url_for
+from flask import Blueprint, render_template, request, session, redirect, url_for, current_app
 from app.services.search_service import SearchService
 from app.services.search_logger import SearchLogger
 
 main = Blueprint('main', __name__)
-search_service = SearchService()
 search_logger = SearchLogger()
+
+def get_search_service():
+    """Get SearchService with configured index directory"""
+    index_dir = current_app.config.get('INDEX_DIR', 'data/whoosh_index')
+    return SearchService(index_dir)
 
 @main.route('/')
 def index():
@@ -106,8 +110,8 @@ def search():
     if not query or not query.strip():
         return redirect(url_for('main.index'))
     
-    search_results = search_service.search(query, limit, prefecture, cust_status)
-    stats = search_service.get_stats()
+    search_results = get_search_service().search(query, limit, prefecture, cust_status)
+    stats = get_search_service().get_stats()
     
     # Get popular queries for search suggestions dropdown
     popular_queries = search_logger.get_popular_queries(limit=10)

@@ -1,0 +1,6 @@
+app:
+  secret_key: "your-secret-key-here"
+  debug: true
+
+index:
+  dir: "data/whoosh_index"

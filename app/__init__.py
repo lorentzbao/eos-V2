@@ -1,11 +1,19 @@
 from flask import Flask
 import os
+from omegaconf import DictConfig
 
-def create_app():
+def create_app(config: DictConfig = None):
     app = Flask(__name__, 
                 template_folder='../templates',
                 static_folder='../static')
-    app.config['SECRET_KEY'] = 'your-secret-key-here'
+    
+    # Use config if provided, otherwise use defaults
+    if config:
+        app.config['SECRET_KEY'] = config.app.secret_key
+        app.config['INDEX_DIR'] = config.index.dir
+    else:
+        app.config['SECRET_KEY'] = 'your-secret-key-here'
+        app.config['INDEX_DIR'] = 'data/whoosh_index'
     
     # Register blueprints
     from app.routes.main import main
