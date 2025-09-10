@@ -9,47 +9,70 @@ Utility scripts for managing Whoosh search indexes with Japanese text processing
 
 ### 1. `tokenize_csv.py` - Japanese Text Tokenization & HTML Processing
 
-**Supports both CSV files and JSON folder structures with HTML content extraction.**
+**Supports both CSV files and JSON folder structures with HTML content extraction, now using Hydra configuration management.**
 
 **Usage:**
 ```bash
-# CSV input
-python scripts/tokenize_csv.py --csv-file <csv_file> [OPTIONS]
+# Using configuration presets
+uv run python scripts/tokenize_csv.py --config-name <config_name>
 
-# JSON folder input  
-python scripts/tokenize_csv.py --json-folder <json_folder> [OPTIONS]
+# Using custom config path
+uv run python scripts/tokenize_csv.py --config-path <path> --config-name <config_name>
+
+# With command-line overrides
+uv run python scripts/tokenize_csv.py --config-name <config_name> <key>=<value>
 ```
 
 **Key Features:**
+- **Hydra Configuration** - YAML-based configuration with command-line overrides
 - **HTML Content Extraction** - Extract and tokenize content from HTML files referenced in JSON data
 - **DataFrame Merging** - Merge additional company information from CSV files (O(1) performance)
 - **URL-based Records** - Generate separate records for main domains and sub-domains
-- **Content Length Control** - Configurable HTML content truncation to prevent overwhelming tokenization
+- **Content Length Control** - Configurable HTML content truncation with direct text slicing
 - **Auto-directory Generation** - Smart output directory naming based on input source
+- **Column Selection** - Specify which DataFrame columns to merge with `extra_columns` list
+
+**Configuration Presets:**
+- `tokenize_json` - JSON folder processing with DataFrame merging
+- `tokenize_csv` - Traditional CSV file processing
+- `tokenize` - Base configuration with examples
 
 **Examples:**
 ```bash
-# JSON folder with HTML content extraction
-python scripts/tokenize_csv.py --json-folder data/test_json_companies --max-content-length 10000
+# JSON folder with HTML content extraction (using preset)
+uv run python scripts/tokenize_csv.py --config-name tokenize_json
 
-# JSON with DataFrame merging for additional company info
-python scripts/tokenize_csv.py --json-folder data/companies_json/ --dataframe-file data/company_info.csv
+# CSV processing (using preset)
+uv run python scripts/tokenize_csv.py --config-name tokenize_csv
 
-# Traditional CSV processing
-python scripts/tokenize_csv.py --csv-file data/companies.csv --batch-size 1000
+# Override specific settings
+uv run python scripts/tokenize_csv.py --config-name tokenize_json processing.batch_size=1000 processing.max_content_length=5000
 
-# Custom output directory and content limits
-python scripts/tokenize_csv.py --json-folder data/companies/ --output-dir data/custom/ --max-content-length 5000
+# Select specific DataFrame columns
+uv run python scripts/tokenize_csv.py --config-name tokenize input.json_folder=data/custom/ processing.extra_columns=[cust_status,revenue]
+
+# Custom configuration path
+uv run python scripts/tokenize_csv.py --config-path ../conf --config-name tokenize_json
 ```
 
-**Parameters:**
-- `--csv-file` - Path to CSV file (mutually exclusive with --json-folder)
-- `--json-folder` - Path to folder containing JSON company files  
-- `--dataframe-file` - CSV file for merging additional company information (used with --json-folder)
-- `--batch-size` - Records per batch (default: 500)
-- `--output-dir` - Output directory (auto-generated if not specified)
-- `--clear-output` - Clear output directory before processing
-- `--max-content-length` - Maximum HTML content length for tokenization (default: 10000)
+**Configuration Structure:**
+```yaml
+input:
+  csv_file: null                    # Path to CSV file
+  json_folder: "data/companies"     # Path to JSON folder
+  dataframe_file: "data/info.csv"   # DataFrame for merging
+  
+processing:
+  batch_size: 500                   # Records per batch
+  max_content_length: 10000         # HTML content limit
+  extra_columns:                    # DataFrame columns to merge
+    - cust_status
+    - revenue
+  
+output:
+  output_dir: null                  # Auto-generated if null
+  clear_output: false
+```
 
 ### 2. `create_index.py` - Index Creation
 

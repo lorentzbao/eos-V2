@@ -19,7 +19,10 @@ uv run python run.py --config-path custom/ --config-name production
 
 ```
 conf/
-└── config.yaml          # Default configuration
+├── config.yaml          # Default Flask application configuration
+├── tokenize.yaml         # Base tokenization configuration
+├── tokenize_json.yaml    # JSON processing preset
+└── tokenize_csv.yaml     # CSV processing preset
 ```
 
 ### **Default Configuration** (`conf/config.yaml`)
@@ -48,9 +51,44 @@ index:
 |---------|------|---------|-------------|
 | `dir` | string | `"data/whoosh_index"` | Whoosh search index directory |
 
+## 🔧 Tokenization Configuration
+
+### **Tokenization Settings** (`tokenize.yaml`)
+
+```yaml
+input:
+  csv_file: null                    # Path to CSV file
+  json_folder: null                 # Path to JSON folder
+  dataframe_file: null              # Path to DataFrame CSV for merging
+  
+processing:
+  batch_size: 500                   # Records per batch
+  max_content_length: 10000         # Maximum HTML content length
+  extra_columns:                    # Specific DataFrame columns to merge
+    - cust_status
+    - revenue
+  
+output:
+  output_dir: null                  # Output directory (auto-generated if null)
+  clear_output: false               # Clear output directory before processing
+```
+
+### **Tokenization Configuration Options**
+
+| Section | Setting | Type | Default | Description |
+|---------|---------|------|---------|-------------|
+| `input` | `csv_file` | string | `null` | Path to CSV file containing enterprise data |
+| `input` | `json_folder` | string | `null` | Path to folder containing JSON files with company data |
+| `input` | `dataframe_file` | string | `null` | Path to CSV file with additional company information |
+| `processing` | `batch_size` | integer | `500` | Number of records to process per batch |
+| `processing` | `max_content_length` | integer | `10000` | Maximum HTML content length for tokenization |
+| `processing` | `extra_columns` | list | examples | Specific DataFrame columns to merge (null = all columns) |
+| `output` | `output_dir` | string | `null` | Directory for tokenized output files |
+| `output` | `clear_output` | boolean | `false` | Clear output directory before processing |
+
 ## 📖 Usage Examples
 
-### **Command Line Overrides**
+### **Flask Application Overrides**
 
 ```bash
 # Disable debug mode
@@ -61,6 +99,25 @@ uv run python run.py index.dir=data/custom_index/
 
 # Multiple overrides
 uv run python run.py app.debug=false index.dir=data/prod/ app.secret_key=production-secret
+```
+
+### **Tokenization Configuration Examples**
+
+```bash
+# Use JSON processing preset
+uv run python scripts/tokenize_csv.py --config-name tokenize_json
+
+# Use CSV processing preset
+uv run python scripts/tokenize_csv.py --config-name tokenize_csv
+
+# Override processing settings
+uv run python scripts/tokenize_csv.py --config-name tokenize_json processing.batch_size=1000 processing.max_content_length=5000
+
+# Select specific DataFrame columns
+uv run python scripts/tokenize_csv.py --config-name tokenize processing.extra_columns=[cust_status,revenue,market_segment]
+
+# Custom input sources
+uv run python scripts/tokenize_csv.py --config-name tokenize input.json_folder=data/custom_companies/ input.dataframe_file=data/custom_info.csv
 ```
 
 ### **Custom Configuration Files**

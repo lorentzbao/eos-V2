@@ -59,28 +59,31 @@ http://127.0.0.1:5000/api/download-csv?q=Python&prefecture=tokyo&cust_status=白
 ### **Two-Step Tokenization Workflow (Recommended)**
 
 ```bash
-# Step 1: Tokenize data with HTML content extraction
-python scripts/tokenize_csv.py --json-folder data/test_json_companies --max-content-length 10000
+# Step 1: Tokenize data with HTML content extraction using Hydra configuration
+uv run python scripts/tokenize_csv.py --config-name tokenize_json
 
 # Step 2: Create index from tokenized data
 python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized
 
 # Alternative: Process CSV files
-python scripts/tokenize_csv.py --csv-file data/sample_companies.csv
+uv run python scripts/tokenize_csv.py --config-name tokenize_csv
 python scripts/create_index.py --tokenized-dir data/sample_companies/tokenized
 ```
 
-### **Input Sources**
+### **Configuration-Based Input Sources**
 
 ```bash
-# JSON folder with company data and HTML content
-python scripts/tokenize_csv.py --json-folder data/companies_json/ --dataframe-file data/additional_info.csv
+# JSON folder with company data and HTML content (using preset)
+uv run python scripts/tokenize_csv.py --config-name tokenize_json
 
-# CSV file (traditional method)
-python scripts/tokenize_csv.py --csv-file data/companies.csv --batch-size 1000
+# CSV file processing (using preset)
+uv run python scripts/tokenize_csv.py --config-name tokenize_csv
 
-# Custom output directories
-python scripts/tokenize_csv.py --json-folder data/companies/ --output-dir data/custom_output/
+# Override specific settings
+uv run python scripts/tokenize_csv.py --config-name tokenize_json processing.batch_size=1000 processing.max_content_length=5000
+
+# Select specific DataFrame columns
+uv run python scripts/tokenize_csv.py --config-name tokenize processing.extra_columns=[cust_status,revenue]
 ```
 
 ### **Index Management**

@@ -6,18 +6,26 @@ Tokenizes Japanese text content from CSV files or JSON folders and creates inter
 for index creation. Supports merging additional company information from DataFrames.
 
 Usage:
-    # From CSV file
-    python scripts/tokenize_csv.py --csv-file <csv_file> [options]
+    # Using Hydra configuration - specify config directory and config name
+    uv run python scripts/tokenize_csv.py --config-path conf --config-name tokenize_json
+    uv run python scripts/tokenize_csv.py --config-path conf --config-name tokenize_csv
     
-    # From JSON folder with DataFrame merging
-    python scripts/tokenize_csv.py --json-folder <json_folder> --dataframe-file <csv_file> [options]
+    # Use default config path (../conf) with config name only
+    uv run python scripts/tokenize_csv.py --config-name tokenize_json
+    uv run python scripts/tokenize_csv.py --config-name tokenize_csv
+    
+    # Override specific configuration values
+    uv run python scripts/tokenize_csv.py --config-name tokenize_json input.json_folder=data/custom/
+    uv run python scripts/tokenize_csv.py --config-name tokenize processing.batch_size=1000
 
 Examples:
-    python scripts/tokenize_csv.py --csv-file data/companies.csv --batch-size 1000
-    python scripts/tokenize_csv.py --json-folder data/sample_companies/ --dataframe-file data/company_info.csv
+    uv run python scripts/tokenize_csv.py --config-name tokenize_json
+    uv run python scripts/tokenize_csv.py --config-name tokenize_csv processing.batch_size=1000
+    uv run python scripts/tokenize_csv.py --config-name tokenize input.json_folder=data/test_json_companies processing.extra_columns=[cust_status,revenue]
 """
 
-import argparse
+import hydra
+from omegaconf import DictConfig, OmegaConf
 import csv
 import os
 import sys
@@ -75,9 +83,17 @@ class JapaneseTokenizer:
         }
 
 
-def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None, max_content_length: int = 10000) -> List[Dict]:
-    """Read JSON files from folder and optionally merge with DataFrame"""
-    print(f"📖 Reading JSON files from folder: {json_folder}")
+def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None, max_content_length: int = 10000, 
+                    extra_columns: Optional[List[str]] = None) -> List[Dict]:
+    """Read JSON files from folder and optionally merge with DataFrame
+    
+    Args:
+        json_folder: Path to folder containing JSON files
+        dataframe_file: Path to CSV file with additional company information
+        max_content_length: Maximum HTML content length for tokenization
+        extra_columns: List of specific columns to merge from DataFrame (if None, uses all columns)
+    """
+    print(f"Reading JSON files from folder: {json_folder}")
     
     if not os.path.exists(json_folder):
         print(f"❌ Error: JSON folder does not exist: {json_folder}")
@@ -89,18 +105,33 @@ def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None, max
         print(f"❌ Error: No JSON files found in {json_folder}")
         return []
     
-    print(f"📁 Found {len(json_files)} JSON files")
+    print(f"Found {len(json_files)} JSON files")
     
     # Load DataFrame if provided and convert to dictionary for fast lookup
     df_dict = None
     if dataframe_file:
         try:
             df_data = pd.read_csv(dataframe_file)
+            
+            # Filter to specific columns if requested
+            if extra_columns:
+                # Always include 'jcn' for lookup key
+                columns_to_use = ['jcn'] + [col for col in extra_columns if col in df_data.columns and col != 'jcn']
+                missing_columns = [col for col in extra_columns if col not in df_data.columns]
+                
+                if missing_columns:
+                    print(f"⚠️  Warning: Columns not found in DataFrame: {missing_columns}")
+                
+                df_data = df_data[columns_to_use]
+                print(f"Using specific columns: {columns_to_use[1:]} (+ jcn as key)")
+            else:
+                print(f"Using all DataFrame columns ({len(df_data.columns)} columns)")
+            
             # Convert to dictionary with jcn as key for O(1) lookup
             df_data['jcn'] = df_data['jcn'].astype(str)
             df_dict = df_data.set_index('jcn').to_dict('index')
-            print(f"📊 Loaded DataFrame with {len(df_data)} records from {dataframe_file}")
-            print(f"🔑 Created lookup dictionary with {len(df_dict)} JCN keys")
+            print(f"Loaded DataFrame with {len(df_data)} records from {dataframe_file}")
+            print(f"Created lookup dictionary with {len(df_dict)} JCN keys")
         except Exception as e:
             print(f"⚠️  Warning: Could not load DataFrame: {e}")
             df_dict = None
@@ -121,7 +152,7 @@ def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None, max
                 print(f"   📝 Processed {i}/{total_files} JSON files")
                 
         except Exception as e:
-            print(f"⚠️  Warning: Could not process {json_file}: {e}")
+            print(f"⚠️ Warning: Could not process {json_file}: {e}")
             continue
     
     print(f"✅ Successfully loaded {len(records)} records from JSON files")
@@ -153,14 +184,12 @@ def extract_text_from_html(html_path: str, max_length: int = 10000) -> str:
         text = ' '.join(chunk for chunk in chunks if chunk)
         
         # Truncate if too long
-        if len(text) > max_length:
-            text = text[:max_length]
-            print(f"   📏 Truncated HTML content from {html_path} to {max_length} characters")
+        text = text[:max_length]
         
         return text
         
     except Exception as e:
-        print(f"⚠️  Warning: Could not extract text from {html_path}: {e}")
+        print(f"⚠️ Warning: Could not extract text from {html_path}: {e}")
         return ""
 
 
@@ -409,109 +438,94 @@ def get_output_dir(csv_file: str = None, json_folder: str = None, output_dir: st
         return "data/tokenized"
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description='Tokenize Japanese text from CSV files or JSON folders for index creation',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  # From CSV file
-  python scripts/tokenize_csv.py --csv-file data/companies.csv
-  python scripts/tokenize_csv.py --csv-file data/large_dataset.csv --batch-size 1000
-  
-  # From JSON folder with DataFrame merging
-  python scripts/tokenize_csv.py --json-folder data/sample_companies/ --dataframe-file data/company_info.csv
-  python scripts/tokenize_csv.py --json-folder data/companies_json/ --output-dir data/custom/
-        """
-    )
+@hydra.main(version_base=None, config_path="../conf", config_name="tokenize")
+def main(cfg: DictConfig) -> None:
+    """Main function with Hydra configuration"""
     
-    # Input source - either CSV file or JSON folder
-    input_group = parser.add_mutually_exclusive_group(required=True)
-    input_group.add_argument('--csv-file', type=str, help='Path to CSV file containing enterprise data')
-    input_group.add_argument('--json-folder', type=str, help='Path to folder containing JSON files with company data')
+    # Extract configuration values
+    csv_file = cfg.input.csv_file
+    json_folder = cfg.input.json_folder  
+    dataframe_file = cfg.input.dataframe_file
+    batch_size = cfg.processing.batch_size
+    max_content_length = cfg.processing.max_content_length
+    extra_columns = cfg.processing.extra_columns
+    output_dir = cfg.output.output_dir
+    clear_output = cfg.output.clear_output
     
-    parser.add_argument('--dataframe-file', type=str, 
-                       help='Path to CSV file with additional company information to merge (used with --json-folder)')
-    parser.add_argument('--batch-size', type=int, default=500, 
-                       help='Number of records to process per batch (default: 500)')
-    parser.add_argument('--output-dir', type=str,
-                       help='Directory for tokenized output files. If not specified, auto-generates based on input source')
-    parser.add_argument('--clear-output', action='store_true',
-                       help='Clear output directory before processing')
-    parser.add_argument('--max-content-length', type=int, default=10000,
-                       help='Maximum content length for tokenization (default: 10000 characters)')
-    
-    args = parser.parse_args()
-    
-    # Validate arguments
-    if args.csv_file and not os.path.exists(args.csv_file):
-        print(f"❌ Error: CSV file does not exist: {args.csv_file}")
+    # Validate configuration
+    if csv_file and not os.path.exists(csv_file):
+        print(f"❌ Error: CSV file does not exist: {csv_file}")
         sys.exit(1)
         
-    if args.json_folder and not os.path.exists(args.json_folder):
-        print(f"❌ Error: JSON folder does not exist: {args.json_folder}")
+    if json_folder and not os.path.exists(json_folder):
+        print(f"❌ Error: JSON folder does not exist: {json_folder}")
         sys.exit(1)
         
-    if args.dataframe_file and not os.path.exists(args.dataframe_file):
-        print(f"❌ Error: DataFrame file does not exist: {args.dataframe_file}")
+    if dataframe_file and not os.path.exists(dataframe_file):
+        print(f"❌ Error: DataFrame file does not exist: {dataframe_file}")
         sys.exit(1)
         
-    if args.dataframe_file and not args.json_folder:
-        print("❌ Error: --dataframe-file can only be used with --json-folder")
+    if dataframe_file and not json_folder:
+        print("❌ Error: dataframe_file can only be used with json_folder")
         sys.exit(1)
     
-    if args.batch_size <= 0:
+    if batch_size <= 0:
         print("❌ Error: Batch size must be a positive integer")
+        sys.exit(1)
+        
+    if not csv_file and not json_folder:
+        print("❌ Error: Either csv_file or json_folder must be specified")
         sys.exit(1)
     
     # Determine output directory
-    output_dir = get_output_dir(args.csv_file, args.json_folder, args.output_dir)
+    if not output_dir:
+        output_dir = get_output_dir(csv_file, json_folder, None)
     
-    print("🔄 EOS Tokenization Script")
+    print("EOS Tokenization Script")
     print("=" * 50)
-    if args.csv_file:
-        print(f"📂 Input: CSV File - {args.csv_file}")
+    if csv_file:
+        print(f"Input: CSV File - {csv_file}")
     else:
-        print(f"📂 Input: JSON Folder - {args.json_folder}")
-        if args.dataframe_file:
-            print(f"📊 DataFrame: {args.dataframe_file}")
-    print(f"📦 Batch Size: {args.batch_size}")
-    print(f"📁 Output Directory: {output_dir}")
+        print(f"Input: JSON Folder - {json_folder}")
+        if dataframe_file:
+            print(f"DataFrame: {dataframe_file}")
+    print(f"Batch Size: {batch_size}")
+    print(f"Output Directory: {output_dir}")
     print()
     
     # Setup output directory
-    if args.clear_output and os.path.exists(output_dir):
+    if clear_output and os.path.exists(output_dir):
         import shutil
-        print(f"🗑️  Clearing output directory: {output_dir}")
+        print(f"Clearing output directory: {output_dir}")
         shutil.rmtree(output_dir)
     
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
-        print(f"📁 Created output directory: {output_dir}")
+        print(f"Created output directory: {output_dir}")
     
     # Initialize tokenizer
-    print("🔧 Initializing Japanese tokenizer...")
+    print("Initializing Japanese tokenizer...")
     tokenizer = JapaneseTokenizer()
     print("✅ Tokenizer ready")
     print()
     
     # Read input data
     start_time = time.time()
-    if args.csv_file:
+    if csv_file:
         # Read CSV file in batches
-        batches = read_csv_batch(args.csv_file, args.batch_size)
+        batches = read_csv_batch(csv_file, batch_size)
         input_type = "CSV"
     else:
         # Read JSON folder and create batches
-        records = read_json_folder(args.json_folder, args.dataframe_file, args.max_content_length)
+        records = read_json_folder(json_folder, dataframe_file, max_content_length, extra_columns)
         if not records:
             print("❌ No data to process. Exiting.")
             sys.exit(1)
         
         # Create batches from records
         batches = []
-        for i in range(0, len(records), args.batch_size):
-            batch = records[i:i + args.batch_size]
+        for i in range(0, len(records), batch_size):
+            batch = records[i:i + batch_size]
             batches.append(batch)
         input_type = "JSON"
     
@@ -521,10 +535,10 @@ Examples:
     
     total_records = sum(len(batch) for batch in batches)
     
-    print(f"🔄 Starting tokenization...")
-    print(f"📊 Total records: {total_records}")
-    print(f"📦 Total batches: {len(batches)}")
-    print(f"📝 Input type: {input_type}")
+    print(f"Starting tokenization...")
+    print(f"Total records: {total_records}")
+    print(f"Total batches: {len(batches)}")
+    print(f"Input type: {input_type}")
     print()
     
     # Process each batch
@@ -541,42 +555,42 @@ Examples:
         
         # Show progress
         progress = (i / len(batches)) * 100
-        print(f"📈 Progress: {progress:.1f}% ({i}/{len(batches)} batches)")
+        print(f"Progress: {progress:.1f}% ({i}/{len(batches)} batches)")
         print()
     
     # Final statistics
     elapsed_total = time.time() - start_time
     
     print("=" * 50)
-    print("📊 TOKENIZATION COMPLETE")
+    print("TOKENIZATION COMPLETE")
     print("=" * 50)
-    print(f"⏱️  Total time: {elapsed_total:.2f} seconds")
+    print(f"Total time: {elapsed_total:.2f} seconds")
     print(f"✅ Successful batches: {successful_batches}/{len(batches)}")
-    print(f"📝 Records processed: {total_records}")
-    print(f"📁 Output directory: {output_dir}")
+    print(f"Records processed: {total_records}")
+    print(f"Output directory: {output_dir}")
     
     # Create summary file
     create_processing_summary(output_dir, len(batches), total_records, elapsed_total)
     
     if successful_batches == len(batches):
-        print("🎉 Tokenization completed successfully!")
+        print("✅ Tokenization completed successfully!")
         print()
-        print("📋 Next steps:")
-        if args.csv_file:
+        print("Next steps:")
+        if csv_file:
             print(f"   python scripts/create_index.py --tokenized-dir {output_dir}")
         else:
             print(f"   python scripts/create_index.py --tokenized-dir {output_dir}")
-            print(f"   # Tokenized from JSON folder: {args.json_folder}")
-            if args.dataframe_file:
-                print(f"   # Merged with DataFrame: {args.dataframe_file}")
+            print(f"   # Tokenized from JSON folder: {json_folder}")
+            if dataframe_file:
+                print(f"   # Merged with DataFrame: {dataframe_file}")
     else:
         failed_batches = len(batches) - successful_batches
-        print(f"⚠️  Tokenization completed with {failed_batches} failed batches")
+        print(f"⚠️ Tokenization completed with {failed_batches} failed batches")
     
     # Performance metrics
     if total_records > 0:
         records_per_second = total_records / elapsed_total
-        print(f"⚡ Processing rate: {records_per_second:.1f} records/second")
+        print(f"Processing rate: {records_per_second:.1f} records/second")
 
 
 if __name__ == '__main__':
