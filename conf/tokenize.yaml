@@ -1,8 +1,11 @@
+# Default tokenization configuration
+# Override specific settings with command line: python scripts/tokenize_csv.py input.csv_file=data/sample.csv
+
 input:
-  # Input source configuration
+  # Input source configuration - specify ONE of these
   csv_file: null                    # Path to CSV file
-  json_folder: null                 # Path to JSON folder
-  dataframe_file: null              # Path to DataFrame CSV for merging
+  json_folder: null                 # Path to JSON folder (enables HTML processing)
+  dataframe_file: null              # Path to DataFrame CSV for merging (requires json_folder)
   
 processing:
   # Processing configuration
@@ -13,6 +16,10 @@ processing:
     - revenue                       # Example: Company revenue
     - market_segment                # Example: Market segment
     # - sales_rep                   # Example: Sales representative (commented out)
+  use_multiprocessing: true         # Enable multiprocessing for tokenization
+  num_processes: null               # Number of processes (null = auto-detect CPU cores)
+  use_hybrid_pipeline: true        # Enable hybrid async I/O + multiprocessing pipeline
+  max_concurrent_io: 20             # Maximum concurrent I/O operations
   
 output:
   # Output configuration

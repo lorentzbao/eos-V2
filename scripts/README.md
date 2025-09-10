@@ -13,14 +13,14 @@ Utility scripts for managing Whoosh search indexes with Japanese text processing
 
 **Usage:**
 ```bash
-# Using configuration presets
-uv run python scripts/tokenize_csv.py --config-name <config_name>
+# Basic usage with direct parameters (like run.py)
+uv run python scripts/tokenize_csv.py <key>=<value>
 
-# Using custom config path
-uv run python scripts/tokenize_csv.py --config-path <path> --config-name <config_name>
+# Using configuration presets (optional)
+uv run python scripts/tokenize_csv.py --config-path ../conf/presets --config-name <preset_name>
 
 # With command-line overrides
-uv run python scripts/tokenize_csv.py --config-name <config_name> <key>=<value>
+uv run python scripts/tokenize_csv.py <key>=<value> <key2>=<value2>
 ```
 
 **Key Features:**
@@ -31,28 +31,45 @@ uv run python scripts/tokenize_csv.py --config-name <config_name> <key>=<value>
 - **Content Length Control** - Configurable HTML content truncation with direct text slicing
 - **Auto-directory Generation** - Smart output directory naming based on input source
 - **Column Selection** - Specify which DataFrame columns to merge with `extra_columns` list
+- **Multiprocessing Support** - Parallel tokenization for improved performance on large datasets
 
 **Configuration Presets:**
-- `tokenize_json` - JSON folder processing with DataFrame merging
-- `tokenize_csv` - Traditional CSV file processing
-- `tokenize` - Base configuration with examples
+- `json_companies` - JSON folder processing with DataFrame merging
+- `csv_companies` - Traditional CSV file processing
+
+**Performance Optimization:**
+- **Hybrid Pipeline**: Combines concurrent I/O with multiprocessing for optimal performance
+  - **ThreadPoolExecutor** for I/O-bound file reading operations
+  - **ProcessPoolExecutor** for CPU-bound HTML parsing and tokenization
+  - Best for datasets with many HTML files or complex HTML content
+- **Multiprocessing**: CPU-intensive parallel processing for tokenization
+- **Single-threaded**: Better for small datasets (<1000 records) due to reduced overhead
+- **Auto-detection**: Set `num_processes: null` to automatically use all CPU cores
+- **Batch Size**: Larger batches (1000-5000) work better with multiprocessing
 
 **Examples:**
 ```bash
-# JSON folder with HTML content extraction (using preset)
-uv run python scripts/tokenize_csv.py --config-name tokenize_json
+# Basic CSV processing
+uv run python scripts/tokenize_csv.py input.csv_file=data/sample_companies.csv
 
-# CSV processing (using preset)
-uv run python scripts/tokenize_csv.py --config-name tokenize_csv
+# JSON folder with DataFrame merging
+uv run python scripts/tokenize_csv.py input.json_folder=data/test_json_companies input.dataframe_file=data/test_company_info.csv
 
-# Override specific settings
-uv run python scripts/tokenize_csv.py --config-name tokenize_json processing.batch_size=1000 processing.max_content_length=5000
+# Override processing settings  
+uv run python scripts/tokenize_csv.py input.csv_file=data/sample.csv processing.batch_size=1000 processing.max_content_length=5000
 
 # Select specific DataFrame columns
-uv run python scripts/tokenize_csv.py --config-name tokenize input.json_folder=data/custom/ processing.extra_columns=[cust_status,revenue]
+uv run python scripts/tokenize_csv.py input.json_folder=data/companies input.dataframe_file=data/info.csv processing.extra_columns=[cust_status,revenue]
 
-# Custom configuration path
-uv run python scripts/tokenize_csv.py --config-path ../conf --config-name tokenize_json
+# Enable high-performance processing
+uv run python scripts/tokenize_csv.py input.json_folder=data/companies processing.use_hybrid_pipeline=true processing.num_processes=8
+
+# Using configuration presets
+uv run python scripts/tokenize_csv.py --config-path ../conf/presets --config-name json_companies
+uv run python scripts/tokenize_csv.py --config-path ../conf/presets --config-name csv_companies
+
+# Preset with overrides
+uv run python scripts/tokenize_csv.py --config-path ../conf/presets --config-name json_companies processing.batch_size=1000
 ```
 
 **Configuration Structure:**
@@ -68,6 +85,10 @@ processing:
   extra_columns:                    # DataFrame columns to merge
     - cust_status
     - revenue
+  use_multiprocessing: true         # Enable parallel processing
+  num_processes: null               # CPU cores (null = auto-detect)
+  use_hybrid_pipeline: true        # Enable hybrid async I/O + multiprocessing pipeline
+  max_concurrent_io: 20             # Maximum concurrent I/O operations
   
 output:
   output_dir: null                  # Auto-generated if null
