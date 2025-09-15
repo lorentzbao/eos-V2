@@ -103,6 +103,9 @@ class JapaneseTokenizer:
             
             # Include meaningful parts of speech
             if pos in ['名詞', '動詞', '形容詞', '副詞'] and len(word) > 1:
+                # Skip numeric tokens and pure digits
+                if word.isdigit():
+                    continue
                 if word not in self.stop_words:
                     tokens.append(word)
         
