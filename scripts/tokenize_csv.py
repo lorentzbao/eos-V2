@@ -141,31 +141,38 @@ def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None, max
     df_dict = None
     if dataframe_file:
         try:
-            df_data = pd.read_csv(dataframe_file)
-            
-            # Filter to specific columns if requested
+            # Determine which columns to read
             if extra_columns:
-                # Always include 'jcn' for lookup key
-                columns_to_use = ['jcn'] + [col for col in extra_columns if col in df_data.columns and col != 'jcn']
+                # Read only DOMESTIC_DESCRIMI_NO + extra_columns for better performance
+                columns_to_read = ['DOMESTIC_DESCRIMI_NO'] + extra_columns
+                df_data = pd.read_csv(dataframe_file, usecols=lambda x: x in columns_to_read)
+                
+                # Check which columns were actually found
+                available_columns = ['DOMESTIC_DESCRIMI_NO'] + [col for col in extra_columns if col in df_data.columns and col != 'DOMESTIC_DESCRIMI_NO']
                 missing_columns = [col for col in extra_columns if col not in df_data.columns]
                 
                 if missing_columns:
                     print(f"⚠️  Warning: Columns not found in DataFrame: {missing_columns}")
                 
-                df_data = df_data[columns_to_use]
-                print(f"Using specific columns: {columns_to_use[1:]} (+ jcn as key)")
+                print(f"Using specific columns: {available_columns[1:]} (+ DOMESTIC_DESCRIMI_NO as key)")
             else:
+                # Read all columns if no specific columns requested
+                df_data = pd.read_csv(dataframe_file)
                 print(f"Using all DataFrame columns ({len(df_data.columns)} columns)")
             
+            # Clean the data
+            df_data = df_data[df_data['DOMESTIC_DESCRIMI_NO'].notnull()]
+            df_data.drop_duplicates(subset=['DOMESTIC_DESCRIMI_NO'], inplace=True)
+            
             # Convert to dictionary with jcn as key for O(1) lookup
-            df_data['jcn'] = df_data['jcn'].astype(str)
-            df_dict = df_data.set_index('jcn').to_dict('index')
+            df_data['DOMESTIC_DESCRIMI_NO'] = df_data['DOMESTIC_DESCRIMI_NO'].astype(str)
+            df_dict = df_data.set_index('DOMESTIC_DESCRIMI_NO').to_dict('index')
             print(f"Loaded DataFrame with {len(df_data)} records from {dataframe_file}")
-            print(f"Created lookup dictionary with {len(df_dict)} JCN keys")
+            print(f"Created lookup dictionary with {len(df_dict)} DOMESTIC_DESCRIMI_NO keys")
         except Exception as e:
             print(f"⚠️  Warning: Could not load DataFrame: {e}")
             df_dict = None
-    
+
     records = []
     total_files = len(json_files)
     
@@ -203,7 +210,7 @@ def extract_text_from_html(html_path: str, max_length: int = 10000) -> str:
             html_content = f.read()
         
         # Parse HTML and extract text
-        soup = BeautifulSoup(html_content, 'html.parser')
+        soup = BeautifulSoup(html_content, 'lxml')
         
         # Remove script and style elements
         for script in soup(["script", "style"]):
@@ -279,7 +286,7 @@ def parse_html_content_cpu(html_content: str, max_length: int = 10000) -> str:
             return ""
         
         # Parse HTML and extract text
-        soup = BeautifulSoup(html_content, 'html.parser')
+        soup = BeautifulSoup(html_content, 'lxml')
         
         # Remove script and style elements
         for script in soup(["script", "style"]):
@@ -329,7 +336,6 @@ def convert_json_to_records_hybrid(json_data: Dict, df_dict: Optional[Dict] = No
             'company_address_all': json_data.get('company_address', {}).get('all', ''),
             'prefecture': json_data.get('company_address', {}).get('prefecture', ''),
             'city': json_data.get('company_address', {}).get('city', ''),
-            'employee': json_data.get('company_info', {}).get('employee') or 0,
             'main_domain_url': json_data.get('homepage', {}).get('main_domain', {}).get('url', ''),
         }
         
@@ -471,7 +477,6 @@ def convert_json_to_records(json_data: Dict, df_dict: Optional[Dict] = None, max
             'company_address_all': json_data.get('company_address', {}).get('all', ''),
             'prefecture': json_data.get('company_address', {}).get('prefecture', ''),
             'city': json_data.get('company_address', {}).get('city', ''),
-            'employee': json_data.get('company_info', {}).get('employee') or 0,
             'main_domain_url': json_data.get('homepage', {}).get('main_domain', {}).get('url', ''),
         }
         

@@ -26,7 +26,7 @@ class WhooshSimpleJapanese:
             
             # Enterprise corporate identification
             jcn=fields.KEYWORD(stored=True),  # 法人番号 (Corporate Number)
-            cust_status=fields.KEYWORD(stored=True),  # 顧客区分 (Customer Status)
+            CUST_STATUS2=fields.KEYWORD(stored=True),  # 顧客区分 (Customer Status)
             company_name_kj=fields.TEXT(stored=True),  # 漢字名 (Company Name - this is the title)
             
             # Address information
@@ -35,12 +35,12 @@ class WhooshSimpleJapanese:
             city=fields.KEYWORD(stored=True),  # 市区町村
             
             # Industry classification
-            duns_large_class_name=fields.KEYWORD(stored=True),  # 業種大分類
-            duns_middle_class_name=fields.KEYWORD(stored=True),  # 業種中分類
+            LARGE_CLASS_NAME=fields.KEYWORD(stored=True),  # 業種大分類
+            MIDDLE_CLASS_NAME=fields.KEYWORD(stored=True),  # 業種中分類
             
             # Financial data
-            curr_setlmnt_taking_amt=fields.NUMERIC(stored=True),  # 売上高
-            employee=fields.NUMERIC(stored=True),  # 従業員数
+            CURR_SETLMNT_TAKING_AMT=fields.NUMERIC(stored=True),  # 売上高
+            EMPLOYEE_ALL_NUM=fields.NUMERIC(stored=True),  # 従業員数
             
             # Organization codes
             district_finalized_cd=fields.KEYWORD(stored=True),  # 事業本部コード
@@ -95,10 +95,10 @@ class WhooshSimpleJapanese:
         return ' '.join(tokens)
     
     def add_document(self, doc_id: str, url: str = "", content: str = "", 
-                   jcn: str = "", cust_status: str = "", company_name_kj: str = "",
+                   jcn: str = "", CUST_STATUS2: str = "", company_name_kj: str = "",
                    company_address_all: str = "", prefecture: str = "", city: str = "",
-                   duns_large_class_name: str = "", duns_middle_class_name: str = "",
-                   curr_setlmnt_taking_amt: int = 0, employee: int = 0,
+                   LARGE_CLASS_NAME: str = "", MIDDLE_CLASS_NAME: str = "",
+                   CURR_SETLMNT_TAKING_AMT: int = 0, EMPLOYEE_ALL_NUM: int = 0,
                    district_finalized_cd: str = "", branch_name_cd: str = "",
                    main_domain_url: str = "", url_name: str = ""):
         """Add a single document to the index with enterprise metadata"""
@@ -114,7 +114,7 @@ class WhooshSimpleJapanese:
                 
                 # Enterprise corporate identification
                 jcn=jcn,
-                cust_status=cust_status,
+                CUST_STATUS2=CUST_STATUS2,
                 company_name_kj=company_name_kj,
                 
                 # Address information
@@ -123,12 +123,12 @@ class WhooshSimpleJapanese:
                 city=city,
                 
                 # Industry classification
-                duns_large_class_name=duns_large_class_name,
-                duns_middle_class_name=duns_middle_class_name,
+                LARGE_CLASS_NAME=LARGE_CLASS_NAME,
+                MIDDLE_CLASS_NAME=MIDDLE_CLASS_NAME,
                 
                 # Financial data
-                curr_setlmnt_taking_amt=curr_setlmnt_taking_amt,
-                employee=employee,
+                CURR_SETLMNT_TAKING_AMT=CURR_SETLMNT_TAKING_AMT,
+                EMPLOYEE_ALL_NUM=EMPLOYEE_ALL_NUM,
                 
                 # Organization codes
                 district_finalized_cd=district_finalized_cd,
@@ -155,8 +155,13 @@ class WhooshSimpleJapanese:
             writer = self.ix.writer()
             
             for doc in documents:
-                # Pre-process Japanese text for content
-                content_tokens = self._tokenize_japanese(doc['content'])
+                # Use pre-tokenized content if available, otherwise tokenize
+                if 'content_tokens' in doc and doc['content_tokens']:
+                    content_tokens = doc['content_tokens']
+                elif 'content' in doc and doc['content']:
+                    content_tokens = self._tokenize_japanese(doc['content'])
+                else:
+                    content_tokens = ""
                 
                 writer.add_document(
                     id=doc['id'],
@@ -165,7 +170,7 @@ class WhooshSimpleJapanese:
                     
                     # Enterprise corporate identification
                     jcn=doc.get('jcn', ''),
-                    cust_status=doc.get('cust_status', ''),
+                    CUST_STATUS2=doc.get('CUST_STATUS2', ''),
                     company_name_kj=doc.get('company_name_kj', ''),
                     
                     # Address information
@@ -174,12 +179,12 @@ class WhooshSimpleJapanese:
                     city=doc.get('city', ''),
                     
                     # Industry classification
-                    duns_large_class_name=doc.get('duns_large_class_name', ''),
-                    duns_middle_class_name=doc.get('duns_middle_class_name', ''),
+                    LARGE_CLASS_NAME=doc.get('LARGE_CLASS_NAME', ''),
+                    MIDDLE_CLASS_NAME=doc.get('MIDDLE_CLASS_NAME', ''),
                     
                     # Financial data
-                    curr_setlmnt_taking_amt=doc.get('curr_setlmnt_taking_amt', 0),
-                    employee=doc.get('employee', 0),
+                    CURR_SETLMNT_TAKING_AMT=doc.get('CURR_SETLMNT_TAKING_AMT', 0),
+                    EMPLOYEE_ALL_NUM=doc.get('EMPLOYEE_ALL_NUM', 0),
                     
                     # Organization codes
                     district_finalized_cd=doc.get('district_finalized_cd', ''),
@@ -237,7 +242,7 @@ class WhooshSimpleJapanese:
                 
                 if cust_status:
                     from whoosh.query import Term
-                    filters.append(Term("cust_status", cust_status))
+                    filters.append(Term("CUST_STATUS2", cust_status))
                 
                 # Combine filters with AND logic
                 filter_query = None
@@ -278,7 +283,7 @@ class WhooshSimpleJapanese:
                         
                         # Enterprise corporate identification
                         'jcn': result.get('jcn', ''),
-                        'cust_status': result.get('cust_status', ''),
+                        'CUST_STATUS2': result.get('CUST_STATUS2', ''),
                         'company_name_kj': result.get('company_name_kj', ''),
                         
                         # Address information
@@ -287,12 +292,12 @@ class WhooshSimpleJapanese:
                         'city': result.get('city', ''),
                         
                         # Industry classification
-                        'duns_large_class_name': result.get('duns_large_class_name', ''),
-                        'duns_middle_class_name': result.get('duns_middle_class_name', ''),
+                        'LARGE_CLASS_NAME': result.get('LARGE_CLASS_NAME', ''),
+                        'MIDDLE_CLASS_NAME': result.get('MIDDLE_CLASS_NAME', ''),
                         
                         # Financial data
-                        'curr_setlmnt_taking_amt': result.get('curr_setlmnt_taking_amt', ''),
-                        'employee': result.get('employee', ''),
+                        'CURR_SETLMNT_TAKING_AMT': result.get('CURR_SETLMNT_TAKING_AMT', ''),
+                        'EMPLOYEE_ALL_NUM': result.get('EMPLOYEE_ALL_NUM', ''),
                         
                         # Organization codes
                         'district_finalized_cd': result.get('district_finalized_cd', ''),

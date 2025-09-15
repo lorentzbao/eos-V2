@@ -159,7 +159,7 @@ def process_batch(search_service: SearchService, batch: List[Dict], batch_num: i
             
             # Enterprise corporate identification
             'jcn': row.get('jcn', ''),
-            'cust_status': row.get('cust_status', ''),
+            'CUST_STATUS2': row.get('CUST_STATUS2', ''),
             'company_name_kj': row.get('company_name_kj', ''),
             
             # Address information
@@ -168,12 +168,12 @@ def process_batch(search_service: SearchService, batch: List[Dict], batch_num: i
             'city': row.get('city', ''),
             
             # Industry classification
-            'duns_large_class_name': row.get('duns_large_class_name', ''),
-            'duns_middle_class_name': row.get('duns_middle_class_name', ''),
+            'LARGE_CLASS_NAME': row.get('LARGE_CLASS_NAME', ''),
+            'MIDDLE_CLASS_NAME': row.get('MIDDLE_CLASS_NAME', ''),
             
             # Financial data (convert to int)
-            'curr_setlmnt_taking_amt': convert_to_int(row.get('curr_setlmnt_taking_amt', '0')),
-            'employee': convert_to_int(row.get('employee', '0')),
+            'CURR_SETLMNT_TAKING_AMT': convert_to_int(row.get('CURR_SETLMNT_TAKING_AMT', '0')),
+            'EMPLOYEE_ALL_NUM': convert_to_int(row.get('EMPLOYEE_ALL_NUM', '0')),
             
             # Organization codes
             'district_finalized_cd': row.get('district_finalized_cd', ''),

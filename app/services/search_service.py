@@ -90,7 +90,7 @@ class SearchService:
                     # Corporate identification
                     'jcn': jcn,
                     'company_name_kj': company_name,
-                    'cust_status': result.get('cust_status', ''),
+                    'CUST_STATUS2': result.get('CUST_STATUS2', ''),
                     
                     # Address information
                     'company_address_all': result.get('company_address_all', ''),
@@ -98,12 +98,12 @@ class SearchService:
                     'city': result.get('city', ''),
                     
                     # Industry classification
-                    'duns_large_class_name': result.get('duns_large_class_name', ''),
-                    'duns_middle_class_name': result.get('duns_middle_class_name', ''),
+                    'LARGE_CLASS_NAME': result.get('LARGE_CLASS_NAME', ''),
+                    'MIDDLE_CLASS_NAME': result.get('MIDDLE_CLASS_NAME', ''),
                     
                     # Financial data
-                    'curr_setlmnt_taking_amt': result.get('curr_setlmnt_taking_amt', ''),
-                    'employee': result.get('employee', ''),
+                    'CURR_SETLMNT_TAKING_AMT': result.get('CURR_SETLMNT_TAKING_AMT', ''),
+                    'EMPLOYEE_ALL_NUM': result.get('EMPLOYEE_ALL_NUM', ''),
                     
                     # Organization codes
                     'district_finalized_cd': result.get('district_finalized_cd', ''),
@@ -132,16 +132,16 @@ class SearchService:
         return grouped_companies
     
     def add_document(self, doc_id: str, url: str = "", content: str = "", 
-                   jcn: str = "", cust_status: str = "", company_name_kj: str = "",
+                   jcn: str = "", CUST_STATUS2: str = "", company_name_kj: str = "",
                    company_address_all: str = "", prefecture: str = "", city: str = "",
-                   duns_large_class_name: str = "", duns_middle_class_name: str = "",
-                   curr_setlmnt_taking_amt: int = 0, employee: int = 0,
+                   LARGE_CLASS_NAME: str = "", MIDDLE_CLASS_NAME: str = "",
+                   CURR_SETLMNT_TAKING_AMT: int = 0, EMPLOYEE_ALL_NUM: int = 0,
                    district_finalized_cd: str = "", branch_name_cd: str = "",
                    main_domain_url: str = "", url_name: str = ""):
         result = self.search_engine.add_document(
-            doc_id, url, content, jcn, cust_status, company_name_kj,
-            company_address_all, prefecture, city, duns_large_class_name, 
-            duns_middle_class_name, curr_setlmnt_taking_amt, employee,
+            doc_id, url, content, jcn, CUST_STATUS2, company_name_kj,
+            company_address_all, prefecture, city, LARGE_CLASS_NAME, 
+            MIDDLE_CLASS_NAME, CURR_SETLMNT_TAKING_AMT, EMPLOYEE_ALL_NUM,
             district_finalized_cd, branch_name_cd, main_domain_url, url_name
         )
         # Clear cache when documents are added

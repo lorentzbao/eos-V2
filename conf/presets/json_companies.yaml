@@ -5,13 +5,17 @@
 input:
   csv_file: null
   json_folder: "data/test_json_companies"
-  dataframe_file: "data/test_company_info.csv"
+  dataframe_file: "data/sample_companies.csv"
   
 processing:
   batch_size: 500
   max_content_length: 10000
   extra_columns:
-    - cust_status
+    - CUST_STATUS2
+    - LARGE_CLASS_NAME
+    - MIDDLE_CLASS_NAME
+    - CURR_SETLMNT_TAKING_AMT
+    - EMPLOYEE_ALL_NUM
   use_multiprocessing: true
   num_processes: null               # Auto-detect CPU cores
   use_hybrid_pipeline: true        # Enable hybrid async I/O + multiprocessing pipeline
