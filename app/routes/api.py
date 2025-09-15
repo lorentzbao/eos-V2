@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, session, send_file, current_app
 from app.services.search_service import SearchService
+from app.services.multi_index_search_service import MultiIndexSearchService
 import csv
 import io
 import os
@@ -9,9 +10,14 @@ from datetime import datetime
 api = Blueprint('api', __name__, url_prefix='/api')
 
 def get_search_service():
-    """Get SearchService with configured index directory"""
-    index_dir = current_app.config.get('INDEX_DIR', 'data/whoosh_index')
-    return SearchService(index_dir)
+    """Get appropriate search service (multi-index or single-index)"""
+    # Check if multi-index configuration is available
+    if 'INDEXES' in current_app.config:
+        return MultiIndexSearchService(current_app.config['INDEXES'])
+    else:
+        # Fallback to single index
+        index_dir = current_app.config.get('INDEX_DIR', 'data/whoosh_index')
+        return SearchService(index_dir)
 
 @api.route('/search')
 def api_search():
@@ -24,8 +30,30 @@ def api_search():
     if not query:
         return jsonify({'error': 'Query parameter required'}), 400
     
-    results = get_search_service().search(query, limit, prefecture, cust_status)
+    search_service = get_search_service()
+    
+    # Check if using multi-index service
+    if isinstance(search_service, MultiIndexSearchService):
+        if not prefecture:
+            return jsonify({'error': 'Prefecture selection is required'}), 400
+        results = search_service.search(query, prefecture, limit, cust_status)
+    else:
+        # Single index service (backward compatibility)
+        results = search_service.search(query, limit, prefecture, cust_status)
+    
     return jsonify(results)
+
+@api.route('/prefectures')
+def api_prefectures():
+    """API endpoint to get available prefectures"""
+    search_service = get_search_service()
+    
+    if isinstance(search_service, MultiIndexSearchService):
+        prefectures = search_service.get_available_prefectures()
+        return jsonify({'prefectures': prefectures})
+    else:
+        # Single index service - return empty or default
+        return jsonify({'prefectures': []})
 
 @api.route('/add_document', methods=['POST'])
 def api_add_document():

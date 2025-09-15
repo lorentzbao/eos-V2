@@ -1,0 +1,79 @@
+{
+  "jcn": 4270001234567,
+  "jcn_scs": null,
+  "status": "",
+  "company_name": {
+    "kj": "大阪製造技術株式会社",
+    "kn": "オオサカセイゾウギジュツ",
+    "en": "Osaka Manufacturing Technology Co."
+  },
+  "company_address": {
+    "all": "大阪府大阪市中央区本町3-2-5",
+    "zipcode": "5410053",
+    "prefecture": "大阪府",
+    "city": "大阪市",
+    "chome_etc": "中央区本町3-2-5",
+    "prefecture_en": "Osaka",
+    "all_en": ""
+  },
+  "company_info": {
+    "kind": "株式会社",
+    "head_officer": "佐藤一郎",
+    "tel": {
+      "homepage": "0667890123",
+      "nta": ""
+    },
+    "email": "info@osaka-manufacturing.jp",
+    "captial": 1200000000,
+    "employee": 300,
+    "establishment": "1985-04-20",
+    "founding": null,
+    "industry": "製造業",
+    "market": ""
+  },
+  "data_date": {
+    "regist": "1985-04-20T00:00:00Z",
+    "modified": "",
+    "updated": "",
+    "closed": "",
+    "download": ""
+  },
+  "homepage": {
+    "main_domain": {
+      "url": "https://www.osaka-manufacturing.jp",
+      "source": {
+        "bing": {
+          "scraped_date": "2025-01-15T08:45:00Z",
+          "url": "https://www.osaka-manufacturing.jp"
+        }
+      },
+      "html_path": "data/HTML/osaka/osaka_manufacturing_main.html",
+      "status": 200,
+      "scraped_at": "2025-01-15T12:15:30Z"
+    },
+    "sub_domain": [
+      {
+        "url": "https://www.osaka-manufacturing.jp/products",
+        "tags": [
+          "精密機械",
+          "工作機械",
+          "産業用ロボット"
+        ],
+        "html_path": "data/HTML/osaka/osaka_manufacturing_products.html",
+        "status": 200,
+        "scraped_date": "2025-01-15T12:16:00Z"
+      },
+      {
+        "url": "https://www.osaka-manufacturing.jp/iot",
+        "tags": [
+          "IoT",
+          "スマートファクトリー",
+          "製造業DX"
+        ],
+        "html_path": "data/HTML/osaka/osaka_manufacturing_iot.html",
+        "status": 200,
+        "scraped_date": "2025-01-15T12:16:30Z"
+      }
+    ]
+  }
+}

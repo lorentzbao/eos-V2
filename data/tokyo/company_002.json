@@ -1,0 +1,68 @@
+{
+  "jcn": 1270001234568,
+  "jcn_scs": null,
+  "status": "",
+  "company_name": {
+    "kj": "東京フィンテック株式会社",
+    "kn": "トウキョウフィンテック",
+    "en": "Tokyo FinTech Corp."
+  },
+  "company_address": {
+    "all": "東京都港区六本木3-4-5",
+    "zipcode": "1060032",
+    "prefecture": "東京都",
+    "city": "港区",
+    "chome_etc": "六本木3-4-5",
+    "prefecture_en": "Tokyo",
+    "all_en": ""
+  },
+  "company_info": {
+    "kind": "株式会社",
+    "head_officer": "田中花子",
+    "tel": {
+      "homepage": "0356789012",
+      "nta": ""
+    },
+    "email": "contact@tokyo-fintech.co.jp",
+    "captial": 1200000000,
+    "employee": 95,
+    "establishment": "2016-09-01",
+    "founding": null,
+    "industry": "金融業・保険業",
+    "market": ""
+  },
+  "data_date": {
+    "regist": "2016-09-01T00:00:00Z",
+    "modified": "",
+    "updated": "",
+    "closed": "",
+    "download": ""
+  },
+  "homepage": {
+    "main_domain": {
+      "url": "https://www.tokyo-fintech.com",
+      "source": {
+        "bing": {
+          "scraped_date": "2025-01-15T09:00:00Z",
+          "url": "https://www.tokyo-fintech.com"
+        }
+      },
+      "html_path": "data/HTML/tokyo/tokyo_fintech_main.html",
+      "status": 200,
+      "scraped_at": "2025-01-15T11:20:45Z"
+    },
+    "sub_domain": [
+      {
+        "url": "https://www.tokyo-fintech.com/blockchain",
+        "tags": [
+          "ブロックチェーン",
+          "仮想通貨",
+          "決済システム"
+        ],
+        "html_path": "data/HTML/tokyo/tokyo_fintech_blockchain.html",
+        "status": 200,
+        "scraped_date": "2025-01-15T11:21:00Z"
+      }
+    ]
+  }
+}

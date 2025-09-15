@@ -28,17 +28,9 @@
                 
                 <div class="row">
                     <div class="col-md-4">
-                        <select name="prefecture" class="form-select">
-                            <option value="" {% if not prefecture %}selected{% endif %}>すべての地域</option>
+                        <select name="prefecture" class="form-select" required>
                             <option value="tokyo" {% if prefecture == 'tokyo' %}selected{% endif %}>東京都</option>
                             <option value="osaka" {% if prefecture == 'osaka' %}selected{% endif %}>大阪府</option>
-                            <option value="kyoto" {% if prefecture == 'kyoto' %}selected{% endif %}>京都府</option>
-                            <option value="aichi" {% if prefecture == 'aichi' %}selected{% endif %}>愛知県</option>
-                            <option value="kanagawa" {% if prefecture == 'kanagawa' %}selected{% endif %}>神奈川県</option>
-                            <option value="fukuoka" {% if prefecture == 'fukuoka' %}selected{% endif %}>福岡県</option>
-                            <option value="hokkaido" {% if prefecture == 'hokkaido' %}selected{% endif %}>北海道</option>
-                            <option value="sendai" {% if prefecture == 'sendai' %}selected{% endif %}>宮城県</option>
-                            <option value="hiroshima" {% if prefecture == 'hiroshima' %}selected{% endif %}>広島県</option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -88,18 +80,18 @@
                             <div class="company-details">
                                 {% if company.jcn %}<small class="text-muted me-2">JCN: {{ company.jcn }}</small>{% endif %}
                                 <br>
-                                {% if company.duns_large_class_name %}{{ company.duns_large_class_name }}{% endif %}
-                                {% if company.duns_middle_class_name %} • {{ company.duns_middle_class_name }}{% endif %}
+                                {% if company.LARGE_CLASS_NAME %}{{ company.LARGE_CLASS_NAME }}{% endif %}
+                                {% if company.MIDDLE_CLASS_NAME %} • {{ company.MIDDLE_CLASS_NAME }}{% endif %}
                                 <br>
                                 {% if company.prefecture %}{{ company.prefecture }}{% endif %}
                                 {% if company.city %} {{ company.city }}{% endif %}
-                                {% if company.employee %} • 従業員: {{ company.employee }}人{% endif %}
-                                {% if company.curr_setlmnt_taking_amt %} • 売上: {{ company.curr_setlmnt_taking_amt }}{% endif %}
+                                {% if company.EMPLOYEE_ALL_NUM %} • 従業員: {{ company.EMPLOYEE_ALL_NUM }}人{% endif %}
+                                {% if company.CURR_SETLMNT_TAKING_AMT %} • 売上: {{ company.CURR_SETLMNT_TAKING_AMT }}{% endif %}
                             </div>
                         </div>
-                        {% if company.cust_status %}
+                        {% if company.CUST_STATUS2 %}
                         <div class="company-badges">
-                            <span class="badge bg-secondary">{{ company.cust_status }}</span>
+                            <span class="badge bg-secondary">{{ company.CUST_STATUS2 }}</span>
                         </div>
                         {% endif %}
                     </div>

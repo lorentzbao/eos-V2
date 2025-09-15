@@ -1,0 +1,78 @@
+{
+  "jcn": 1270001234567,
+  "jcn_scs": null,
+  "status": "",
+  "company_name": {
+    "kj": "株式会社東京AIソリューションズ",
+    "kn": "トウキョウエーアイソリューションズ",
+    "en": "Tokyo AI Solutions Inc."
+  },
+  "company_address": {
+    "all": "東京都新宿区西新宿2-8-1",
+    "zipcode": "1600023",
+    "prefecture": "東京都",
+    "city": "新宿区",
+    "chome_etc": "西新宿2-8-1",
+    "prefecture_en": "Tokyo",
+    "all_en": ""
+  },
+  "company_info": {
+    "kind": "株式会社",
+    "head_officer": "山田太郎",
+    "tel": {
+      "homepage": "0332345678",
+      "nta": ""
+    },
+    "email": "info@tokyo-ai.co.jp",
+    "captial": 800000000,
+    "employee": 85,
+    "establishment": "2018-03-15",
+    "founding": null,
+    "industry": "情報通信業",
+    "market": ""
+  },
+  "data_date": {
+    "regist": "2018-03-15T00:00:00Z",
+    "modified": "",
+    "updated": "",
+    "closed": "",
+    "download": ""
+  },
+  "homepage": {
+    "main_domain": {
+      "url": "https://www.tokyo-ai.co.jp",
+      "source": {
+        "bing": {
+          "scraped_date": "2025-01-15T08:30:00Z",
+          "url": "https://www.tokyo-ai.co.jp"
+        }
+      },
+      "html_path": "data/HTML/tokyo/tokyo_ai_main.html",
+      "status": 200,
+      "scraped_at": "2025-01-15T10:15:30Z"
+    },
+    "sub_domain": [
+      {
+        "url": "https://www.tokyo-ai.co.jp/solutions",
+        "tags": [
+          "AI開発",
+          "機械学習",
+          "深層学習"
+        ],
+        "html_path": "data/HTML/tokyo/tokyo_ai_solutions.html",
+        "status": 200,
+        "scraped_date": "2025-01-15T10:16:00Z"
+      },
+      {
+        "url": "https://www.tokyo-ai.co.jp/consulting",
+        "tags": [
+          "AIコンサルティング",
+          "データ分析"
+        ],
+        "html_path": "data/HTML/tokyo/tokyo_ai_consulting.html",
+        "status": 200,
+        "scraped_date": "2025-01-15T10:16:30Z"
+      }
+    ]
+  }
+}

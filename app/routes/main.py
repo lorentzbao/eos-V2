@@ -1,14 +1,20 @@
 from flask import Blueprint, render_template, request, session, redirect, url_for, current_app
 from app.services.search_service import SearchService
+from app.services.multi_index_search_service import MultiIndexSearchService
 from app.services.search_logger import SearchLogger
 
 main = Blueprint('main', __name__)
 search_logger = SearchLogger()
 
 def get_search_service():
-    """Get SearchService with configured index directory"""
-    index_dir = current_app.config.get('INDEX_DIR', 'data/whoosh_index')
-    return SearchService(index_dir)
+    """Get appropriate search service (multi-index or single-index)"""
+    # Check if multi-index configuration is available
+    if 'INDEXES' in current_app.config:
+        return MultiIndexSearchService(current_app.config['INDEXES'])
+    else:
+        # Fallback to single index
+        index_dir = current_app.config.get('INDEX_DIR', 'data/whoosh_index')
+        return SearchService(index_dir)
 
 @main.route('/')
 def index():
@@ -19,9 +25,16 @@ def index():
     # Get popular queries for search suggestions
     popular_queries = search_logger.get_popular_queries(limit=10)
     
+    # Get available prefectures for multi-index service
+    search_service = get_search_service()
+    prefectures = []
+    if isinstance(search_service, MultiIndexSearchService):
+        prefectures = search_service.get_available_prefectures()
+    
     return render_template('index.html', 
                          username=session['username'],
-                         popular_queries=popular_queries)
+                         popular_queries=popular_queries,
+                         prefectures=prefectures)
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -110,8 +123,19 @@ def search():
     if not query or not query.strip():
         return redirect(url_for('main.index'))
     
-    search_results = get_search_service().search(query, limit, prefecture, cust_status)
-    stats = get_search_service().get_stats()
+    search_service = get_search_service()
+    
+    # Handle multi-index service
+    if isinstance(search_service, MultiIndexSearchService):
+        if not prefecture:
+            # Redirect back to index with error (prefecture required)
+            return redirect(url_for('main.index', error='prefecture_required'))
+        search_results = search_service.search(query, prefecture, limit, cust_status)
+        stats = search_service.get_stats(prefecture)
+    else:
+        # Single index service (backward compatibility)
+        search_results = search_service.search(query, limit, prefecture, cust_status)
+        stats = search_service.get_stats()
     
     # Get popular queries for search suggestions dropdown
     popular_queries = search_logger.get_popular_queries(limit=10)
