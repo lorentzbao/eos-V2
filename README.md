@@ -60,27 +60,27 @@ http://127.0.0.1:5000/api/download-csv?q=Python&prefecture=tokyo&cust_status=白
 
 ```bash
 # Step 1: Tokenize data with HTML content extraction using Hydra configuration
-uv run python scripts/tokenize_csv.py --config-name tokenize_json
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies
 
 # Step 2: Create index from tokenized data
-python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized
+uv run python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized
 
 # Alternative: Process CSV files
-uv run python scripts/tokenize_csv.py --config-name tokenize_csv
-python scripts/create_index.py --tokenized-dir data/sample_companies/tokenized
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name csv_companies
+uv run python scripts/create_index.py --tokenized-dir data/sample_companies/tokenized
 ```
 
 ### **Configuration-Based Input Sources**
 
 ```bash
 # JSON folder with company data and HTML content (using preset)
-uv run python scripts/tokenize_csv.py --config-name tokenize_json
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies
 
 # CSV file processing (using preset)
-uv run python scripts/tokenize_csv.py --config-name tokenize_csv
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name csv_companies
 
 # Override specific settings
-uv run python scripts/tokenize_csv.py --config-name tokenize_json processing.batch_size=1000 processing.max_content_length=5000
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies processing.batch_size=1000 processing.max_content_length=5000
 
 # Select specific DataFrame columns
 uv run python scripts/tokenize_csv.py --config-name tokenize processing.extra_columns=[cust_status,revenue]
@@ -92,13 +92,13 @@ For detailed documentation, see: **[scripts/README.md](./scripts/README.md)**
 
 ```bash
 # Add more data to existing index
-python scripts/add_to_index.py data/new_companies.csv
+uv run python scripts/add_to_index.py data/new_companies.csv
 
 # Check index health and performance
-python scripts/index_info.py
+uv run python scripts/index_info.py
 
 # Delete index
-python scripts/delete_index.py
+uv run python scripts/delete_index.py
 ```
 
 ## 🏗️ Technical Stack
@@ -132,8 +132,8 @@ uv run python run.py
 uv run python run.py app.debug=false index.dir=data/production/index
 
 # Process sample data
-python scripts/tokenize_csv.py --json-folder data/test_json_companies
-python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized
+uv run python scripts/tokenize_csv.py --json-folder data/test_json_companies
+uv run python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized
 ```
 
 ### **Configuration Management**

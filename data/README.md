@@ -27,20 +27,20 @@ Test data for the Japanese company search engine with HTML content extraction ca
 ### **Modern JSON Workflow (Recommended)**
 ```bash
 # Process JSON companies with HTML content extraction (using Hydra configuration)
-uv run python scripts/tokenize_csv.py --config-name tokenize_json
-python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies
+uv run python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized
 
 # Test HTML content truncation with override
-uv run python scripts/tokenize_csv.py --config-name tokenize_json processing.max_content_length=500
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies processing.max_content_length=500
 
 # Select specific DataFrame columns
-uv run python scripts/tokenize_csv.py --config-name tokenize_json processing.extra_columns=[cust_status]
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies processing.extra_columns=[cust_status]
 ```
 
 ### **Legacy CSV Processing**
 ```bash
 # Traditional CSV workflow
-python scripts/create_index.py data/sample_companies.csv
+uv run python scripts/create_index.py data/sample_companies.csv
 ```
 
 ## Data Features

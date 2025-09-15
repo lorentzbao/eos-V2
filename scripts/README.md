@@ -65,11 +65,11 @@ uv run python scripts/tokenize_csv.py input.json_folder=data/companies input.dat
 uv run python scripts/tokenize_csv.py input.json_folder=data/companies processing.use_hybrid_pipeline=true processing.num_processes=8
 
 # Using configuration presets
-uv run python scripts/tokenize_csv.py --config-path ../conf/presets --config-name json_companies
-uv run python scripts/tokenize_csv.py --config-path ../conf/presets --config-name csv_companies
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name csv_companies
 
 # Preset with overrides
-uv run python scripts/tokenize_csv.py --config-path ../conf/presets --config-name json_companies processing.batch_size=1000
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies processing.batch_size=1000
 ```
 
 **Configuration Structure:**
@@ -102,23 +102,23 @@ output:
 **Usage:**
 ```bash
 # From tokenized data (recommended)
-python scripts/create_index.py --tokenized-dir <tokenized_dir> [--index-dir DIR]
+uv run python scripts/create_index.py --tokenized-dir <tokenized_dir> [--index-dir DIR]
 
 # From CSV (direct)
-python scripts/create_index.py <csv_file> [--batch-size SIZE] [--index-dir DIR]
+uv run python scripts/create_index.py <csv_file> [--batch-size SIZE] [--index-dir DIR]
 ```
 
 **Examples:**
 ```bash
 # Two-step workflow with auto-generated paths
-python scripts/tokenize_csv.py --json-folder data/test_json_companies
-python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized
+uv run python scripts/tokenize_csv.py --json-folder data/test_json_companies
+uv run python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized
 
 # From CSV with custom index directory
-python scripts/create_index.py data/companies.csv --index-dir data/custom_index/
+uv run python scripts/create_index.py data/companies.csv --index-dir data/custom_index/
 
 # From tokenized data with custom paths
-python scripts/create_index.py --tokenized-dir data/custom/tokenized --index-dir data/custom/index
+uv run python scripts/create_index.py --tokenized-dir data/custom/tokenized --index-dir data/custom/index
 ```
 
 **Features:**
@@ -131,14 +131,14 @@ python scripts/create_index.py --tokenized-dir data/custom/tokenized --index-dir
 
 **Usage:**
 ```bash
-python scripts/delete_index.py [--index-dir DIR] [--force] [--stats-only]
+uv run python scripts/delete_index.py [--index-dir DIR] [--force] [--stats-only]
 ```
 
 ### 4. `add_to_index.py` - Add to Existing Index
 
 **Usage:**
 ```bash
-python scripts/add_to_index.py <csv_file> [--batch-size SIZE] [--index-dir DIR] [--dry-run]
+uv run python scripts/add_to_index.py <csv_file> [--batch-size SIZE] [--index-dir DIR] [--dry-run]
 ```
 
 ## Data Processing Pipeline
