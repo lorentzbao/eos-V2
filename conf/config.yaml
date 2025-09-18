@@ -10,3 +10,6 @@ indexes:
   osaka:
     dir: "data/osaka/index"
     name: "Osaka"
+  kochi:
+    dir: "data/kochi/index"
+    name: "Kochi"

@@ -8,8 +8,8 @@ input:
   dataframe_file: "data/sample_companies.csv"
   
 processing:
-  batch_size: 500
-  max_content_length: 10000
+  batch_size: 256
+  max_content_length: 5000
   extra_columns:
     - CUST_STATUS2
     - LARGE_CLASS_NAME
@@ -19,7 +19,7 @@ processing:
   use_multiprocessing: true
   num_processes: null               # Auto-detect CPU cores
   use_hybrid_pipeline: true        # Enable hybrid async I/O + multiprocessing pipeline
-  max_concurrent_io: 20             # Maximum concurrent I/O operations
+  max_concurrent_io: 8             # Maximum concurrent I/O operations
   
 output:
   output_dir: null                  # Auto-generate: data/test_json_companies/tokenized

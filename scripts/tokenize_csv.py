@@ -47,6 +47,10 @@ import multiprocessing as mp
 import pandas as pd
 from bs4 import BeautifulSoup
 
+from bs4 import XMLParsedAsHTMLWarning
+import warnings
+warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
+
 
 # Data structures for pipeline processing
 class FileTask(NamedTuple):
@@ -168,7 +172,7 @@ def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None, max
             df_data.drop_duplicates(subset=['DOMESTIC_DESCRIMI_NO'], inplace=True)
             
             # Convert to dictionary with jcn as key for O(1) lookup
-            df_data['DOMESTIC_DESCRIMI_NO'] = df_data['DOMESTIC_DESCRIMI_NO'].astype(str)
+            df_data['DOMESTIC_DESCRIMI_NO'] = df_data['DOMESTIC_DESCRIMI_NO'].apply(lambda x: str(int(float(x))))
             df_dict = df_data.set_index('DOMESTIC_DESCRIMI_NO').to_dict('index')
             print(f"Loaded DataFrame with {len(df_data)} records from {dataframe_file}")
             print(f"Created lookup dictionary with {len(df_dict)} DOMESTIC_DESCRIMI_NO keys")

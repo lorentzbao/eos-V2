@@ -31,13 +31,15 @@
                         <select name="prefecture" class="form-select" required>
                             <option value="tokyo" {% if prefecture == 'tokyo' %}selected{% endif %}>東京都</option>
                             <option value="osaka" {% if prefecture == 'osaka' %}selected{% endif %}>大阪府</option>
+                            <option value="kochi" {% if prefecture == 'kochi' %}selected{% endif %}>高知県</option>
                         </select>
                     </div>
                     <div class="col-md-4">
                         <select name="cust_status" class="form-select">
                             <option value="" {% if not cust_status %}selected{% endif %}>すべての顧客区分</option>
                             <option value="白地" {% if cust_status == '白地' %}selected{% endif %}>白地</option>
-                            <option value="既存" {% if cust_status == '既存' %}selected{% endif %}>既存</option>
+                            <option value="契約" {% if cust_status == '契約' %}selected{% endif %}>契約</option>
+                            <option value="過去" {% if cust_status == '過去' %}selected{% endif %}>過去</option>
                         </select>
                     </div>
                     <div class="col-md-4">
