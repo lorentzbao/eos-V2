@@ -5,6 +5,23 @@ Complete setup and development guide for frontend developers working on the EOS 
 
 ---
 
+## 📋 Table of Contents
+
+### **Getting Started**
+- [🪟 Windows uv Installation](#-windows-uv-installation) - Install the Python package manager
+- [🚀 Running the Application](#-running-the-application) - Start the development server
+
+### **Understanding the Project**
+- [📁 Project Folder Structure](#-project-folder-structure) - Navigate the codebase
+- [🎨 Frontend-Specific Folders](#-frontend-specific-folders) - Where to make UI/UX changes
+- [🔧 Jinja2 Templates Explained](#understanding-jinja2-syntax-for-frontend-developers) - Server-side templating for React/Vue developers
+
+### **Development Resources**
+- [🔗 Development URLs](#useful-development-urls) - Test pages and APIs
+- [📚 API Documentation](#api-documentation) - Complete integration guide
+
+---
+
 ## 🪟 Windows uv Installation
 
 EOS uses `uv` as the Python package manager for fast dependency management. Here's how to install it on Windows:
@@ -151,10 +168,80 @@ templates/
     └── Search history pagination
 ```
 
-**Template Technology:** Jinja2 templating engine
-- Use `{{ variable }}` for data output
-- Use `{% if condition %}` for logic
-- Use `{% for item in list %}` for loops
+**Template Technology:** Jinja2 templating engine (Flask's template system)
+
+#### **Understanding Jinja2 Syntax for Frontend Developers**
+
+If you're coming from React/Vue/Angular, Jinja2 might look unfamiliar. Here's what you need to know:
+
+**🔗 URL Generation:**
+```html
+<!-- Jinja2 (Flask) -->
+<form action="{{ url_for('main.search') }}" method="GET">
+<!-- Becomes: <form action="/search" method="GET"> -->
+
+<a href="{{ url_for('main.rankings') }}">Rankings</a>
+<!-- Becomes: <a href="/rankings">Rankings</a> -->
+
+<script src="{{ url_for('static', filename='js/app.js') }}">
+<!-- Becomes: <script src="/static/js/app.js"> -->
+```
+
+**📊 Data Display:**
+```html
+<!-- Variables -->
+<h1>{{ company.company_name }}</h1>
+<!-- Outputs: <h1>株式会社東京AIソリューションズ</h1> -->
+
+<p>Found {{ total_results }} companies</p>
+<!-- Outputs: <p>Found 15 companies</p> -->
+```
+
+**🔄 Loops (like v-for or map):**
+```html
+<!-- Jinja2 -->
+{% for company in grouped_results %}
+  <div class="company">
+    <h3>{{ company.company_name }}</h3>
+    {% for url in company.urls %}
+      <a href="{{ url.url }}">{{ url.url_name }}</a>
+    {% endfor %}
+  </div>
+{% endfor %}
+```
+
+**❓ Conditionals (like v-if):**
+```html
+<!-- Jinja2 -->
+{% if user_logged_in %}
+  <button>Download CSV</button>
+{% else %}
+  <a href="{{ url_for('main.login') }}">Login</a>
+{% endif %}
+
+{% if results %}
+  <p>Found {{ results|length }} results</p>
+{% else %}
+  <p>No results found</p>
+{% endif %}
+```
+
+**🛠️ Common Jinja2 Patterns You'll See:**
+
+| Jinja2 Syntax | Purpose | React/Vue Equivalent |
+|---------------|---------|---------------------|
+| `{{ variable }}` | Display data | `{variable}` or `{{variable}}` |
+| `{% for item in list %}` | Loop through data | `.map()` or `v-for` |
+| `{% if condition %}` | Conditional rendering | `{condition && <div>}` or `v-if` |
+| `{{ url_for('route.name') }}` | Generate URLs | Router links |
+| `{{ variable\|filter }}` | Apply filters | Computed properties/methods |
+
+**📝 Editing Templates:**
+1. **Find the template file** in `templates/` directory
+2. **Locate the HTML section** you want to modify
+3. **Keep Jinja2 syntax intact** - only modify HTML structure and CSS classes
+4. **Add your HTML/CSS** around existing Jinja2 code
+5. **Test changes** by refreshing the browser (auto-reload in debug mode)
 
 ### **`static/` Directory - Frontend Assets**
 
