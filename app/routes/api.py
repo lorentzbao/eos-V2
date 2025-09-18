@@ -1,27 +1,59 @@
-from flask import Blueprint, request, jsonify, Response, session, send_file
+from flask import Blueprint, request, jsonify, session, send_file, current_app
 from app.services.search_service import SearchService
+from app.services.multi_index_search_service import MultiIndexSearchService
 import csv
 import io
 import os
 import hashlib
 from datetime import datetime
-import urllib.parse
 
 api = Blueprint('api', __name__, url_prefix='/api')
-search_service = SearchService()
+
+def get_search_service():
+    """Get appropriate search service (multi-index or single-index)"""
+    # Check if multi-index configuration is available
+    if 'INDEXES' in current_app.config:
+        return MultiIndexSearchService(current_app.config['INDEXES'])
+    else:
+        # Fallback to single index
+        index_dir = current_app.config.get('INDEX_DIR', 'data/whoosh_index')
+        return SearchService(index_dir)
 
 @api.route('/search')
 def api_search():
     """API endpoint for search queries"""
     query = request.args.get('q', '')
-    search_type = request.args.get('type', 'auto')
     limit = int(request.args.get('limit', 10))
+    prefecture = request.args.get('prefecture', '')
+    cust_status = request.args.get('cust_status', '')
     
     if not query:
         return jsonify({'error': 'Query parameter required'}), 400
     
-    results = search_service.search(query, limit, search_type)
+    search_service = get_search_service()
+    
+    # Check if using multi-index service
+    if isinstance(search_service, MultiIndexSearchService):
+        if not prefecture:
+            return jsonify({'error': 'Prefecture selection is required'}), 400
+        results = search_service.search(query, prefecture, limit, cust_status)
+    else:
+        # Single index service (backward compatibility)
+        results = search_service.search(query, limit, prefecture, cust_status)
+    
     return jsonify(results)
+
+@api.route('/prefectures')
+def api_prefectures():
+    """API endpoint to get available prefectures"""
+    search_service = get_search_service()
+    
+    if isinstance(search_service, MultiIndexSearchService):
+        prefectures = search_service.get_available_prefectures()
+        return jsonify({'prefectures': prefectures})
+    else:
+        # Single index service - return empty or default
+        return jsonify({'prefectures': []})
 
 @api.route('/add_document', methods=['POST'])
 def api_add_document():
@@ -32,11 +64,13 @@ def api_add_document():
         return jsonify({'error': 'Missing required fields: id, title, content'}), 400
     
     try:
-        success = search_service.add_document(
+        success = get_search_service().add_document(
             data['id'], 
             data['title'], 
             data['content'], 
-            data.get('url', '')
+            data.get('content', ''),  # Use content as introduction since no separate field
+            data.get('url', ''),
+            data.get('prefecture', '')
         )
         if success:
             return jsonify({'success': True, 'message': 'Document added successfully'})
@@ -63,7 +97,7 @@ def api_add_documents():
             return jsonify({'error': f'Document {i}: Missing required fields: id, title, content'}), 400
     
     try:
-        success = search_service.add_documents_batch(documents)
+        success = get_search_service().add_documents_batch(documents)
         if success:
             return jsonify({
                 'success': True, 
@@ -77,13 +111,13 @@ def api_add_documents():
 @api.route('/stats')
 def api_stats():
     """API endpoint to get search engine statistics"""
-    return jsonify(search_service.get_stats())
+    return jsonify(get_search_service().get_stats())
 
 @api.route('/clear_index', methods=['POST'])
 def api_clear_index():
     """API endpoint to clear the search index"""
     try:
-        success = search_service.clear_index()
+        success = get_search_service().clear_index()
         if success:
             return jsonify({'success': True, 'message': 'Index cleared successfully'})
         else:
@@ -95,7 +129,7 @@ def api_clear_index():
 def api_optimize_index():
     """API endpoint to optimize the search index"""
     try:
-        success = search_service.optimize_index()
+        success = get_search_service().optimize_index()
         if success:
             return jsonify({'success': True, 'message': 'Index optimized successfully'})
         else:
@@ -103,9 +137,9 @@ def api_optimize_index():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-def get_cache_key(query, search_type, prefecture):
+def get_cache_key(query, prefecture, cust_status):
     """Generate unique cache key for search parameters"""
-    params = f"{query}:{search_type}:{prefecture}"
+    params = f"{query}:{prefecture}:{cust_status}"
     return hashlib.md5(params.encode('utf-8')).hexdigest()
 
 @api.route('/download-csv')
@@ -117,14 +151,14 @@ def download_csv():
     
     # Get search parameters
     query = request.args.get('q', '').strip()
-    search_type = request.args.get('type', 'auto')
     prefecture = request.args.get('prefecture', '')
+    cust_status = request.args.get('cust_status', '')
     
     if not query:
         return jsonify({'error': 'Query parameter required'}), 400
     
     # Generate cache key and file path
-    cache_key = get_cache_key(query, search_type, prefecture)
+    cache_key = get_cache_key(query, prefecture, cust_status)
     # Use absolute path from project root
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     cache_dir = os.path.join(project_root, "data", "csv_cache")
@@ -149,31 +183,48 @@ def download_csv():
             # Use Python's CSV writer for proper encoding
             output = io.StringIO()
             
-            # Create CSV writer
-            fieldnames = ['ID', 'Title', 'Content', 'URL', 'Score', 'Prefecture', 'Matched_Terms']
+            # Create CSV writer with enterprise data field order
+            fieldnames = [
+                'jcn', 'CUST_STATUS2', 'company_name_kj', 'company_address_all', 
+                'LARGE_CLASS_NAME', 'MIDDLE_CLASS_NAME', 'CURR_SETLMNT_TAKING_AMT', 'EMPLOYEE_ALL_NUM',
+                'prefecture', 'city', 'district_finalized_cd', 'branch_name_cd', 
+                'main_domain_url', 'url_name', 'url', 'content', 'matched_terms', 'id'
+            ]
             writer = csv.DictWriter(output, fieldnames=fieldnames)
             
             # Write header
             writer.writeheader()
             
-            # Single search to get all results - most efficient approach
-            search_results = search_service.search(query, limit=10000, search_type=search_type, prefecture=prefecture)
-            results = search_results.get('results', [])
+            # Single search to get all results - most efficient approach with JCN sorting
+            search_results = get_search_service().search(query, limit=10000, prefecture=prefecture, cust_status=cust_status, sort_by="jcn")
+            grouped_results = search_results.get('grouped_results', [])
             
-            # Write all results
-            for result in results:
-                # Format result data
-                result_data = {
-                    'ID': result.get('id', ''),
-                    'Title': result.get('title', ''),
-                    'Content': result.get('content', '')[:500],  # Limit content length
-                    'URL': result.get('url', ''),
-                    'Score': round(result.get('score', 0), 3),
-                    'Prefecture': prefecture if prefecture else 'all',
-                    'Matched_Terms': '|'.join(result.get('matched_terms', []))
-                }
-                
-                writer.writerow(result_data)
+            # Write all results by flattening grouped results
+            for company in grouped_results:
+                for url in company.get('urls', []):
+                    # Format result data with enterprise structure
+                    result_data = {
+                        'jcn': company.get('jcn', ''),
+                        'CUST_STATUS2': company.get('CUST_STATUS2', ''),
+                        'company_name_kj': company.get('company_name_kj', ''),
+                        'company_address_all': company.get('company_address_all', ''),
+                        'LARGE_CLASS_NAME': company.get('LARGE_CLASS_NAME', ''),
+                        'MIDDLE_CLASS_NAME': company.get('MIDDLE_CLASS_NAME', ''),
+                        'CURR_SETLMNT_TAKING_AMT': company.get('CURR_SETLMNT_TAKING_AMT', ''),
+                        'EMPLOYEE_ALL_NUM': company.get('EMPLOYEE_ALL_NUM', ''),
+                        'prefecture': company.get('prefecture', ''),
+                        'city': company.get('city', ''),
+                        'district_finalized_cd': company.get('district_finalized_cd', ''),
+                        'branch_name_cd': company.get('branch_name_cd', ''),
+                        'main_domain_url': company.get('main_domain_url', ''),
+                        'url_name': url.get('url_name', ''),
+                        'url': url.get('url', ''),
+                        'content': url.get('content', '')[:500],  # Limit content length
+                        'matched_terms': '|'.join(url.get('matched_terms', [])),
+                        'id': url.get('id', '')
+                    }
+                    
+                    writer.writerow(result_data)
             
             # Get CSV content
             csv_content = output.getvalue()

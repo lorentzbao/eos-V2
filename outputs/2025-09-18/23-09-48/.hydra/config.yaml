@@ -1,0 +1,13 @@
+app:
+  secret_key: your-secret-key-here
+  debug: true
+indexes:
+  tokyo:
+    dir: data/tokyo/index
+    name: Tokyo
+  osaka:
+    dir: data/osaka/index
+    name: Osaka
+  kochi:
+    dir: data/kochi/index
+    name: Kochi

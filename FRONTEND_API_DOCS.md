@@ -1,7 +1,7 @@
-# Frontend API Guide
+# Frontend API Reference
 **EOS - Japanese Enterprise Search Engine**
 
-Quick reference for frontend developers to integrate with the EOS backend.
+Clean API documentation for frontend developers.
 
 ---
 
@@ -14,450 +14,384 @@ uv run python run.py
 # Backend runs on http://127.0.0.1:5000
 ```
 
+**Authentication:** All endpoints require login via session cookies.
+
+**Japanese Text:** Queries are normalized (full-width spaces → half-width spaces).
+
+---
+
+## 📋 API Overview
+
+### **HTML Pages** (for browser integration)
+- `GET /` - Home page with search form
+- `GET /search` - Search results with company grouping  
+- `GET /login` / `POST /login` - Authentication
+- `GET /logout` - Session cleanup
+- `GET /history` - User search history
+- `GET /rankings` - Popular keywords
+
+### **JSON APIs** (for AJAX/fetch integration)
+- `GET /api/search` - Search with JSON response
+- `GET /api/download-csv` - CSV export (authenticated)
+- `GET /api/stats` - Search engine statistics
+- `POST /api/add_document` - Add single record
+- `POST /api/add_documents` - Batch add records  
+- `POST /api/clear_index` - Clear index
+- `POST /api/optimize_index` - Optimize index
+
+---
+
 ## 🔐 Authentication
 
-Simple username-based sessions. All search endpoints require login.
+**Session-based authentication required for all endpoints.**
 
+### Login
 ```http
-# Login
 POST /login
 Content-Type: application/x-www-form-urlencoded
 
 username=john_doe
 ```
 
-**Sample Response:**
-```http
-HTTP/1.1 302 Found
-Location: /
-Set-Cookie: session=eyJ1c2VybmFtZSI6ImpvaG5fZG9lIn0...; HttpOnly; Path=/
-```
+**Response:** `302 Redirect` to `/` with session cookie
 
+### Logout
 ```http
-# Logout  
 GET /logout
 ```
 
-**Sample Response:**
-```http
-HTTP/1.1 302 Found  
-Location: /login
-Set-Cookie: session=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/
-```
+**Response:** `302 Redirect` to `/login` (session cleared)
 
 ---
 
-## 🔍 Main Search API
+## 🔍 Search APIs
 
-**Endpoint:** `GET /search`
+### 1. HTML Search Page
+```http
+GET /search?q=Python&type=auto&prefecture=tokyo&limit=20
+```
 
 **Parameters:**
+- `q` - Search query (required)
+- `type` - `auto` (default) or `title` 
+- `prefecture` - Filter: `tokyo`, `osaka`, `kyoto`, etc.
+- `limit` - Results per page: `10`, `20`, `50`
+
+**Response:** HTML page with company-grouped search results
+
+**Template Data Structure:**
 ```javascript
-{
-  q: "search query",        // Required, non-empty
-  type: "auto",             // "auto" | "title" (default: "auto") 
-  limit: 10,                // 10 | 20 | 50 (default: 10)
-  prefecture: "tokyo"       // Optional prefecture filter
-}
-```
-
-**Examples:**
-```http
-GET /search?q=Python&limit=20
-GET /search?q=機械学習&type=title&prefecture=osaka
-GET /search?q=AI開発&prefecture=tokyo
-```
-
-**Response:** HTML page with search results + pagination JavaScript
-
-**Sample Output Structure:**
-```javascript
-// Template receives this data
 {
   query: "Python",
-  search_type: "auto", 
-  prefecture: "tokyo",
-  limit: 10,
-  results: [
+  grouped_results: [
     {
-      id: "company_020",
-      title: "秋葉原IoT研究所",
-      content: "秋葉原のIoT研究所。エッジAI・5G・産業用IoTデバイス開発。Python/C++でのファームウェア開発...",
-      url: "https://akihabara-iot.lab",
-      score: 1.95,
-      matched_terms: ["python"]
-    },
-    {
-      id: "company_005", 
-      title: "Tokyo AI Solutions",
-      content: "AI・機械学習コンサルティング。Python/TensorFlow専門チーム...",
-      url: "https://tokyo-ai-solutions.com",
-      score: 1.87,
-      matched_terms: ["python"]
+      company_name: "株式会社東京テクノロジー",
+      company_number: "1010001000001", 
+      company_tel: "03-1234-5678",
+      company_industry: "情報通信業",
+      prefecture: "tokyo",
+      urls: [
+        {
+          url: "https://tokyo-tech.co.jp",
+          url_name: "メインサイト",
+          content: "東京を拠点とするIT企業です...",
+          matched_terms: ["python"],
+          score: 1.95,
+          id: "url_001"
+        }
+      ]
     }
   ],
-  total_found: 3,
-  search_time: 0.156,
-  username: "john_doe"
+  total_found: 15,
+  total_companies: 8,
+  search_time: 0.156
+}
+```
+
+### 2. JSON Search API
+```http
+GET /api/search?q=Python&limit=10
+```
+
+**Parameters:**
+- `q` - Search query (required)
+- `limit` - Max results (default: 10)
+
+**Response:**
+```json
+{
+  "results": [
+    {
+      "id": "url_001",
+      "title": "株式会社東京テクノロジー - メインサイト", 
+      "content": "東京を拠点とするIT企業です...",
+      "url": "https://tokyo-tech.co.jp",
+      "score": 1.95,
+      "matched_terms": ["python"]
+    }
+  ],
+  "total_found": 15,
+  "query": "Python",
+  "search_time": 0.156
 }
 ```
 
 ---
 
-## 📊 Search History
+## 📥 CSV Export API
 
-**Endpoint:** `GET /history`
+```http
+GET /api/download-csv?q=Python&prefecture=tokyo
+```
+
+**Authentication:** Required (session-based)
 
 **Parameters:**
-```javascript
+- `q` - Search query (required)
+- `type` - `auto` (default) or `title`
+- `prefecture` - Optional filter
+
+**Response:** CSV file download (UTF-8 BOM)
+
+**CSV Columns:**
+```
+Company_Number,Company_Name,Company_Tel,Company_Industry,Prefecture,URL_Name,URL,Content,Matched_Terms,ID
+```
+
+**Features:**
+- File-based caching for performance
+- Company information repeated per URL
+- Sorted by company_number
+- Matched terms separated by `|`
+
+---
+
+## 📊 Statistics API
+
+```http
+GET /api/stats
+```
+
+**Response:**
+```json
 {
-  show_all: true  // false: 8 entries, true: up to 100 entries
+  "total_documents": 150,
+  "engine_type": "Whoosh",
+  "cache_hits": 45,
+  "cache_misses": 12,
+  "cache_size": 32,
+  "cache_max_size": 128
 }
 ```
 
-**Examples:**
+---
+
+## 📚 Search History
+
 ```http
-GET /history              // Latest 8 searches
-GET /history?show_all=true // Up to 100 searches  
+GET /history?show_all=true
 ```
+
+**Parameters:**
+- `show_all` - `false` (8 entries) or `true` (up to 100)
 
 **Response:** HTML page with search history table
 
-**Sample Output Structure:**
+**Template Data:**
 ```javascript
-// Template receives this data
 {
   searches: [
     {
-      timestamp: "2024-01-15T10:30:45.123456",
-      query: "Python開発",
+      timestamp: "2024-03-15T14:30:22.123456",
+      query: "python",
       search_type: "auto",
-      prefecture: "tokyo",
-      results_count: 24,
-      search_time: 0.156
-    },
-    {
-      timestamp: "2024-01-15T10:25:12.789012", 
-      query: "機械学習",
-      search_type: "title",
-      prefecture: "",
-      results_count: 8,
-      search_time: 0.089
-    },
-    {
-      timestamp: "2024-01-15T10:20:33.456789",
-      query: "フィンテック",
-      search_type: "auto", 
-      prefecture: "osaka",
       results_count: 12,
-      search_time: 0.134
+      search_time: 0.156,
+      prefecture: "tokyo"
     }
   ],
-  username: "john_doe",
-  show_all: false,
-  limit: 8,
-  total_searches: 156
+  total_searches: 45,
+  show_all: false
 }
 ```
 
 ---
 
-## 🏆 Search Rankings & Suggestions
+## 🏆 Rankings Page
 
-### Rankings Page
+```http
+GET /rankings
+```
 
-**Endpoint:** `GET /rankings`
+**Response:** HTML page with popular keyword rankings
 
-**Response:** HTML page showing popular keyword rankings with statistics
-
-**Sample Output Structure:**
+**Template Data:**
 ```javascript
-// Template receives this data
 {
   queries: [
     {
       query: "python",
-      count: 12,
-      percentage: 35.3
-    },
-    {
-      query: "機械学習", 
-      count: 8,
-      percentage: 23.5
+      count: 23,
+      percentage: 15.3
     },
     {
       query: "ai",
-      count: 6, 
-      percentage: 17.6
+      count: 18, 
+      percentage: 12.0
     }
   ],
   stats: {
-    total_queries: 34,
-    unique_queries: 15,
-    top_query: ["python", 12]
-  },
-  username: "john_doe"
-}
-```
-
-### Smart Search Suggestions
-
-**Auto-completion dropdowns** are embedded in search forms:
-
-**Features:**
-- Instant suggestions from popular search keywords
-- Google-style dropdown with keyboard navigation
-- No API calls needed (data embedded in templates)
-- Real-time filtering as user types
-
-**Implementation:**
-```javascript
-// Popular queries data is embedded in each page
-window.popularQueries = [
-  {"query": "python", "count": 12},
-  {"query": "機械学習", "count": 8},
-  {"query": "ai", "count": 6}
-];
-
-// Suggestions appear instantly on:
-// - Focus on search input
-// - Typing in search input  
-// - Clicking search input
-```
-
----
-
-## 🏠 Navigation
-
-```http
-GET /           # Home page (search form with suggestions)
-GET /search     # Search results page (with suggestions)  
-GET /rankings   # Popular keyword rankings page
-GET /history    # User search history
-GET /login      # Login form  
-GET /logout     # Destroys session, redirects to login
-```
-
-**Sample Outputs:**
-
-**Home Page (`GET /`):**
-```http
-HTTP/1.1 200 OK
-Content-Type: text/html
-
-<!-- Returns index.html template with: -->
-{
-  username: "john_doe"
-}
-```
-
-**Login Page (`GET /login`):**  
-```http
-HTTP/1.1 200 OK
-Content-Type: text/html
-
-<!-- Returns login.html template with login form -->
-<!-- If POST with username, redirects to / with session -->
-```
-
----
-
-## 📝 Frontend Integration
-
-### 1. Search Form Template with Auto-suggestions
-
-```html
-<form action="/search" method="GET">
-  <div class="input-group position-relative">
-    <!-- Search input with suggestions -->
-    <input type="text" 
-           id="searchInput"
-           name="q" 
-           required
-           autocomplete="off"
-           placeholder="検索キーワードを入力...">
-    <button type="submit">検索</button>
-    
-    <!-- Auto-suggestions dropdown -->
-    <div id="searchSuggestions" class="suggestions-dropdown" style="display: none;">
-      <div class="suggestions-header">
-        <small class="text-muted">🏆 人気の検索キーワード</small>
-      </div>
-      <div id="suggestionsList">
-        <!-- Populated by JavaScript -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Search type -->
-  <select name="type">
-    <option value="auto">すべて検索</option>
-    <option value="title">タイトルのみ</option>
-  </select>
-
-  <!-- Prefecture filter -->
-  <select name="prefecture">
-    <option value="">すべての地域</option>
-    <option value="tokyo">東京都</option>
-    <option value="osaka">大阪府</option>
-    <option value="kyoto">京都府</option>
-    <option value="aichi">愛知県</option>
-    <option value="kanagawa">神奈川県</option>
-    <option value="fukuoka">福岡県</option>
-  </select>
-
-  <!-- Results limit -->
-  <select name="limit">
-    <option value="10">10件</option>
-    <option value="20">20件</option>
-    <option value="50">50件</option>
-  </select>
-</form>
-
-<!-- Embed popular queries data -->
-<script>
-window.popularQueries = {{ popular_queries | tojson }};
-</script>
-```
-
-### 2. Empty Search Prevention
-
-```javascript
-// Prevent empty submissions (Google-style)
-document.querySelector('form').addEventListener('submit', function(e) {
-  const query = document.querySelector('input[name="q"]').value.trim();
-  if (!query) {
-    e.preventDefault();
-    // Show validation feedback
-    document.querySelector('input[name="q"]').classList.add('is-invalid');
+    total_queries: 150,
+    unique_queries: 45,
+    top_query: "python"
   }
+}
+```
+
+---
+
+## 📝 Data Management APIs
+
+### Add Single Record
+```http
+POST /api/add_document
+Content-Type: application/json
+
+{
+  "id": "url_001",
+  "title": "株式会社東京テクノロジー - メインサイト",
+  "content": "東京を拠点とするIT企業です...",
+  "company_name": "株式会社東京テクノロジー",
+  "company_number": "1010001000001",
+  "company_tel": "03-1234-5678", 
+  "company_industry": "情報通信業",
+  "prefecture": "tokyo",
+  "url_name": "メインサイト",
+  "url": "https://tokyo-tech.co.jp"
+}
+```
+
+**Response:**
+```json
+{"success": true, "message": "Document added successfully"}
+```
+
+### Add Multiple Records
+```http
+POST /api/add_documents
+Content-Type: application/json
+
+{
+  "documents": [
+    {
+      "id": "url_001",
+      "title": "Company A",
+      "content": "Content here..."
+      // ... other fields
+    },
+    {
+      "id": "url_002", 
+      "title": "Company B",
+      "content": "More content..."
+      // ... other fields
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{"success": true, "message": "2 documents added successfully"}
+```
+
+### Clear Index
+```http
+POST /api/clear_index
+```
+
+**Response:**
+```json
+{"success": true, "message": "Index cleared successfully"}
+```
+
+### Optimize Index  
+```http
+POST /api/optimize_index
+```
+
+**Response:**
+```json
+{"success": true, "message": "Index optimized successfully"}
+```
+
+---
+
+## ⚠️ Error Responses
+
+All APIs return consistent error format:
+
+```json
+{"error": "Error message description"}
+```
+
+**Common HTTP Status Codes:**
+- `400` - Bad Request (missing parameters)
+- `401` - Unauthorized (login required)  
+- `500` - Internal Server Error
+
+---
+
+## 💡 Usage Examples
+
+### AJAX Search
+```javascript
+fetch('/api/search?q=Python&limit=5')
+  .then(response => response.json())
+  .then(data => {
+    console.log(`Found ${data.total_found} results`);
+    data.results.forEach(result => {
+      console.log(result.title);
+    });
+  });
+```
+
+### CSV Download Trigger
+```javascript
+// Trigger download
+const params = new URLSearchParams({
+  q: 'Python',
+  prefecture: 'tokyo'
 });
+window.location = `/api/download-csv?${params}`;
 ```
 
-### 3. State Preservation
-
-```html
-<!-- Keep user selections after search -->
-<select name="type">
-  <option value="auto" {% if search_type == 'auto' %}selected{% endif %}>
-    すべて検索
-  </option>
-  <option value="title" {% if search_type == 'title' %}selected{% endif %}>
-    タイトルのみ  
-  </option>
-</select>
-```
-
----
-
-## 🎨 Template Data
-
-### Search Results Page
-
-The `/search` endpoint provides these template variables:
-
+### Add Company Record
 ```javascript
-{
-  // Search info
-  query: "Python",              // Original query
-  search_type: "auto",          // Search type used
-  prefecture: "tokyo",          // Prefecture filter  
-  limit: 10,                    // Results limit
-  
-  // Results
-  results: [                    // Array of search results
-    {
-      id: "doc1",               // Document ID
-      title: "Python開発会社",   // Document title
-      content: "Pythonで...",    // Document introduction
-      url: "https://...",       // Document URL
-      score: 7.5,               // Relevance score (0-10)
-      matched_terms: ["Python"] // Highlighted terms
-    }
-  ],
-  total_found: 24,              // Total results count
-  search_time: 0.15,            // Search time in seconds
-  
-  // User info  
-  username: "john_doe"          // Current user
-}
-```
-
-### History Page
-
-The `/history` endpoint provides:
-
-```javascript
-{
-  searches: [                   // User's search history
-    {
-      timestamp: "2023-...",    // When searched
-      query: "Python",          // What they searched
-      search_type: "auto",      // Search type
-      prefecture: "tokyo",      // Prefecture filter (if any)
-      results_count: 24,        // Results found
-      search_time: 0.15         // How long it took
-    }
-  ],
-  username: "john_doe",         // Current user
-  show_all: false,              // Pagination state
-  total_searches: 156           // Total user searches
-}
+fetch('/api/add_document', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({
+    id: 'url_001',
+    title: 'New Company',
+    content: 'Company description...',
+    company_name: '株式会社新会社',
+    company_number: '1010001000999',
+    prefecture: 'tokyo'
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data.message));
 ```
 
 ---
 
-## ✨ Built-in Features
+## 🎯 Frontend Integration Tips
 
-### JavaScript Pagination *(Already Implemented)*
-- Results automatically paginated at 10 items per page
-- No server requests needed for page navigation
-- Smart pagination with numbered buttons + ellipsis
+1. **Session Management** - Handle 401 redirects to login
+2. **Japanese Text** - Queries normalized automatically
+3. **Company Grouping** - Use HTML endpoints for grouped results
+4. **CSV Downloads** - Check authentication before triggering
+5. **Error Handling** - Parse JSON error responses
+6. **Caching** - CSV/search results cached server-side
 
-### Japanese Search *(Already Implemented)*  
-- Proper Japanese tokenization with Janome
-- OR-based search (multiple keywords expand results)
-- Prefecture metadata filtering
-
-### Search History *(Already Implemented)*
-- Efficient reverse file reading (scales to GB+ logs)
-- User-specific search tracking
-- Scalable pagination (8 recent, up to 100 total)
-
-### Search Rankings & Suggestions *(Already Implemented)*
-- Real-time keyword popularity tracking
-- In-memory rankings with startup initialization
-- Google-style auto-suggestions with keyboard navigation
-- Rankings page with medal badges and progress bars
-- Zero-latency suggestions (data embedded in templates)
-
----
-
-## 🎯 What You Need to Do
-
-1. **Style the existing templates** in `/templates/`
-2. **Customize CSS** in `/static/css/style.css`  
-3. **Add JavaScript features** if needed
-4. **Test with sample data** (25+ companies included)
-
-### Sample Searches to Try:
-- `Python` - Python development companies
-- `AI` - Artificial intelligence companies  
-- `フィンテック` - Fintech companies
-- `ゲーム` - Gaming companies
-
----
-
-## 🛠️ Development
-
-```bash
-# Backend runs with auto-reload
-uv run python run.py
-
-# Load sample data
-uv run python load_sample_data.py
-
-# Access at http://127.0.0.1:5000
-```
-
-**That's it!** The backend handles authentication, search, pagination, and history. You just need to style the frontend.
+**That's it!** Clean, structured API reference for easy frontend integration.

@@ -28,23 +28,18 @@
                 
                 <div class="row">
                     <div class="col-md-4">
-                        <select name="type" class="form-select">
-                            <option value="auto" {% if search_type == 'auto' %}selected{% endif %}>すべて検索</option>
-                            <option value="title" {% if search_type == 'title' %}selected{% endif %}>タイトルのみ</option>
+                        <select name="prefecture" class="form-select" required>
+                            <option value="tokyo" {% if prefecture == 'tokyo' %}selected{% endif %}>東京都</option>
+                            <option value="osaka" {% if prefecture == 'osaka' %}selected{% endif %}>大阪府</option>
+                            <option value="kochi" {% if prefecture == 'kochi' %}selected{% endif %}>高知県</option>
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <select name="prefecture" class="form-select">
-                            <option value="" {% if not prefecture %}selected{% endif %}>すべての地域</option>
-                            <option value="tokyo" {% if prefecture == 'tokyo' %}selected{% endif %}>東京都</option>
-                            <option value="osaka" {% if prefecture == 'osaka' %}selected{% endif %}>大阪府</option>
-                            <option value="kyoto" {% if prefecture == 'kyoto' %}selected{% endif %}>京都府</option>
-                            <option value="aichi" {% if prefecture == 'aichi' %}selected{% endif %}>愛知県</option>
-                            <option value="kanagawa" {% if prefecture == 'kanagawa' %}selected{% endif %}>神奈川県</option>
-                            <option value="fukuoka" {% if prefecture == 'fukuoka' %}selected{% endif %}>福岡県</option>
-                            <option value="hokkaido" {% if prefecture == 'hokkaido' %}selected{% endif %}>北海道</option>
-                            <option value="sendai" {% if prefecture == 'sendai' %}selected{% endif %}>宮城県</option>
-                            <option value="hiroshima" {% if prefecture == 'hiroshima' %}selected{% endif %}>広島県</option>
+                        <select name="cust_status" class="form-select">
+                            <option value="" {% if not cust_status %}selected{% endif %}>すべての顧客区分</option>
+                            <option value="白地" {% if cust_status == '白地' %}selected{% endif %}>白地</option>
+                            <option value="契約" {% if cust_status == '契約' %}selected{% endif %}>契約</option>
+                            <option value="過去" {% if cust_status == '過去' %}selected{% endif %}>過去</option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -63,7 +58,7 @@
         <div class="search-stats mb-3">
             <small class="text-muted">
                 "{{ query }}" の検索結果{% if prefecture %} ({{ prefecture }}のみ){% endif %}: 
-                <strong>{{ total_found }}</strong> 件見つかりました
+                <strong>{{ total_found }}</strong> 件 ({{ total_companies }} 社) 見つかりました
                 {% if search_time %}
                 ({{ search_time }}秒)
                 {% endif %}
@@ -76,54 +71,77 @@
         {% endif %}
 
         <!-- Search Results -->
-        {% if results %}
-        <div class="search-results">
-            {% for result in results %}
-            <div class="result-item mb-4 p-3 border rounded">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1 me-3">
-                        <h5 class="result-title">
-                            {% if result.url %}
-                            <a href="{{ result.url }}" target="_blank" class="text-decoration-none">
-                                {{ result.title }}
-                            </a>
-                            {% else %}
-                            {{ result.title }}
-                            {% endif %}
-                            <small class="text-muted">(スコア: {{ "%.3f"|format(result.score) }})</small>
-                        </h5>
-                        <p class="result-content text-muted mb-2">{{ result.content }}</p>
-                        {% if result.url %}
-                        <small class="text-success">{{ result.url }}</small>
+        {% if grouped_results %}
+        <div class="search-results" id="searchResults">
+            {% for company in grouped_results %}
+            <div class="result-item mb-4 p-3 border rounded bg-white">
+                <div class="company-header">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h5 class="company-title">{{ company.company_name_kj or company.company_name }}</h5>
+                            <div class="company-details">
+                                {% if company.jcn %}<small class="text-muted me-2">JCN: {{ company.jcn }}</small>{% endif %}
+                                <br>
+                                {% if company.LARGE_CLASS_NAME %}{{ company.LARGE_CLASS_NAME }}{% endif %}
+                                {% if company.MIDDLE_CLASS_NAME %} • {{ company.MIDDLE_CLASS_NAME }}{% endif %}
+                                <br>
+                                {% if company.prefecture %}{{ company.prefecture }}{% endif %}
+                                {% if company.city %} {{ company.city }}{% endif %}
+                                {% if company.EMPLOYEE_ALL_NUM %} • 従業員: {{ company.EMPLOYEE_ALL_NUM }}人{% endif %}
+                                {% if company.CURR_SETLMNT_TAKING_AMT %} • 売上: {{ company.CURR_SETLMNT_TAKING_AMT }}{% endif %}
+                            </div>
+                        </div>
+                        {% if company.CUST_STATUS2 %}
+                        <div class="company-badges">
+                            <span class="badge bg-secondary">{{ company.CUST_STATUS2 }}</span>
+                        </div>
                         {% endif %}
-                        <small class="text-muted d-block">ID: {{ result.id }}</small>
                     </div>
-                    
-                    <!-- Matched Terms Badges on the right -->
-                    {% if result.matched_terms %}
-                    <div class="matched-terms-sidebar">
-                        <small class="text-muted d-block mb-1">マッチした語句:</small>
-                        {% for term in result.matched_terms %}
-                        <span class="badge bg-primary me-1 mb-1">{{ term }}</span>
-                        {% endfor %}
+                </div>
+                
+                <div class="company-urls">
+                    {% for url in company.urls %}
+                    <div class="url-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                {% if url.url %}
+                                <div class="url-title">
+                                    <a href="{{ url.url }}" target="_blank">
+                                        {{ url.url_name }}
+                                    </a>
+                                </div>
+                                {% else %}
+                                <div class="url-title">{{ url.url_name }}</div>
+                                {% endif %}
+                                {% if url.content %}
+                                <div class="url-content">{{ url.content }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            {% if url.matched_terms %}
+                            <div class="matched-terms-sidebar">
+                                {% for term in url.matched_terms %}
+                                <span class="badge bg-primary">{{ term }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
-                    {% endif %}
+                    {% endfor %}
                 </div>
             </div>
             {% endfor %}
         </div>
         
         <!-- JavaScript Pagination Controls -->
-        {% if results %}
+        {% if grouped_results %}
         <nav id="pagination" class="mt-4" style="display: none;">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <small class="text-muted" id="pagination-info">
-                    <!-- Filled by JavaScript -->
                 </small>
             </div>
             
             <ul class="pagination justify-content-center" id="pagination-buttons">
-                <!-- Buttons will be generated by JavaScript -->
             </ul>
         </nav>
         {% endif %}
@@ -149,7 +167,7 @@
                     インデックス済み文書数: {{ stats.total_documents }} 件
                 </small>
                 <div class="d-flex gap-2">
-                    {% if results %}
+                    {% if grouped_results %}
                     <button id="downloadBtn" class="btn btn-sm btn-outline-secondary">
                         📥 CSV Download
                     </button>
@@ -166,17 +184,15 @@
 
 <script>
 // JavaScript Pagination
-let allResults = []; 
 let currentPage = 1;
 const itemsPerPage = 10;
+let totalCompanies = 0;
 
-{% if results %}
-// Load all results from backend
-allResults = {{ results | tojson }};
-
+{% if grouped_results %}
 // Initialize pagination on page load
 document.addEventListener('DOMContentLoaded', function() {
-    if (allResults.length > itemsPerPage) {
+    totalCompanies = document.querySelectorAll('.result-item').length;
+    if (totalCompanies > itemsPerPage) {
         document.getElementById('pagination').style.display = 'block';
     }
     showPage(1);
@@ -187,26 +203,20 @@ function showPage(page) {
     const startIndex = (page - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     
-    // Hide all result items
+    // Show/hide company cards for current page
     const resultItems = document.querySelectorAll('.result-item');
     resultItems.forEach((item, index) => {
-        if (index >= startIndex && index < endIndex) {
-            item.style.display = 'block';
-        } else {
-            item.style.display = 'none';
-        }
+        item.style.display = (index >= startIndex && index < endIndex) ? 'block' : 'none';
     });
     
     // Update pagination info
-    const totalResults = allResults.length;
-    const totalPages = Math.ceil(totalResults / itemsPerPage);
+    const totalPages = Math.ceil(totalCompanies / itemsPerPage);
     const showingStart = startIndex + 1;
-    const showingEnd = Math.min(endIndex, totalResults);
+    const showingEnd = Math.min(endIndex, totalCompanies);
     
     document.getElementById('pagination-info').textContent = 
-        `${showingStart}-${showingEnd} / ${totalResults} 件を表示 (ページ ${page} / ${totalPages})`;
+        `${showingStart}-${showingEnd} / ${totalCompanies} 社を表示 (ページ ${page} / ${totalPages})`;
     
-    // Generate pagination buttons
     generatePaginationButtons(page, totalPages);
 }
 
@@ -270,8 +280,8 @@ function generatePaginationButtons(currentPage, totalPages) {
 }
 
 function changePage(direction) {
-    const totalPages = Math.ceil(allResults.length / itemsPerPage);
-    let newPage = currentPage + direction;
+    const totalPages = Math.ceil(totalCompanies / itemsPerPage);
+    const newPage = currentPage + direction;
     
     if (newPage >= 1 && newPage <= totalPages) {
         showPage(newPage);
@@ -289,9 +299,9 @@ window.popularQueries = {{ popular_queries | tojson }};
 // CSV Download functionality
 document.addEventListener('DOMContentLoaded', function() {
     const downloadBtn = document.getElementById('downloadBtn');
+    if (!downloadBtn) return;
     
-    if (downloadBtn) {
-        downloadBtn.addEventListener('click', function() {
+    downloadBtn.addEventListener('click', function() {
             const btn = this;
             const originalHTML = btn.innerHTML;
             
@@ -302,8 +312,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Get current search parameters
             const searchParams = new URLSearchParams({
                 q: '{{ query }}',
-                type: '{{ search_type }}',
-                prefecture: '{{ prefecture }}'
+                prefecture: '{{ prefecture }}',
+                cust_status: '{{ cust_status }}'
             });
             
             // Build download URL
@@ -349,7 +359,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }, 3000);
         });
-    }
 });
 </script>
 {% endblock %}

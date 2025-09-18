@@ -1,109 +1,155 @@
 # EOS - Japanese Enterprise Search Engine
 
-A modern Flask-based search engine for Japanese companies with user authentication, search history, and metadata filtering.
+Modern Flask-based search engine for Japanese companies with intelligent grouping, advanced text processing, and HTML content extraction.
 
-## Quick Start
+## 🚀 Quick Start
 
 ```bash
-# Install and run with uv
+# Install dependencies
+uv add flask janome whoosh beautifulsoup4 pandas hydra-core
+
+# Start with default configuration
 uv run python run.py
+
+# Or with custom configuration
+uv run python run.py index.dir=data/custom/index
 
 # Open browser
 http://127.0.0.1:5000
 ```
 
-## Features
+**Default Login:** Enter any username to start
 
-✅ **Japanese Search** - Janome tokenization with proper Japanese text processing  
-✅ **User Authentication** - Simple username-based login system  
-✅ **Search History** - Track and view past searches with scalable pagination  
-✅ **Search Rankings** - Real-time popular keyword tracking and rankings page  
-✅ **Smart Suggestions** - Google-style dropdown with popular search terms  
-✅ **Metadata Filtering** - Filter companies by prefecture (Tokyo, Osaka, etc.)  
-✅ **Client-side Pagination** - Instant navigation through search results  
-✅ **LRU Cache** - Built-in search result caching for instant repeat queries  
-✅ **Modern UI** - Clean, responsive interface with Bootstrap  
-✅ **Sample Data** - 25+ test companies across Japanese prefectures  
+## 📋 Key Features
 
-## Project Structure
+- **Enterprise Search** - Japanese company search with intelligent URL grouping
+- **HTML Content Extraction** - Extract and tokenize content from HTML files with configurable length limits
+- **Flexible Input Sources** - Support for CSV files and JSON folder structures
+- **Two-Step Tokenization** - Separate tokenization and indexing for preprocessing flexibility
+- **Customer Filtering** - Filter by customer status (白地/既存) and prefecture
+- **Auto-suggestions** - Google-style dropdown with popular search terms
+- **Search Analytics** - Track user searches, popular keywords, and rankings
+- **CSV Export** - Download search results in enterprise format
+- **OR Search Logic** - Multiple keywords return results with ANY matching terms
+- **Hydra Configuration** - Flexible configuration management system
 
-```
-eos/
-├── app/
-│   ├── routes/           # Web routes (main.py, api.py)
-│   └── services/         # Search logic (Whoosh-based)
-├── templates/            # HTML templates
-├── static/              # CSS, JavaScript
-├── data/                # Search index and logs
-└── requirements.txt
-```
+## 📖 Usage
 
-## How to Use
-
-1. **Login**: Enter any username to start
-2. **Search**: Enter Japanese keywords (e.g., "Python 開発", "AI")  
-3. **Suggestions**: See popular search terms as you type in Google-style dropdown
-4. **Filter**: Select prefecture to narrow results
-5. **Browse**: Use pagination to navigate through results
-6. **History**: View your search history with details
-7. **Rankings**: Check trending keywords on the rankings page (🏆 button)
-
-## Search Features
-
-- **Basic search**: `機械学習` - finds all matching content
-- **Auto-suggestions**: Smart dropdown with popular searches as you type
-- **Title search**: Use "タイトルのみ" dropdown option
-- **Prefecture filter**: Filter by Tokyo, Osaka, Kyoto, etc.
-- **Smart pagination**: 10 results per page with instant navigation
-- **Match highlighting**: See which terms matched your query
-- **Rankings tracking**: Real-time keyword popularity with statistics
-- **Keyboard navigation**: Use arrow keys to navigate suggestions
-
-## Sample Searches
-
-Try these with the included sample data:
-- `Python` - finds Python development companies
-- `AI` or `人工知能` - artificial intelligence companies  
-- `フィンテック` - fintech companies
-- `ゲーム` - gaming companies
-
-## API Endpoints
-
-For frontend developers:
-
-📚 **[Complete API Documentation](./FRONTEND_API_DOCS.md)**
-
-Quick reference:
-- `GET /search` - Search with pagination
-- `GET /rankings` - Popular keyword rankings
-- `POST /api/add_document` - Add company data
-- `GET /history` - User search history
-
-## Technical Stack
-
-- **Backend**: Flask with Whoosh search engine
-- **Frontend**: Bootstrap 5 with JavaScript pagination  
-- **Japanese**: Janome tokenizer for proper text processing
-- **Cache**: Python's built-in LRU cache (128 entries, auto-clearing)
-- **Data**: JSON-based persistence with binary search index
-- **Authentication**: Session-based user tracking
-
-## Dependencies
-
-```txt
-Flask==3.0.0
-Janome==0.5.0  
-Whoosh==2.7.4
+### **Basic Search**
+```bash
+# Search Japanese companies
+Query: "Python 開発"     # OR logic: Python OR 開発
+Query: "AI 人工知能"     # Returns companies with AI OR 人工知能
+Query: "研究　開発"      # Normalized automatically
 ```
 
-## Development
+### **Advanced Filtering**
+- **Prefecture:** Filter by location (tokyo, osaka, etc.)
+- **Customer Status:** Filter by 白地 (prospects) or 既存 (existing)
+- **Results Limit:** 10, 20, or 50 results per page
+
+### **CSV Export**
+```bash
+# Download search results
+http://127.0.0.1:5000/api/download-csv?q=Python&prefecture=tokyo&cust_status=白地
+```
+
+## 🛠️ Data Processing & Index Management
+
+### **Two-Step Tokenization Workflow (Recommended)**
 
 ```bash
-# Run with auto-reload
-uv run python run.py
+# Step 1: Tokenize data with HTML content extraction using Hydra configuration
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies
 
-# Load sample data
-uv run python load_sample_data.py
+# Step 2: Create index from tokenized data
+uv run python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized
+
+# Alternative: Process CSV files
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name csv_companies
+uv run python scripts/create_index.py --tokenized-dir data/sample_companies/tokenized
 ```
 
-The search engine is ready to use with sample company data. Add your own data via the API endpoints or modify `load_sample_data.py`.
+### **Configuration-Based Input Sources**
+
+```bash
+# JSON folder with company data and HTML content (using preset)
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies
+
+# CSV file processing (using preset)
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name csv_companies
+
+# Override specific settings
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies processing.batch_size=1000 processing.max_content_length=5000
+
+# Select specific DataFrame columns
+uv run python scripts/tokenize_csv.py --config-name tokenize processing.extra_columns=[cust_status,revenue]
+```
+
+### **Index Management**
+
+For detailed documentation, see: **[scripts/README.md](./scripts/README.md)**
+
+```bash
+# Add more data to existing index
+uv run python scripts/add_to_index.py data/new_companies.csv
+
+# Check index health and performance
+uv run python scripts/index_info.py
+
+# Delete index
+uv run python scripts/delete_index.py
+```
+
+## 🏗️ Technical Stack
+
+- **Backend:** Flask + Whoosh (Japanese full-text search) + Janome (tokenization)
+- **HTML Processing:** BeautifulSoup4 for content extraction from HTML files
+- **Data Processing:** Pandas for DataFrame operations and data merging
+- **Configuration:** Hydra for flexible configuration management
+- **Frontend:** Bootstrap 5 + JavaScript (pagination, auto-suggestions)
+- **Data Formats:** CSV files and JSON folder structures with URL-based record generation
+- **Performance:** LRU cache + file-based CSV export caching + O(1) dictionary lookups for data merging
+
+## 📚 Documentation
+
+- **[Configuration Guide](./CONFIGURATION.md)** - Hydra configuration system and deployment options
+- **[API Reference](./FRONTEND_API_DOCS.md)** - Complete frontend API documentation
+- **[Scripts Documentation](./scripts/README.md)** - Index management, tokenization, and utility scripts
+- **[Tokenized Format Specification](./scripts/TOKENIZED_FORMAT.md)** - Two-step tokenization workflow format
+- **[Sample Data Guide](./data/README.md)** - Testing data and development examples
+
+## 🔧 Development
+
+```bash
+# Install all dependencies
+uv add flask janome whoosh beautifulsoup4 pandas hydra-core
+
+# Run development server with default config
+uv run python run.py
+
+# Run with custom configuration
+uv run python run.py app.debug=false index.dir=data/production/index
+
+# Process sample data
+uv run python scripts/tokenize_csv.py --json-folder data/test_json_companies
+uv run python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized
+```
+
+### **Configuration Management**
+
+The project uses Hydra for flexible configuration:
+
+```bash
+# Default configuration (conf/config.yaml)
+uv run python run.py
+
+# Override specific settings
+uv run python run.py app.debug=false index.dir=data/custom/
+
+# Use different config file
+uv run python run.py --config-path custom/path --config-name custom_config
+```
+
+**Sample Data:** Includes JSON company data with HTML content files for testing HTML extraction functionality
+

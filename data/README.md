@@ -1,160 +1,79 @@
-# Sample Data for Japanese Company Search Engine
+# Sample Data
 
-This directory contains sample data for testing and development of the Japanese company search engine.
+Test data for the Japanese company search engine with HTML content extraction capabilities.
 
 ## Files
 
-### `sample_companies.json`
-Comprehensive test dataset containing **25 companies** across Japan:
+### **Legacy CSV Data**
+**`sample_companies.csv`** - 25 Japanese companies across 9 prefectures covering AI/ML, software, mobile, IoT, healthcare, manufacturing, fintech, and gaming.
 
-- **7 Tokyo companies**: IT, AI, startups, fintech, logistics
-- **4 Osaka companies**: Software, maritime tech, medical systems  
-- **4 Fukuoka companies**: Mobile apps, tourism, logistics, defense
-- **4 Aichi companies**: Manufacturing, analytics, environment, smart factory
-- **2 Kanagawa companies**: Cloud infrastructure, sustainability 
-- **1 each**: Kyoto (AI), Hokkaido (mobile), Sendai (fintech), Hiroshima (games)
+### **JSON Company Data with HTML Content**
+**`test_json_companies/`** - Modern JSON-based company data with HTML content extraction
+- `company_001.json` - 株式会社テックイノベーション (AI/ML company)
+- `company_002.json` - 株式会社グリーンテック (Environmental tech company)
 
-### `whoosh_index/` (Generated)
-Whoosh search index files generated from the sample data. These files are included in git to enable testing across different environments without requiring data reload.
+**`HTML/2025/Homepage/`** - Sample HTML files for content extraction testing
+- `tech_001.html` - Main site for tech company
+- `tech_001_services.html` - Services page with AI/ML details  
+- `tech_001_about.html` - Company overview and history
+- `green_001.html` - Environmental tech company main site
+- `green_001_products.html` - Environmental products and solutions
 
-## Company Categories Covered
+### **Additional Test Data**
+**`test_company_info.csv`** - Additional company information for DataFrame merging tests
 
-The sample data includes diverse technology companies to test various search scenarios:
+## Processing Examples
 
-### By Technology Focus
-- **AI/Machine Learning**: 4 companies
-- **Software Development**: 6 companies  
-- **Mobile Apps**: 3 companies
-- **IoT/Hardware**: 3 companies
-- **Healthcare/Medical**: 2 companies
-- **Manufacturing/Industry**: 3 companies
-- **Finance/Fintech**: 2 companies
-- **Gaming/Entertainment**: 1 company
-- **Sustainability/Environment**: 1 company
-
-### By Prefecture
-- **tokyo**: 7 companies (28%)
-- **osaka**: 4 companies (16%)
-- **fukuoka**: 4 companies (16%) 
-- **aichi**: 4 companies (16%)
-- **kanagawa**: 2 companies (8%)
-- **Others**: 4 companies (16%)
-
-## Loading Sample Data
-
-### Option 1: Using the loader script (Recommended)
+### **Modern JSON Workflow (Recommended)**
 ```bash
-# Load all sample data into search index
-uv run load_sample_data.py
+# Process JSON companies with HTML content extraction (using Hydra configuration)
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies
+uv run python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized
+
+# Test HTML content truncation with override
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies processing.max_content_length=500
+
+# Select specific DataFrame columns
+uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies processing.extra_columns=[cust_status]
 ```
 
-### Option 2: Manual loading via API
-```python
-from app.services.search_service import SearchService
-import json
-
-search_service = SearchService()
-with open('data/sample_companies.json', 'r', encoding='utf-8') as f:
-    companies = json.load(f)
-    
-search_service.clear_index()
-search_service.add_documents_batch(companies)
-```
-
-## Testing Scenarios
-
-The sample data enables comprehensive testing of:
-
-### 1. **Japanese Text Search**
-- **Keywords**: Python, Java, React, Vue.js, AI, IoT
-- **Japanese terms**: 機械学習, 開発, システム, 管理, 分析
-- **Mixed queries**: "Python 開発", "AI システム"
-
-### 2. **Prefecture Filtering**
+### **Legacy CSV Processing**
 ```bash
-# Test prefecture filters
-tokyo companies: 7 results
-osaka companies: 4 results  
-fukuoka companies: 4 results
-aichi companies: 4 results
+# Traditional CSV workflow
+uv run python scripts/create_index.py data/sample_companies.csv
 ```
 
-### 3. **Search Types**
-- **All content**: Searches both company names and descriptions
-- **Title only**: Searches only company names
-- **Phrase search**: "機械学習", "クラウドサービス"
+## Data Features
 
-### 4. **Advanced Features**
-- **Multi-keyword search**: "Python 機械学習"
-- **Combined filtering**: "開発" + prefecture filter
-- **Score-based ranking**: Relevance scoring verification
+### **JSON Company Structure**
+- **Company Information** - JCN, names (Japanese/English), address, industry
+- **Homepage Data** - Main domain and sub-domain URLs
+- **HTML Content Paths** - References to HTML files for content extraction
+- **URL Tags** - Descriptive tags for sub-domain pages
 
-## Sample Search Queries
+### **HTML Content Extraction**
+- **BeautifulSoup Processing** - Clean text extraction from HTML
+- **Content Truncation** - Configurable length limits to prevent overwhelming tokenization
+- **Japanese Text Processing** - Janome tokenization with POS filtering
 
-Try these queries to test different features:
+## Test Coverage
 
-```bash
-# Technology searches
-Python          # 3 results - Python development companies
-AI              # 3 results - AI/ML companies  
-機械学習         # 3 results - Machine learning companies
-IoT             # 3 results - IoT companies
+### **Legacy CSV Data**
+**Industries:** AI/ML (4), Software (6), Mobile (3), IoT (3), Healthcare (2), Manufacturing (3), Fintech (2), Gaming (1), Sustainability (1)
 
-# Industry searches  
-医療            # 3 results - Medical/healthcare companies
-製造業          # 3 results - Manufacturing companies
-金融            # 2 results - Financial/fintech companies
+**Prefectures:** Tokyo (7), Osaka (4), Fukuoka (4), Aichi (4), Kanagawa (2), Others (4)
 
-# Prefecture + keyword searches
-開発 + tokyo    # Development companies in Tokyo
-システム + osaka # System companies in Osaka  
-アプリ + fukuoka # App companies in Fukuoka
-```
+### **JSON Test Data**
+**Companies:** 2 companies with 5 URL records (main + sub-domains)
+- AI/ML Technology Company (Tokyo) - 3 URLs
+- Environmental Technology Company (Osaka) - 2 URLs
 
-## Data Structure
+**HTML Content:** 5 HTML files with realistic Japanese business content
 
-Each company record contains:
+## Test Queries
 
-```json
-{
-  "id": "company_001",
-  "title": "Company Name in Japanese",
-  "content": "Detailed description for search indexing (not displayed)",
-  "introduction": "Short company intro for display",
-  "url": "https://company-website.co.jp", 
-  "prefecture": "tokyo"
-}
-```
+**Keywords:** Python, AI, 機械学習, 環境技術, データ分析, リサイクル
 
-## Index Statistics
+**Prefecture filters:** tokyo (tech companies), osaka (environmental companies)
 
-After loading sample data:
-- **Total documents**: 25 companies
-- **Index size**: ~2-3MB (with full Japanese tokenization)
-- **Search performance**: Sub-100ms average response time
-- **Prefecture coverage**: 9 different prefectures
-
-## Usage in Different Environments
-
-The included Whoosh index files allow immediate testing without data setup:
-
-1. **Development**: Index files included, ready to search
-2. **CI/CD**: Automated tests can run against sample data
-3. **Demo/Staging**: Consistent dataset across deployments
-4. **Local testing**: No additional setup required
-
-## Updating Sample Data
-
-To add more companies or modify existing data:
-
-1. Edit `sample_companies.json`
-2. Run `uv run load_sample_data.py` to rebuild index
-3. Commit both JSON and index files to git
-
-## Notes
-
-- All company data is fictional but realistic
-- URLs are example domains (non-functional)
-- Prefecture values match the frontend dropdown options
-- Japanese text includes proper business terminology
-- Content is optimized for search relevance testing
+**Content-based queries:** "tensorflow pytorch", "廃棄物処理", "人工知能システム"

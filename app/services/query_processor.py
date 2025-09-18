@@ -9,6 +9,8 @@ class QueryProcessor:
     
     def normalize_query(self, query: str) -> str:
         query = query.strip()
+        # Convert full-width space to half-width space
+        query = query.replace('　', ' ')
         query = re.sub(r'\s+', ' ', query)
         return query
     
@@ -52,18 +54,10 @@ class QueryProcessor:
     def process_advanced_query(self, query: str) -> Dict:
         result = {
             'processed_query': '',
-            'search_type': 'content',
-            'filters': {},
-            'boost_title': False
+            'filters': {}
         }
         
         query = self.normalize_query(query)
-        
-        if query.startswith('title:'):
-            result['search_type'] = 'title'
-            query = query[6:].strip()
-        elif 'title:' in query:
-            result['boost_title'] = True
         
         result['processed_query'] = self.build_whoosh_query(query)
         

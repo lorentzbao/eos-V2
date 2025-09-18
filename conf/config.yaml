@@ -1,0 +1,15 @@
+app:
+  secret_key: "your-secret-key-here"
+  debug: true
+
+# Multi-index configuration - users must select a prefecture
+indexes:
+  tokyo:
+    dir: "data/indexes/tokyo"
+    name: "Tokyo"
+  osaka:
+    dir: "data/indexes/osaka"
+    name: "Osaka"
+  kochi:
+    dir: "data/indexes/kochi"
+    name: "Kochi"

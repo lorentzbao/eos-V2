@@ -475,3 +475,72 @@ main.container {
     background: rgba(40, 167, 69, 0.1);
     border-color: rgba(40, 167, 69, 0.3);
 }
+
+/* Company Grouping Styles - Clean Master Branch Style */
+.company-header {
+    padding: 0 0 0.75rem 0;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.company-title {
+    font-weight: 600;
+    color: var(--brand-primary);
+    margin-bottom: 0.25rem;
+    font-size: 1.1rem;
+}
+
+.company-details {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: normal;
+}
+
+.company-urls {
+    margin-top: 0;
+}
+
+.url-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.url-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.url-title {
+    font-weight: normal;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.url-title a {
+    color: #333;
+    text-decoration: none;
+}
+
+.url-title a:hover {
+    color: #000;
+    text-decoration: underline;
+}
+
+.url-content {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.matched-terms-sidebar {
+    background: none;
+    padding: 0;
+    min-width: auto;
+}
+
+.matched-terms-sidebar .badge {
+    font-size: 0.75rem;
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+}

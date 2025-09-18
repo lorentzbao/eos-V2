@@ -1,10 +1,20 @@
-from flask import Blueprint, render_template, request, session, redirect, url_for
+from flask import Blueprint, render_template, request, session, redirect, url_for, current_app
 from app.services.search_service import SearchService
+from app.services.multi_index_search_service import MultiIndexSearchService
 from app.services.search_logger import SearchLogger
 
 main = Blueprint('main', __name__)
-search_service = SearchService()
 search_logger = SearchLogger()
+
+def get_search_service():
+    """Get appropriate search service (multi-index or single-index)"""
+    # Check if multi-index configuration is available
+    if 'INDEXES' in current_app.config:
+        return MultiIndexSearchService(current_app.config['INDEXES'])
+    else:
+        # Fallback to single index
+        index_dir = current_app.config.get('INDEX_DIR', 'data/whoosh_index')
+        return SearchService(index_dir)
 
 @main.route('/')
 def index():
@@ -15,9 +25,16 @@ def index():
     # Get popular queries for search suggestions
     popular_queries = search_logger.get_popular_queries(limit=10)
     
+    # Get available prefectures for multi-index service
+    search_service = get_search_service()
+    prefectures = []
+    if isinstance(search_service, MultiIndexSearchService):
+        prefectures = search_service.get_available_prefectures()
+    
     return render_template('index.html', 
                          username=session['username'],
-                         popular_queries=popular_queries)
+                         popular_queries=popular_queries,
+                         prefectures=prefectures)
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
@@ -46,23 +63,17 @@ def rankings():
     
     username = session['username']
     
-    # Get popular queries and stats
+    # Get popular queries, keywords and stats
     popular_queries = search_logger.get_popular_queries(limit=10)
+    popular_keywords = search_logger.get_popular_keywords(limit=10)
     ranking_stats = search_logger.get_rankings_stats()
     
-    # Calculate percentages
-    total_queries = ranking_stats['total_queries']
-    for query_data in popular_queries:
-        if total_queries > 0:
-            query_data['percentage'] = round((query_data['count'] / total_queries) * 100, 1)
-        else:
-            query_data['percentage'] = 0.0
     
     return render_template('rankings.html',
                          username=username,
                          queries=popular_queries,
-                         stats=ranking_stats,
-                         total_queries=total_queries)
+                         keywords=popular_keywords,
+                         stats=ranking_stats)
 
 @main.route('/history')
 def history():
@@ -103,17 +114,28 @@ def search():
         return redirect(url_for('main.login'))
     
     query = request.args.get('q', '')
-    search_type = request.args.get('type', 'auto')
     limit = int(request.args.get('limit', 10))
     prefecture = request.args.get('prefecture', '')
+    cust_status = request.args.get('cust_status', '')
     username = session['username']
     
     # Handle empty or whitespace-only queries
     if not query or not query.strip():
         return redirect(url_for('main.index'))
     
-    search_results = search_service.search(query, limit, search_type, prefecture)
-    stats = search_service.get_stats()
+    search_service = get_search_service()
+    
+    # Handle multi-index service
+    if isinstance(search_service, MultiIndexSearchService):
+        if not prefecture:
+            # Redirect back to index with error (prefecture required)
+            return redirect(url_for('main.index', error='prefecture_required'))
+        search_results = search_service.search(query, prefecture, limit, cust_status)
+        stats = search_service.get_stats(prefecture)
+    else:
+        # Single index service (backward compatibility)
+        search_results = search_service.search(query, limit, prefecture, cust_status)
+        stats = search_service.get_stats()
     
     # Get popular queries for search suggestions dropdown
     popular_queries = search_logger.get_popular_queries(limit=10)
@@ -122,20 +144,21 @@ def search():
     search_logger.log_search(
         username, 
         query, 
-        search_type, 
         search_results['total_found'], 
         search_results['search_time'],
-        prefecture
+        prefecture,
+        cust_status
     )
     
     return render_template('search.html', 
                          query=query,
-                         results=search_results['results'],
+                         grouped_results=search_results.get('grouped_results', []),
                          total_found=search_results['total_found'],
+                         total_companies=search_results.get('total_companies', 0),
                          search_time=search_results['search_time'],
                          processed_query=search_results['processed_query'],
-                         search_type=search_type,
                          prefecture=prefecture,
+                         cust_status=cust_status,
                          limit=limit,
                          username=username,
                          stats=stats,

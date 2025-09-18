@@ -30,25 +30,20 @@
                     </div>
                 </div>
                 
-                <div class="row">
+                <div class="row g-2">
                     <div class="col-md-4">
-                        <select name="type" class="form-select">
-                            <option value="auto">すべて検索</option>
-                            <option value="title">タイトルのみ</option>
+                        <select name="prefecture" class="form-select" required>
+                            <option value="tokyo">東京都</option>
+                            <option value="osaka">大阪府</option>
+                            <option value="kochi">高知県</option>
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <select name="prefecture" class="form-select">
-                            <option value="">すべての地域</option>
-                            <option value="tokyo">東京都</option>
-                            <option value="osaka">大阪府</option>
-                            <option value="kyoto">京都府</option>
-                            <option value="aichi">愛知県</option>
-                            <option value="kanagawa">神奈川県</option>
-                            <option value="fukuoka">福岡県</option>
-                            <option value="hokkaido">北海道</option>
-                            <option value="sendai">宮城県</option>
-                            <option value="hiroshima">広島県</option>
+                        <select name="cust_status" class="form-select">
+                            <option value="">すべての顧客</option>
+                            <option value="白地">白地</option>
+                            <option value="契約">契約</option>
+                            <option value="過去">過去</option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -75,8 +70,8 @@
                         </div>
                         <div class="col-md-4 mb-2">
                             <small class="text-muted">
-                                <strong>title:キーワード</strong><br>
-                                タイトル検索
+                                <strong>地域・顧客フィルタ</strong><br>
+                                絞り込み検索
                             </small>
                         </div>
                         <div class="col-md-4 mb-2">
