@@ -54,6 +54,8 @@ Query: "研究　開発"      # Normalized automatically
 http://127.0.0.1:5000/api/download-csv?q=Python&prefecture=tokyo&cust_status=白地
 ```
 
+📚 **For complete API documentation:** See [app/API_REFERENCE.md](./app/API_REFERENCE.md)
+
 ## 🛠️ Data Processing & Index Management
 
 ### **Two-Step Tokenization Workflow (Recommended)**
@@ -113,8 +115,21 @@ uv run python scripts/delete_index.py
 
 ## 📚 Documentation
 
+### **For Frontend Developers**
+- **[🚀 Frontend Development Guide](./FRONTEND_DEVELOPMENT.md)** - Complete setup and development guide
+  - Windows uv installation instructions
+  - Running the application and development workflow
+  - Project folder structure and UI/UX files
+  - Development URLs and resources
+- **[🔗 API Reference](./app/API_REFERENCE.md)** - Complete API documentation with examples
+  - Authentication endpoints (`/login`, `/logout`)
+  - Search APIs (`/api/search`, `/search`) with filters and pagination
+  - CSV export (`/api/download-csv`) with enterprise data fields
+  - Admin APIs for index management
+  - Multi-index support for prefecture-based search
+
+### **For Backend Developers**
 - **[Configuration Guide](./CONFIGURATION.md)** - Hydra configuration system and deployment options
-- **[API Reference](./FRONTEND_API_DOCS.md)** - Complete frontend API documentation
 - **[Scripts Documentation](./scripts/README.md)** - Index management, tokenization, and utility scripts
 - **[Tokenized Format Specification](./scripts/TOKENIZED_FORMAT.md)** - Two-step tokenization workflow format
 - **[Sample Data Guide](./data/README.md)** - Testing data and development examples
