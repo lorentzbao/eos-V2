@@ -1,0 +1,5 @@
+app:
+  secret_key: your-secret-key-here
+  debug: true
+index:
+  dir: data/test_json_companies/index
