@@ -74,9 +74,9 @@ uv --version
    git checkout frontend-dev
    ```
 
-3. **Sync with main branch (before starting work):**
+3. **Sync with master branch (before starting work):**
    ```bash
-   git pull origin main
+   git pull origin master
    git push origin frontend-dev
    ```
 
