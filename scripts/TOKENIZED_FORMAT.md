@@ -103,7 +103,7 @@ When processing JSON folders, the tokenizer extracts text content from HTML file
 ### **JSON Folder with HTML Content**
 ```bash
 # 1. Tokenize JSON companies with HTML extraction (using Hydra configuration)
-uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies
+uv run python scripts/tokenize_csv.py --config-name json_companies
 
 # 2. Create index from tokens  
 uv run python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized/
@@ -112,7 +112,7 @@ uv run python scripts/create_index.py --tokenized-dir data/test_json_companies/t
 ### **Traditional CSV Processing**
 ```bash
 # 1. Tokenize CSV (using Hydra configuration)
-uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name csv_companies
+uv run python scripts/tokenize_csv.py --config-name csv_companies
 
 # 2. Create index from tokens
 uv run python scripts/create_index.py --tokenized-dir data/sample_companies/tokenized/
@@ -121,10 +121,10 @@ uv run python scripts/create_index.py --tokenized-dir data/sample_companies/toke
 ### **DataFrame Merging with Column Selection**
 ```bash
 # Merge specific columns during tokenization
-uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies processing.extra_columns=[cust_status,revenue]
+uv run python scripts/tokenize_csv.py --config-name json_companies processing.extra_columns=[cust_status,revenue]
 
 # Override content length and batch size
-uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies processing.max_content_length=5000 processing.batch_size=1000
+uv run python scripts/tokenize_csv.py --config-name json_companies processing.max_content_length=5000 processing.batch_size=1000
 ```
 
 **Benefits:** 

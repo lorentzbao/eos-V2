@@ -16,8 +16,8 @@ Utility scripts for managing Whoosh search indexes with Japanese text processing
 # Basic usage with direct parameters (like run.py)
 uv run python scripts/tokenize_csv.py <key>=<value>
 
-# Using configuration presets (optional)
-uv run python scripts/tokenize_csv.py --config-path ../conf/presets --config-name <preset_name>
+# Using configuration files (optional)
+uv run python scripts/tokenize_csv.py --config-name <config_name>
 
 # With command-line overrides
 uv run python scripts/tokenize_csv.py <key>=<value> <key2>=<value2>
@@ -33,9 +33,10 @@ uv run python scripts/tokenize_csv.py <key>=<value> <key2>=<value2>
 - **Column Selection** - Specify which DataFrame columns to merge with `extra_columns` list
 - **Multiprocessing Support** - Parallel tokenization for improved performance on large datasets
 
-**Configuration Presets:**
+**Configuration Files:**
 - `json_companies` - JSON folder processing with DataFrame merging
 - `csv_companies` - Traditional CSV file processing
+- `tokenize` - Base tokenization configuration
 
 **Performance Optimization:**
 - **Hybrid Pipeline**: Combines concurrent I/O with multiprocessing for optimal performance
@@ -64,12 +65,12 @@ uv run python scripts/tokenize_csv.py input.json_folder=data/companies input.dat
 # Enable high-performance processing
 uv run python scripts/tokenize_csv.py input.json_folder=data/companies processing.use_hybrid_pipeline=true processing.num_processes=8
 
-# Using configuration presets
-uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies
-uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name csv_companies
+# Using configuration files
+uv run python scripts/tokenize_csv.py --config-name json_companies
+uv run python scripts/tokenize_csv.py --config-name csv_companies
 
-# Preset with overrides
-uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies processing.batch_size=1000
+# Configuration with overrides
+uv run python scripts/tokenize_csv.py --config-name json_companies processing.batch_size=1000
 ```
 
 **Configuration Structure:**

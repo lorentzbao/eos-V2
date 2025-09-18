@@ -119,12 +119,12 @@ uv run python scripts/tokenize_csv.py input.json_folder=data/companies input.dat
 # Enable high-performance processing
 uv run python scripts/tokenize_csv.py input.json_folder=data/companies processing.use_hybrid_pipeline=true processing.num_processes=8
 
-# Using configuration presets (optional)
-uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies
-uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name csv_companies
+# Using configuration files (optional)
+uv run python scripts/tokenize_csv.py --config-name json_companies
+uv run python scripts/tokenize_csv.py --config-name csv_companies
 
-# Preset with parameter overrides
-uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies processing.batch_size=1000
+# Configuration with parameter overrides
+uv run python scripts/tokenize_csv.py --config-name json_companies processing.batch_size=1000
 ```
 
 ### **Custom Configuration Files**

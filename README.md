@@ -4,36 +4,47 @@ Modern Flask-based search engine for Japanese companies with intelligent groupin
 
 ## 📋 Table of Contents
 
-### **Getting Started**
-- [🚀 Quick Start](#-quick-start) - Install and run the application
+### **For End Users**
+- [🚀 Quick Start](#-quick-start) - Try the search engine in 2 minutes
 - [📋 Key Features](#-key-features) - What EOS can do
-- [📖 Usage](#-usage) - How to search and use features
+- [📖 How to Use](#-how-to-use) - Search, filter, and export features
+- [🔧 Troubleshooting](#-troubleshooting) - Common issues and solutions
 
-### **Development & Setup**
-- [🛠️ Data Processing & Index Management](#️-data-processing--index-management) - Tokenization and indexing
-- [🏗️ Technical Stack](#️-technical-stack) - Technologies used
-- [🔧 Development](#-development) - Development setup and configuration
+### **For Developers**
+- [🛠️ Development Setup](#️-development-setup) - Local development environment
+- [📚 Developer Documentation](#-developer-documentation) - Detailed guides for frontend and backend
+- [🏗️ Technical Architecture](#️-technical-architecture) - Stack and design overview
 
-### **Documentation**
-- [📚 Documentation](#-documentation) - Complete guides for frontend and backend developers
+### **For Administrators**
+- [🚀 Deployment](#-deployment) - Production deployment guide
+- [📊 Data Management](#-data-management) - Index and data processing
+- [⚙️ Configuration](#️-configuration) - Advanced settings
+
+### **Project Information**
+- [🤝 Contributing](#-contributing) - How to contribute to EOS
+- [📄 License](#-license) - Usage terms and conditions
+- [🆘 Support](#-support) - Getting help and reporting issues
 
 ## 🚀 Quick Start
 
-```bash
-# Install dependencies
-uv add flask janome whoosh beautifulsoup4 pandas hydra-core
+**Prerequisites:** Python 3.8+ and [uv package manager](https://docs.astral.sh/uv/getting-started/installation/)
 
-# Start with default configuration
+```bash
+# 1. Clone and setup
+git clone https://github.com/lorentzbao/eos-V2.git
+cd eos-V2
+uv sync
+
+# 2. Start the server
 uv run python run.py
 
-# Or with custom configuration
-uv run python run.py index.dir=data/custom/index
-
-# Open browser
-http://127.0.0.1:5000
+# 3. Open browser and start searching
+# → http://127.0.0.1:5000
 ```
 
-**Default Login:** Enter any username to start
+**Login:** Enter any username (e.g., "demo") to access the search interface.
+
+**Sample Search:** Try searching for "Python 開発" or "AI" to see the search in action.
 
 ## 📋 Key Features
 
@@ -48,138 +59,258 @@ http://127.0.0.1:5000
 - **OR Search Logic** - Multiple keywords return results with ANY matching terms
 - **Hydra Configuration** - Flexible configuration management system
 
-## 📖 Usage
+## 📖 How to Use
 
-### **Basic Search**
+### **Search Interface**
+1. **Enter search terms** in Japanese or English (e.g., "Python 開発", "AI")
+2. **Use filters** to narrow results:
+   - **Prefecture:** Tokyo, Osaka, or other locations
+   - **Customer Status:** 白地 (prospects), 契約 (contract), or 過去 (past)
+   - **Results per page:** 10, 20, or 50 companies
+3. **Review results** grouped by company with multiple URLs
+4. **Export to CSV** for further analysis
+
+### **Search Tips**
+- **OR Logic:** "Python 開発" finds companies with Python OR 開発
+- **Multiple Keywords:** Use space-separated terms for broader results
+- **Japanese Support:** Full Japanese text search with intelligent tokenization
+- **Auto-suggestions:** Start typing to see popular search terms
+
+### **Data Export**
+Click the "CSV Download" button on search results to export company data including:
+- Company details (name, address, status)
+- Contact information and URLs
+- Business classification and employee count
+- Matched search terms and relevance scores
+
+📚 **For developers:** Complete API documentation at [app/API_REFERENCE.md](./app/API_REFERENCE.md)
+
+## 🔧 Troubleshooting
+
+### **Common Issues**
+
+**Server won't start:**
 ```bash
-# Search Japanese companies
-Query: "Python 開発"     # OR logic: Python OR 開発
-Query: "AI 人工知能"     # Returns companies with AI OR 人工知能
-Query: "研究　開発"      # Normalized automatically
+# Check if uv is installed
+uv --version
+
+# Install dependencies if missing
+uv sync
+
+# Check port availability
+lsof -i :5000  # Kill process if port is busy
 ```
 
-### **Advanced Filtering**
-- **Prefecture:** Filter by location (tokyo, osaka, etc.)
-- **Customer Status:** Filter by 白地 (prospects) or 既存 (existing)
-- **Results Limit:** 10, 20, or 50 results per page
+**Empty search results:**
+- Ensure sample data is loaded (see [Data Management](#-data-management))
+- Check if index exists in `data/` directory
+- Try basic queries like "AI" or "Python" first
 
-### **CSV Export**
+**Permission errors:**
 ```bash
-# Download search results
-http://127.0.0.1:5000/api/download-csv?q=Python&prefecture=tokyo&cust_status=白地
+# Fix file permissions
+chmod -R 755 data/
+chmod +x scripts/*.py
 ```
 
-📚 **For complete API documentation:** See [app/API_REFERENCE.md](./app/API_REFERENCE.md)
+**Japanese text display issues:**
+- Ensure UTF-8 encoding in browser
+- Check terminal/IDE supports Japanese characters
 
-## 🛠️ Data Processing & Index Management
+### **Getting Help**
+- Check [Issues on GitHub](https://github.com/lorentzbao/eos-V2/issues)
+- Review logs in terminal for error details
+- See [Support](#-support) section for contact information
 
-### **Two-Step Tokenization Workflow (Recommended)**
+---
 
+## 🛠️ Development Setup
+
+### **Prerequisites**
+- Python 3.8 or higher
+- [uv package manager](https://docs.astral.sh/uv/getting-started/installation/)
+- Git for version control
+
+### **Quick Development Setup**
 ```bash
-# Step 1: Tokenize data with HTML content extraction using Hydra configuration
-uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies
+# Clone and setup (see detailed setup in documentation links below)
+git clone https://github.com/lorentzbao/eos-V2.git
+cd eos-V2 && uv sync
 
-# Step 2: Create index from tokenized data
+# Run development server
+uv run python run.py
+
+# Access at http://127.0.0.1:5000
+```
+
+**Frontend developers:** See [Frontend Development Guide](./FRONTEND_DEVELOPMENT.md) for complete setup
+**Backend developers:** See [Configuration Guide](./CONFIGURATION.md) for advanced settings
+
+### **Development with Sample Data**
+```bash
+# Process and index sample data
+uv run python scripts/tokenize_csv.py --config-name json_companies
 uv run python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized
 
-# Alternative: Process CSV files
-uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name csv_companies
-uv run python scripts/create_index.py --tokenized-dir data/sample_companies/tokenized
+# Start server with indexed data
+uv run python run.py
 ```
 
-### **Configuration-Based Input Sources**
+**Note:** For detailed data processing, index management, and production deployment, see [Data Management](#-data-management) section.
 
+## 📚 Developer Documentation
+
+### **Frontend Development**
+- **[🚀 Frontend Development Guide](./FRONTEND_DEVELOPMENT.md)** - Complete setup guide
+  - Windows/Linux installation instructions
+  - Git workflow with frontend-dev branch
+  - Project folder structure and UI/UX files
+  - Jinja2 templating and JavaScript/AJAX integration
+
+### **API Integration**
+- **[🔗 API Reference](./app/API_REFERENCE.md)** - Complete API documentation
+  - Search APIs with filters and pagination
+  - CSV export with enterprise data fields
+  - Authentication and session management
+  - JavaScript examples for all endpoints
+
+### **Backend Development**
+- **[Configuration Guide](./CONFIGURATION.md)** - Hydra configuration system
+- **[Scripts Documentation](./scripts/README.md)** - Index management and utilities
+- **[Data Processing Guide](./scripts/TOKENIZED_FORMAT.md)** - Two-step tokenization workflow
+- **[Sample Data Guide](./data/README.md)** - Testing data and examples
+
+## 🏗️ Technical Architecture
+
+### **Core Technologies**
+- **Backend:** Flask + Whoosh (Japanese full-text search) + Janome (tokenization)
+- **Frontend:** Bootstrap 5 + Vanilla JavaScript (no jQuery dependency)
+- **Data Processing:** Pandas + BeautifulSoup4 for HTML content extraction
+- **Configuration:** Hydra for flexible configuration management
+
+### **Performance Features**
+- **Caching:** LRU cache + file-based CSV export caching
+- **Search:** O(1) dictionary lookups for data merging
+- **Japanese Support:** UTF-8 encoding with proper tokenization
+- **Scalability:** Multi-index support for prefecture-based search
+
+---
+
+## 🚀 Deployment
+
+### **Production Deployment**
 ```bash
-# JSON folder with company data and HTML content (using preset)
-uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies
+# Quick production setup
+export FLASK_ENV=production
+uv run python run.py app.debug=false app.host=0.0.0.0 app.port=80
+```
 
-# CSV file processing (using preset)
-uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name csv_companies
+📚 **Complete deployment guide:** [CONFIGURATION.md](./CONFIGURATION.md)
 
-# Override specific settings
-uv run python scripts/tokenize_csv.py --config-path conf/presets --config-name json_companies processing.batch_size=1000 processing.max_content_length=5000
+### **Environment Variables**
+- `FLASK_SECRET_KEY` - Secret key for sessions
+- `INDEX_DIR` - Path to search index directory
+- `DEBUG` - Enable/disable debug mode
 
-# Select specific DataFrame columns
-uv run python scripts/tokenize_csv.py --config-name tokenize processing.extra_columns=[cust_status,revenue]
+## 📊 Data Management
+
+### **Index Creation Workflow**
+```bash
+# Step 1: Tokenize your data
+uv run python scripts/tokenize_csv.py --config-name json_companies
+
+# Step 2: Create search index
+uv run python scripts/create_index.py --tokenized-dir data/tokenized/
+
+# Step 3: Verify index
+uv run python scripts/index_info.py
+```
+
+### **Adding New Data**
+```bash
+# Add CSV data to existing index
+uv run python scripts/add_to_index.py data/new_companies.csv
+
+# Rebuild entire index
+uv run python scripts/delete_index.py
+uv run python scripts/create_index.py --tokenized-dir data/tokenized/
 ```
 
 ### **Index Management**
-
-For detailed documentation, see: **[scripts/README.md](./scripts/README.md)**
-
 ```bash
-# Add more data to existing index
-uv run python scripts/add_to_index.py data/new_companies.csv
-
-# Check index health and performance
+# Check index statistics
 uv run python scripts/index_info.py
 
-# Delete index
-uv run python scripts/delete_index.py
+# Backup index
+cp -r data/indexes/ backups/indexes-$(date +%Y%m%d)
+
+# Restore from backup
+cp -r backups/indexes-20240101/ data/indexes/
 ```
 
-## 🏗️ Technical Stack
+**For detailed documentation:** See **[scripts/README.md](./scripts/README.md)**
 
-- **Backend:** Flask + Whoosh (Japanese full-text search) + Janome (tokenization)
-- **HTML Processing:** BeautifulSoup4 for content extraction from HTML files
-- **Data Processing:** Pandas for DataFrame operations and data merging
-- **Configuration:** Hydra for flexible configuration management
-- **Frontend:** Bootstrap 5 + JavaScript (pagination, auto-suggestions)
-- **Data Formats:** CSV files and JSON folder structures with URL-based record generation
-- **Performance:** LRU cache + file-based CSV export caching + O(1) dictionary lookups for data merging
+## ⚙️ Configuration
 
-## 📚 Documentation
-
-### **For Frontend Developers**
-- **[🚀 Frontend Development Guide](./FRONTEND_DEVELOPMENT.md)** - Complete setup and development guide
-  - Windows uv installation instructions
-  - Running the application and development workflow
-  - Project folder structure and UI/UX files
-  - Development URLs and resources
-- **[🔗 API Reference](./app/API_REFERENCE.md)** - Complete API documentation with examples
-  - Authentication endpoints (`/login`, `/logout`)
-  - Search APIs (`/api/search`, `/search`) with filters and pagination
-  - CSV export (`/api/download-csv`) with enterprise data fields
-  - Admin APIs for index management
-  - Multi-index support for prefecture-based search
-
-### **For Backend Developers**
-- **[Configuration Guide](./CONFIGURATION.md)** - Hydra configuration system and deployment options
-- **[Scripts Documentation](./scripts/README.md)** - Index management, tokenization, and utility scripts
-- **[Tokenized Format Specification](./scripts/TOKENIZED_FORMAT.md)** - Two-step tokenization workflow format
-- **[Sample Data Guide](./data/README.md)** - Testing data and development examples
-
-## 🔧 Development
+EOS uses Hydra for flexible configuration management. Basic usage:
 
 ```bash
-# Install all dependencies
-uv add flask janome whoosh beautifulsoup4 pandas hydra-core
-
-# Run development server with default config
+# Default configuration
 uv run python run.py
 
-# Run with custom configuration
-uv run python run.py app.debug=false index.dir=data/production/index
-
-# Process sample data
-uv run python scripts/tokenize_csv.py --json-folder data/test_json_companies
-uv run python scripts/create_index.py --tokenized-dir data/test_json_companies/tokenized
+# Override settings
+uv run python run.py app.debug=false index.dir=data/production/
 ```
 
-### **Configuration Management**
+**Configuration files:** `config.yaml`, `json_companies.yaml`, `csv_companies.yaml`, `tokenize.yaml`
 
-The project uses Hydra for flexible configuration:
+📚 **Complete guide:** [CONFIGURATION.md](./CONFIGURATION.md)
 
-```bash
-# Default configuration (conf/config.yaml)
-uv run python run.py
+---
 
-# Override specific settings
-uv run python run.py app.debug=false index.dir=data/custom/
+## 🤝 Contributing
 
-# Use different config file
-uv run python run.py --config-path custom/path --config-name custom_config
-```
+We welcome contributions to EOS! Here's how to get started:
 
-**Sample Data:** Includes JSON company data with HTML content files for testing HTML extraction functionality
+### **Development Process**
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Make your changes following our coding standards
+4. Add tests for new functionality
+5. Submit a pull request
+
+### **Coding Standards**
+- Follow PEP 8 for Python code
+- Use type hints where appropriate
+- Add docstrings to functions and classes
+- Test Japanese text handling thoroughly
+
+### **Areas for Contribution**
+- UI/UX improvements
+- Search algorithm enhancements
+- Additional data format support
+- Performance optimizations
+- Documentation improvements
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+### **Getting Help**
+- **GitHub Issues:** [Report bugs or request features](https://github.com/lorentzbao/eos-V2/issues)
+- **Documentation:** Check our comprehensive guides in the repo
+- **Discussions:** Use GitHub Discussions for questions
+
+### **Reporting Issues**
+When reporting issues, please include:
+- Operating system and Python version
+- Steps to reproduce the problem
+- Error messages and logs
+- Sample data (if applicable)
+
+### **Contact**
+- **Repository:** https://github.com/lorentzbao/eos-V2
+- **Issues:** https://github.com/lorentzbao/eos-V2/issues
 
