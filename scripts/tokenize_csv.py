@@ -738,21 +738,18 @@ def create_processing_summary(output_dir: str, total_batches: int, total_records
 
 
 def get_output_dir(csv_file: str = None, json_folder: str = None, output_dir: str = None) -> str:
-    """Generate output directory based on input source"""
+    """Generate output directory using new organized structure: data/tokenized/{prefecture}"""
     if output_dir:
-        # User specified explicit output directory
         return output_dir
-    
+
     if json_folder:
-        # Auto-generate from JSON folder name
-        folder_name = os.path.basename(json_folder.rstrip('/'))
-        return f"data/{folder_name}/tokenized"
+        # Extract prefecture from path like "data/raw/tokyo"
+        prefecture = os.path.basename(json_folder.rstrip('/'))
+        return f"data/tokenized/{prefecture}"
     elif csv_file:
-        # Auto-generate from CSV filename
         csv_name = os.path.splitext(os.path.basename(csv_file))[0]
-        return f"data/{csv_name}/tokenized"
+        return f"data/tokenized/{csv_name}"
     else:
-        # Fallback
         return "data/tokenized"
 
 

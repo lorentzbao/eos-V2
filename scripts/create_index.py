@@ -214,25 +214,19 @@ def process_batch(search_service: SearchService, batch: List[Dict], batch_num: i
 
 
 def get_index_dir(csv_file: str = None, tokenized_dir: str = None, index_dir: str = None) -> str:
-    """Generate index directory based on input source"""
+    """Generate index directory using new organized structure: data/indexes/{prefecture}"""
     if index_dir:
-        # User specified explicit index directory
         return index_dir
-    
+
     if tokenized_dir:
-        # Extract base folder from tokenized path
-        # data/xxx/tokenized -> data/xxx/index
-        base_path = os.path.dirname(tokenized_dir.rstrip('/'))
-        return os.path.join(base_path, 'index')
-    
+        # Extract prefecture from path like "data/tokenized/tokyo"
+        prefecture = os.path.basename(tokenized_dir.rstrip('/'))
+        return f"data/indexes/{prefecture}"
     elif csv_file:
-        # Auto-generate from CSV filename
         csv_name = os.path.splitext(os.path.basename(csv_file))[0]
-        return f"data/{csv_name}/index"
-    
+        return f"data/indexes/{csv_name}"
     else:
-        # Fallback
-        return "data/whoosh_index"
+        return "data/indexes"
 
 
 def main():

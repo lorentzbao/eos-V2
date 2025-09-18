@@ -5,11 +5,11 @@ app:
 # Multi-index configuration - users must select a prefecture
 indexes:
   tokyo:
-    dir: "data/tokyo/index"
+    dir: "data/indexes/tokyo"
     name: "Tokyo"
   osaka:
-    dir: "data/osaka/index"
+    dir: "data/indexes/osaka"
     name: "Osaka"
   kochi:
-    dir: "data/kochi/index"
+    dir: "data/indexes/kochi"
     name: "Kochi"

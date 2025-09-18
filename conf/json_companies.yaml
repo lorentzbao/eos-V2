@@ -4,7 +4,7 @@
 
 input:
   csv_file: null
-  json_folder: "data/test_json_companies"
+  json_folder: "data/raw/tokyo"  # Default to tokyo, can be overridden
   dataframe_file: "data/sample_companies.csv"
   
 processing:
@@ -22,7 +22,7 @@ processing:
   max_concurrent_io: 8             # Maximum concurrent I/O operations
   
 output:
-  output_dir: null                  # Auto-generate: data/test_json_companies/tokenized
+  output_dir: null                  # Auto-generate: data/tokenized/{prefecture}
   clear_output: false
   
 tokenizer:
