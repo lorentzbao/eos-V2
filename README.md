@@ -2,6 +2,21 @@
 
 Modern Flask-based search engine for Japanese companies with intelligent grouping, advanced text processing, and HTML content extraction.
 
+## 📋 Table of Contents
+
+### **Getting Started**
+- [🚀 Quick Start](#-quick-start) - Install and run the application
+- [📋 Key Features](#-key-features) - What EOS can do
+- [📖 Usage](#-usage) - How to search and use features
+
+### **Development & Setup**
+- [🛠️ Data Processing & Index Management](#️-data-processing--index-management) - Tokenization and indexing
+- [🏗️ Technical Stack](#️-technical-stack) - Technologies used
+- [🔧 Development](#-development) - Development setup and configuration
+
+### **Documentation**
+- [📚 Documentation](#-documentation) - Complete guides for frontend and backend developers
+
 ## 🚀 Quick Start
 
 ```bash
