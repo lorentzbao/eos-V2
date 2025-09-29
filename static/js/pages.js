@@ -605,7 +605,7 @@ app.pages = {
 
                             <!-- Hidden inputs for defaults -->
                             <input type="hidden" name="limit" value="${params.limit || 100}">
-                            <input type="hidden" name="search_option" value="${params.search_option || 'all'}"
+                            <input type="hidden" name="search_option" value="${params.search_option || 'all'}">
                         </form>
                     </div>
 
@@ -689,7 +689,18 @@ app.pages = {
             const response = await fetch(`/history${showAll ? '?show_all=true' : ''}`);
 
             if (!response.ok) {
-                throw new Error('History request failed');
+                if (response.status === 401) {
+                    return `
+                        <div class="alert alert-warning">
+                            <h5>ログインが必要です</h5>
+                            <p>検索履歴を表示するにはログインが必要です。</p>
+                            <button onclick="app.router.navigate('login')" class="btn btn-primary">
+                                ログインページへ
+                            </button>
+                        </div>
+                    `;
+                }
+                throw new Error(`History request failed with status: ${response.status}`);
             }
 
             const data = await response.json();
@@ -702,6 +713,10 @@ app.pages = {
                 <div class="alert alert-danger">
                     <h5>履歴読み込みエラー</h5>
                     <p>履歴の読み込み中にエラーが発生しました。</p>
+                    <p><small class="text-muted">エラー詳細: ${error.message}</small></p>
+                    <button onclick="location.reload()" class="btn btn-outline-primary">
+                        再読み込み
+                    </button>
                 </div>
             `;
         }
@@ -820,7 +835,18 @@ app.pages = {
             const response = await fetch('/rankings');
 
             if (!response.ok) {
-                throw new Error('Rankings request failed');
+                if (response.status === 401) {
+                    return `
+                        <div class="alert alert-warning">
+                            <h5>ログインが必要です</h5>
+                            <p>ランキングを表示するにはログインが必要です。</p>
+                            <button onclick="app.router.navigate('login')" class="btn btn-primary">
+                                ログインページへ
+                            </button>
+                        </div>
+                    `;
+                }
+                throw new Error(`Rankings request failed with status: ${response.status}`);
             }
 
             const data = await response.json();
@@ -833,6 +859,10 @@ app.pages = {
                 <div class="alert alert-danger">
                     <h5>ランキング読み込みエラー</h5>
                     <p>ランキングの読み込み中にエラーが発生しました。</p>
+                    <p><small class="text-muted">エラー詳細: ${error.message}</small></p>
+                    <button onclick="location.reload()" class="btn btn-outline-primary">
+                        再読み込み
+                    </button>
                 </div>
             `;
         }
