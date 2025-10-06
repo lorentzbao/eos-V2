@@ -9,25 +9,25 @@ class SearchService:
         self.query_processor = QueryProcessor()
     
     @lru_cache(maxsize=128)
-    def _cached_search(self, query: str, limit: int, prefecture: str, cust_status: str, sort_by: str = "") -> tuple:
+    def _cached_search(self, query: str, limit: int, prefecture: str, cust_status: str, sort_by: str = "", city: str = "") -> tuple:
         """
         Cached search implementation using LRU cache.
         Returns tuple to make it hashable and cacheable.
         """
         processed = self.query_processor.process_advanced_query(query)
         processed_query = processed['processed_query']
-        
+
         if not processed_query:
             return ([], processed_query)
-        
+
         try:
-            # Only content search is available now with prefecture and cust_status filtering
-            results = self.search_engine.search(query, limit, prefecture, cust_status, sort_by)
+            # Only content search is available now with prefecture, city, and cust_status filtering
+            results = self.search_engine.search(query, limit, prefecture, cust_status, sort_by, city)
             return (results, processed_query)
         except Exception:
             return ([], processed_query)
-    
-    def search(self, query: str, limit: int = 10, prefecture: str = "", cust_status: str = "", sort_by: str = "") -> Dict:
+
+    def search(self, query: str, limit: int = 10, prefecture: str = "", cust_status: str = "", sort_by: str = "", city: str = "") -> Dict:
         if not query.strip():
             return {
                 'grouped_results': [],
@@ -43,7 +43,7 @@ class SearchService:
         
         # Use cached search
         try:
-            results, processed_query = self._cached_search(query, limit, prefecture, cust_status, sort_by)
+            results, processed_query = self._cached_search(query, limit, prefecture, cust_status, sort_by, city)
             
             # Group results by company on the Python side
             grouped_results = self._group_by_company(results)

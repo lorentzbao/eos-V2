@@ -5,6 +5,7 @@ import csv
 import io
 import os
 import hashlib
+import json
 from datetime import datetime
 
 api = Blueprint('api', __name__, url_prefix='/api')
@@ -251,4 +252,28 @@ def download_csv():
     
     # Serve the newly created cached file
     return send_file(cache_file, as_attachment=True, download_name=filename)
+
+@api.route('/cities/<prefecture>')
+def api_cities(prefecture):
+    """API endpoint to get cities for a specific prefecture"""
+    try:
+        # Get the path to prefecture_cities.json
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        cities_file = os.path.join(project_root, "data", "prefecture_cities.json")
+
+        # Load the cities mapping
+        if not os.path.exists(cities_file):
+            return jsonify({'error': 'Cities data file not found'}), 404
+
+        with open(cities_file, 'r', encoding='utf-8') as f:
+            cities_data = json.load(f)
+
+        # Get cities for the requested prefecture
+        if prefecture not in cities_data:
+            return jsonify({'cities': []})  # Return empty list if prefecture not found
+
+        return jsonify({'cities': cities_data[prefecture]})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 

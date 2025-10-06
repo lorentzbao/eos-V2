@@ -163,6 +163,56 @@ window.app = {
             targetRadios.forEach(radio => {
                 radio.addEventListener('change', this.handleTargetChange);
             });
+
+            // Handle prefecture selection changes to load cities
+            const prefectureSelects = document.querySelectorAll('select[name="prefecture"]');
+            prefectureSelects.forEach(select => {
+                select.addEventListener('change', async (e) => {
+                    await app.forms.loadCities(e.target.value);
+                });
+            });
+        },
+
+        // Load cities for selected prefecture
+        async loadCities(prefecture) {
+            if (!prefecture) {
+                // Clear city dropdown if no prefecture selected
+                const citySelects = document.querySelectorAll('select[name="city"]');
+                citySelects.forEach(select => {
+                    select.innerHTML = '<option value="">市区町村を選択（任意）</option>';
+                    select.disabled = true;
+                });
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/cities/${prefecture}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load cities');
+                }
+
+                const data = await response.json();
+                const cities = data.cities || [];
+
+                // Update all city dropdowns
+                const citySelects = document.querySelectorAll('select[name="city"]');
+                citySelects.forEach(select => {
+                    select.innerHTML = '<option value="">市区町村を選択（任意）</option>';
+
+                    cities.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city.value;
+                        option.textContent = city.name;
+                        select.appendChild(option);
+                    });
+
+                    select.disabled = false;
+                });
+
+            } catch (error) {
+                console.error('Error loading cities:', error);
+                app.utils.showAlert('市区町村の読み込みに失敗しました。', 'warning');
+            }
         },
 
         // Handle target selection change

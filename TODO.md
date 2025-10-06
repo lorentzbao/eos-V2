@@ -4,16 +4,36 @@ This document tracks ongoing development tasks, improvements, and technical debt
 
 ## Current Tasks
 
+### Frontend-dev Integration (In Progress)
+- [x] Create integrate-frontend-dev branch
+- [x] Merge frontend-dev into integration branch
+- [x] Restore CLAUDE.md and TODO.md from master
+- [x] Test basic application startup
+- [~] Fix and enhance search functionality
+  - [x] Implement dynamic city/district dropdown based on prefecture selection
+  - [x] Add backend support for city filtering
+  - [ ] Implement regional_office, branch, solicitor filtering for 契約 target
+  - [ ] Sync hardcoded prefecture list with actual indexes in config.yaml
+- [~] Add missing API endpoints
+  - [ ] `/api/user-rankings` - User search count rankings
+  - [x] `/api/prefectures` - Dynamic prefecture list from config (already existed)
+  - [x] `/api/cities/<prefecture>` - Cities by prefecture
+- [ ] Fix rankings page functionality
+- [ ] Fix history page functionality
+- [ ] Update documentation for SPA architecture
+
 ### Documentation
 - [x] Create comprehensive frontend development guide (FRONTEND_DEVELOPMENT.md)
 - [x] Create complete API reference with examples (app/API_REFERENCE.md)
 - [x] Restructure README.md with improved organization
 - [x] Add CLAUDE.md for AI assistant guidance
+- [x] Add INTEGRATION_PLAN.md for frontend-dev merge
 - [ ] Create ADMIN_GUIDE.md for data processing and administration
 
 ### Features
 
 #### High Priority
+- [x] Implement dynamic city/district dropdown (completed - loads from prefecture_cities.json)
 - [ ] Add pagination support for search results (currently limited by `limit` parameter)
 - [ ] Implement search result sorting options (relevance, date, company name)
 - [ ] Add search query validation and sanitization
@@ -193,5 +213,5 @@ This TODO.md should be reviewed and updated:
 
 ---
 
-**Last Updated**: 2025-10-06
+**Last Updated**: 2025-10-06 (Updated after city dropdown implementation)
 **Next Review**: TBD

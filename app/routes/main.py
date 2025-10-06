@@ -117,6 +117,7 @@ def search():
     limit = int(request.args.get('limit', 10))
     prefecture = request.args.get('prefecture', '')
     cust_status = request.args.get('cust_status', '')
+    city = request.args.get('city', '')
     username = session['username']
 
     # Handle empty or whitespace-only queries
@@ -129,11 +130,11 @@ def search():
     if isinstance(search_service, MultiIndexSearchService):
         if not prefecture:
             return jsonify({'error': 'Prefecture is required'}), 400
-        search_results = search_service.search(query, prefecture, limit, cust_status)
+        search_results = search_service.search(query, prefecture, limit, cust_status, "", city)
         stats = search_service.get_stats(prefecture)
     else:
         # Single index service (backward compatibility)
-        search_results = search_service.search(query, limit, prefecture, cust_status)
+        search_results = search_service.search(query, limit, prefecture, cust_status, "", city)
         stats = search_service.get_stats()
 
     # Log the search query with detailed information
@@ -154,6 +155,7 @@ def search():
         'search_time': search_results['search_time'],
         'processed_query': search_results['processed_query'],
         'prefecture': prefecture,
+        'city': city,
         'cust_status': cust_status,
         'limit': limit,
         'username': username,

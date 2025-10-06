@@ -98,13 +98,8 @@ app.pages = {
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">市区町村</label>
-                                            <select name="city" class="form-select">
+                                            <select name="city" class="form-select" disabled>
                                                 <option value="">市区町村を選択（任意）</option>
-                                                <option value="shibuya">渋谷区</option>
-                                                <option value="shinjuku">新宿区</option>
-                                                <option value="minato">港区</option>
-                                                <option value="chiyoda">千代田区</option>
-                                                <option value="chuo">中央区</option>
                                             </select>
                                         </div>
                                     </div>
@@ -308,11 +303,6 @@ app.pages = {
                                             <label class="form-label">市区町村</label>
                                             <select name="city" class="form-select">
                                                 <option value="">市区町村を選択（任意）</option>
-                                                <option value="shibuya" ${params.city === 'shibuya' ? 'selected' : ''}>渋谷区</option>
-                                                <option value="shinjuku" ${params.city === 'shinjuku' ? 'selected' : ''}>新宿区</option>
-                                                <option value="minato" ${params.city === 'minato' ? 'selected' : ''}>港区</option>
-                                                <option value="chiyoda" ${params.city === 'chiyoda' ? 'selected' : ''}>千代田区</option>
-                                                <option value="chuo" ${params.city === 'chuo' ? 'selected' : ''}>中央区</option>
                                             </select>
                                         </div>
                                     </div>
@@ -532,11 +522,6 @@ app.pages = {
                                             <label class="form-label">市区町村</label>
                                             <select name="city" class="form-select">
                                                 <option value="">市区町村を選択（任意）</option>
-                                                <option value="shibuya" ${params.city === 'shibuya' ? 'selected' : ''}>渋谷区</option>
-                                                <option value="shinjuku" ${params.city === 'shinjuku' ? 'selected' : ''}>新宿区</option>
-                                                <option value="minato" ${params.city === 'minato' ? 'selected' : ''}>港区</option>
-                                                <option value="chiyoda" ${params.city === 'chiyoda' ? 'selected' : ''}>千代田区</option>
-                                                <option value="chuo" ${params.city === 'chuo' ? 'selected' : ''}>中央区</option>
                                             </select>
                                         </div>
                                     </div>

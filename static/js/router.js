@@ -200,6 +200,19 @@ app.router = {
         // Initialize form handlers for conditional fields
         app.forms.initFormHandlers();
 
+        // If prefecture is already selected, load cities
+        if (params.prefecture) {
+            app.forms.loadCities(params.prefecture).then(() => {
+                // After cities loaded, select the city if in params
+                if (params.city) {
+                    const citySelects = document.querySelectorAll('select[name="city"]');
+                    citySelects.forEach(select => {
+                        select.value = params.city;
+                    });
+                }
+            });
+        }
+
         // Initialize search suggestions
         app.search.initSearchSuggestions('searchInput');
 

@@ -209,22 +209,22 @@ class WhooshSimpleJapanese:
                 pass
             return False
     
-    def search(self, query_string: str, limit: int = 10, prefecture: str = "", cust_status: str = "", sort_by: str = "") -> List[Dict]:
-        """Search in content only with highlighting support, prefecture and cust_status filtering, and sorting"""
+    def search(self, query_string: str, limit: int = 10, prefecture: str = "", cust_status: str = "", sort_by: str = "", city: str = "") -> List[Dict]:
+        """Search in content only with highlighting support, prefecture, city, and cust_status filtering, and sorting"""
         if not query_string.strip():
             return []
-        
+
         try:
             # Pre-process the query
             processed_query = self._tokenize_japanese(query_string)
             if not processed_query:
                 # Fallback to original query
                 processed_query = query_string
-            
+
             with self.ix.searcher() as searcher:
                 # Search only in content tokens with OR logic for multiple terms
                 parser = QueryParser("content_tokens", self.ix.schema, group=OrGroup)
-                
+
                 try:
                     query = parser.parse(processed_query)
                 except Exception:
@@ -236,13 +236,17 @@ class WhooshSimpleJapanese:
                         query = Term("content_tokens", terms[0])
                     else:
                         query = Or([Term("content_tokens", term) for term in terms])
-                
+
                 # Build filters if specified
                 filters = []
                 if prefecture:
                     from whoosh.query import Term
                     filters.append(Term("prefecture", prefecture.lower()))
-                
+
+                if city:
+                    from whoosh.query import Term
+                    filters.append(Term("city", city))
+
                 if cust_status:
                     from whoosh.query import Term
                     filters.append(Term("CUST_STATUS2", cust_status))

@@ -30,17 +30,18 @@ class MultiIndexSearchService:
             })
         return prefectures
     
-    def search(self, query: str, prefecture: str, limit: int = 10, 
-               cust_status: str = "", sort_by: str = "") -> Dict:
+    def search(self, query: str, prefecture: str, limit: int = 10,
+               cust_status: str = "", sort_by: str = "", city: str = "") -> Dict:
         """
         Search in a specific prefecture index
-        
+
         Args:
             query: Search query
             prefecture: Required prefecture (tokyo, osaka, etc.)
             limit: Maximum results
             cust_status: Customer status filter
             sort_by: Sort method
+            city: City/district filter
         """
         if not prefecture:
             return {
@@ -52,7 +53,7 @@ class MultiIndexSearchService:
                 'search_time': 0,
                 'error': 'Prefecture selection is required'
             }
-        
+
         if prefecture not in self.search_services:
             return {
                 'grouped_results': [],
@@ -63,10 +64,10 @@ class MultiIndexSearchService:
                 'search_time': 0,
                 'error': f'Prefecture "{prefecture}" not available'
             }
-        
+
         # Search in the specific prefecture index
         service = self.search_services[prefecture]
-        results = service.search(query, limit, "", cust_status, sort_by)  # prefecture="" since it's already filtered
+        results = service.search(query, limit, "", cust_status, sort_by, city)  # prefecture="" since it's already filtered
         
         # Add prefecture info to results
         results['prefecture'] = prefecture
