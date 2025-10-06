@@ -12,6 +12,7 @@ This document tracks ongoing development tasks, improvements, and technical debt
 - [~] Fix and enhance search functionality
   - [x] Implement dynamic city/district dropdown based on prefecture selection
   - [x] Add backend support for city filtering
+  - [x] Implement CUST_STATUS2 filtering for target selection (白地・過去 with OR logic)
   - [ ] Implement regional_office, branch, solicitor filtering for 契約 target
   - [ ] Sync hardcoded prefecture list with actual indexes in config.yaml
 - [~] Add missing API endpoints
@@ -213,5 +214,5 @@ This TODO.md should be reviewed and updated:
 
 ---
 
-**Last Updated**: 2025-10-06 (Updated after city dropdown implementation)
+**Last Updated**: 2025-10-06 (Updated after CUST_STATUS2 target filtering implementation)
 **Next Review**: TBD

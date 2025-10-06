@@ -248,8 +248,15 @@ class WhooshSimpleJapanese:
                     filters.append(Term("city", city))
 
                 if cust_status:
-                    from whoosh.query import Term
-                    filters.append(Term("CUST_STATUS2", cust_status))
+                    from whoosh.query import Term, Or
+                    if '|' in cust_status:
+                        # OR logic for multiple values (e.g., '白地|過去')
+                        status_values = cust_status.split('|')
+                        or_terms = [Term("CUST_STATUS2", val) for val in status_values]
+                        filters.append(Or(or_terms))
+                    else:
+                        # Single value
+                        filters.append(Term("CUST_STATUS2", cust_status))
                 
                 # Combine filters with AND logic
                 filter_query = None

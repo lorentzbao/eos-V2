@@ -116,9 +116,19 @@ def search():
     query = request.args.get('q', '')
     limit = int(request.args.get('limit', 10))
     prefecture = request.args.get('prefecture', '')
-    cust_status = request.args.get('cust_status', '')
     city = request.args.get('city', '')
+    target = request.args.get('target', '')
+    cust_status = request.args.get('cust_status', '')  # Keep for backward compatibility
     username = session['username']
+
+    # Map target selection to CUST_STATUS2 filter
+    # "白地・過去" means search for CUST_STATUS2 = "白地" OR "過去"
+    # "契約" means search for CUST_STATUS2 = "契約"
+    cust_status_filter = cust_status  # Use existing if provided
+    if target == '白地・過去':
+        cust_status_filter = '白地|過去'  # Use pipe to indicate OR logic
+    elif target == '契約':
+        cust_status_filter = '契約'
 
     # Handle empty or whitespace-only queries
     if not query or not query.strip():
@@ -130,11 +140,11 @@ def search():
     if isinstance(search_service, MultiIndexSearchService):
         if not prefecture:
             return jsonify({'error': 'Prefecture is required'}), 400
-        search_results = search_service.search(query, prefecture, limit, cust_status, "", city)
+        search_results = search_service.search(query, prefecture, limit, cust_status_filter, "", city)
         stats = search_service.get_stats(prefecture)
     else:
         # Single index service (backward compatibility)
-        search_results = search_service.search(query, limit, prefecture, cust_status, "", city)
+        search_results = search_service.search(query, limit, prefecture, cust_status_filter, "", city)
         stats = search_service.get_stats()
 
     # Log the search query with detailed information
