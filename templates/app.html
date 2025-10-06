@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Enterprise Online Search</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- EOS CSS Files - Ordered by dependency -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles_basic.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles_main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles_login.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles_search.css') }}">
+</head>
+<body>
+    <!-- Login Layout (shown when not authenticated) -->
+    <div id="loginLayout" class="login-layout" style="display: none;">
+        <div id="loginContent"></div>
+    </div>
+
+    <!-- Main Layout (shown when authenticated) -->
+    <div id="mainLayout" class="main-layout" style="display: none;">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title" onclick="app.router.navigate('home')" style="cursor: pointer;">Enterprise Online Search (EOS)</div>
+            <div id="headerUser" class="header-user" style="display: none;">
+                <div class="user-info">
+                    <span>SMEデジタルトランスフォーメーション部</span>
+                    <strong id="usernameDisplay"></strong>さん
+                </div>
+                <div class="header-actions">
+                    <span>🔔</span>
+                    <span>❓</span>
+                    <button class="btn-logout" onclick="app.auth.logout()">ログアウト</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area with Sidebar -->
+        <div class="content-area">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="window.open('https://share.connect.test/sites/eos', '_blank')">
+                            <span class="nav-icon">ℹ️</span> EOSとは
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" id="nav-search" onclick="app.router.navigate('home')">
+                            <span class="nav-icon">🔍</span> キーワード検索
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" id="nav-rankings" onclick="app.router.navigate('rankings')">
+                            <span class="nav-icon">🏆</span> ランキング
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" id="nav-history" onclick="app.router.navigate('history')">
+                            <span class="nav-icon">📊</span> 検索履歴
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Body Content -->
+                <div class="body-content">
+                    <div id="app-content">
+                        <!-- Content will be dynamically loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" style="display: none;">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/router.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pages.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/search.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/csv-download.js') }}"></script>
+
+    <script>
+        // Pass server-side data to JavaScript
+        {% if popular_queries %}
+        window.serverData = {
+            popularQueries: {{ popular_queries | tojson }},
+            username: {{ username | tojson if username else 'null' }}
+        };
+        {% else %}
+        window.serverData = {
+            popularQueries: [],
+            username: null
+        };
+        {% endif %}
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set initial data from server
+            if (window.serverData) {
+                app.state.popularQueries = window.serverData.popularQueries || [];
+                if (window.serverData.username) {
+                    app.state.user = window.serverData.username;
+                }
+            }
+
+            app.init();
+        });
+    </script>
+</body>
+</html>

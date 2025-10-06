@@ -1,0 +1,546 @@
+/* EOS Search Components Styles */
+
+/* Search Container */
+.search-container {
+    max-width: 100%;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Search Header */
+.search-header {
+    background-color: var(--bg-white);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-light);
+}
+
+/* Search Results */
+.search-results {
+    margin-top: 20px;
+}
+
+.result-item {
+    background-color: var(--bg-white);
+    border: 1px solid #e1e5e9;
+    border-radius: var(--border-radius);
+    padding: 24px;
+    margin-bottom: 20px;
+    transition: var(--transition);
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.result-item:hover {
+    box-shadow: var(--shadow-medium);
+    border-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+/* Search Result Cards - EOS Specification */
+.search-result-card {
+    background-color: var(--bg-white);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: var(--shadow-light);
+    transition: var(--transition);
+}
+
+.search-result-card:hover {
+    box-shadow: var(--shadow-medium);
+    transform: translateY(-1px);
+}
+
+/* Company Information Styling */
+.company-header {
+    padding: 0 0 0.75rem 0;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.company-title {
+    font-weight: 600;
+    color: var(--primary-dark);
+    margin-bottom: 0.25rem;
+    font-size: 1.1rem;
+}
+
+.company-title .company-link {
+    color: var(--primary-dark);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.company-title .company-link:hover {
+    color: var(--primary-blue);
+    text-decoration: underline;
+}
+
+.company-details {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: normal;
+}
+
+.company-urls {
+    margin-top: 0;
+}
+
+.url-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.url-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.url-title {
+    font-weight: normal;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.url-title a {
+    color: #333;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.url-title a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+.url-content {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+/* Matched Terms */
+.matched-terms-sidebar {
+    background: none;
+    padding: 0;
+    min-width: auto;
+}
+
+.matched-terms-sidebar .keyword-badge {
+    font-size: 0.75rem;
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Search Stats */
+.search-stats {
+    background-color: var(--primary-light);
+    border: 1px solid rgba(0, 24, 113, 0.1);
+    border-radius: var(--border-radius);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+}
+
+/* Search Suggestions Dropdown */
+.suggestions-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 60px; /* Account for search button */
+    background: var(--bg-white);
+    border: 1px solid #e1e5e9;
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    box-shadow: var(--shadow-medium);
+    z-index: 1000;
+    max-height: 400px;
+    overflow-y: auto;
+    animation: slideDown 0.2s ease-out;
+}
+
+.suggestions-header {
+    padding: 12px 20px;
+    background-color: var(--primary-light);
+    border-bottom: 1px solid rgba(0, 24, 113, 0.1);
+}
+
+.suggestion-item {
+    padding: 12px 20px;
+    border-bottom: 1px solid #f8f9fa;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.suggestion-item:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-text {
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.suggestion-icon {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.suggestion-count {
+    background: var(--primary-dark);
+    color: var(--font-white);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.suggestion-item.active {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+/* Search Form Animations */
+.search-container .form-control {
+    transition: all 0.3s ease;
+}
+
+.search-container .form-control:focus {
+    transform: scale(1.02);
+    border-color: var(--primary-dark);
+    box-shadow: 0 0 0 4px rgba(0, 24, 113, 0.1);
+}
+
+/* Search Button */
+.search-container .btn-primary {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    transition: var(--transition);
+}
+
+.search-container .btn-primary:hover {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-medium);
+}
+
+/* Search Tips */
+.search-tips {
+    background-color: var(--primary-light);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-top: 30px;
+}
+
+.search-tips h6 {
+    color: var(--primary-dark);
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.search-tips .col-md-4 {
+    margin-bottom: 10px;
+}
+
+.search-tips small {
+    color: var(--primary-dark);
+    line-height: 1.4;
+}
+
+/* Responsive Design - Search */
+@media (max-width: 768px) {
+    .search-container {
+        padding: 0 10px;
+    }
+
+    .result-item {
+        padding: 16px;
+    }
+
+    .search-result-card {
+        padding: 15px;
+    }
+
+    .suggestions-dropdown {
+        right: 50px; /* Smaller button on mobile */
+    }
+
+    .company-title {
+        font-size: 1rem;
+    }
+
+    .matched-terms-sidebar {
+        margin-top: 16px;
+        min-width: auto;
+    }
+
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 576px) {
+    .search-container {
+        padding: 0 5px;
+    }
+
+    .search-header {
+        padding: 15px;
+    }
+
+    .result-item,
+    .search-result-card {
+        padding: 12px;
+    }
+
+    .suggestions-dropdown {
+        right: 45px;
+    }
+}
+
+/* Search Animation Keyframes */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Search Loading States */
+.search-loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--primary-dark);
+}
+
+.search-loading .spinner-border {
+    color: var(--primary-dark);
+    margin-bottom: 15px;
+}
+
+/* Empty Search State */
+.search-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.search-empty h5 {
+    color: var(--primary-dark);
+    margin-bottom: 20px;
+}
+
+.search-empty .btn {
+    margin-top: 20px;
+}
+
+/* Target Selection Radio Button Styling */
+.btn-group#targetSelection {
+    border: 2px solid var(--primary-dark);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-light);
+}
+
+.btn-group#targetSelection .btn {
+    border: none;
+    border-radius: 0;
+    background-color: var(--bg-white);
+    color: var(--primary-dark);
+    font-weight: 600;
+    padding: 12px 24px;
+    transition: var(--transition);
+    position: relative;
+    border-right: 1px solid var(--primary-dark);
+}
+
+.btn-group#targetSelection .btn:last-child {
+    border-right: none;
+}
+
+.btn-group#targetSelection .btn:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+    transform: none;
+    box-shadow: inset 0 0 10px rgba(0, 24, 113, 0.1);
+}
+
+.btn-group#targetSelection .btn:active,
+.btn-group#targetSelection .btn-check:checked + .btn {
+    background-color: var(--primary-dark);
+    color: var(--font-white);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+    transform: none;
+}
+
+.btn-group#targetSelection .btn-check {
+    position: absolute;
+    clip: rect(0, 0, 0, 0);
+    pointer-events: none;
+}
+
+/* Target Selection Animation */
+.btn-group#targetSelection .btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+.btn-group#targetSelection .btn-check:checked + .btn::before {
+    opacity: 1;
+}
+
+/* Search Criteria Section Styling */
+.search-criteria {
+    background-color: var(--bg-white);
+    border: 1px solid #e1e5e9;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-light);
+}
+
+.search-criteria h6 {
+    font-weight: 700;
+    color: var(--primary-dark);
+    border-bottom: 2px solid var(--primary-light);
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+}
+
+/* Conditional Fields Animation */
+.conditional-fields {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Display Options Styling */
+.display-options .card {
+    border: 1px solid #e1e5e9;
+    box-shadow: var(--shadow-light);
+}
+
+.display-options .card-body {
+    padding: 16px 20px;
+}
+
+.display-options .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--primary-dark);
+}
+
+.display-options .form-select {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #dee2e6;
+}
+
+.display-options .form-label {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--primary-dark);
+}
+
+/* Company Details Badge Styling */
+.badge-outline-primary {
+    background-color: transparent;
+    border: 1px solid var(--primary-blue);
+    color: var(--primary-blue);
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 4px;
+}
+
+.company-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+/* Custom Download Button Styling */
+.btn-primary-blue {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    color: var(--font-white);
+    border-radius: var(--border-radius);
+    padding: 8px 16px;
+    transition: var(--transition);
+    font-weight: 600;
+}
+
+.btn-primary-blue:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    color: var(--font-white);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-medium);
+}
+
+.btn-primary-dark {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    color: var(--font-white);
+    border-radius: var(--border-radius);
+    padding: 8px 16px;
+    transition: var(--transition);
+    font-weight: 600;
+}
+
+.btn-primary-dark:hover {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    color: var(--font-white);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-medium);
+}
