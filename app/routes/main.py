@@ -177,3 +177,10 @@ def api_popular_queries():
     """Popular queries API endpoint"""
     popular_queries = search_logger.get_popular_queries(limit=10)
     return jsonify(popular_queries)
+
+@main.route('/api/user-rankings')
+def api_user_rankings():
+    """User rankings API endpoint"""
+    limit = int(request.args.get('limit', 10))
+    user_rankings = search_logger.get_user_rankings(limit=limit)
+    return jsonify(user_rankings)

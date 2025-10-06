@@ -796,10 +796,14 @@ app.pages = {
     // Render rankings page
     async renderRankingsPage() {
         try {
-            const response = await fetch('/rankings');
+            // Fetch both rankings data and user rankings in parallel
+            const [rankingsResponse, userRankingsResponse] = await Promise.all([
+                fetch('/rankings'),
+                fetch('/api/user-rankings?limit=10')
+            ]);
 
-            if (!response.ok) {
-                if (response.status === 401) {
+            if (!rankingsResponse.ok) {
+                if (rankingsResponse.status === 401) {
                     return `
                         <div class="alert alert-warning">
                             <h5>ログインが必要です</h5>
@@ -810,12 +814,13 @@ app.pages = {
                         </div>
                     `;
                 }
-                throw new Error(`Rankings request failed with status: ${response.status}`);
+                throw new Error(`Rankings request failed with status: ${rankingsResponse.status}`);
             }
 
-            const data = await response.json();
+            const data = await rankingsResponse.json();
+            const userRankings = userRankingsResponse.ok ? await userRankingsResponse.json() : [];
 
-            return this.renderRankingsContent(data);
+            return this.renderRankingsContent(data, userRankings);
 
         } catch (error) {
             console.error('Rankings error:', error);
@@ -833,22 +838,8 @@ app.pages = {
     },
 
     // Render rankings content
-    renderRankingsContent(data) {
+    renderRankingsContent(data, userRankings = []) {
         const { keywords, queries, stats, username } = data;
-
-        // Dummy user ranking data (until backend is implemented)
-        const userRankings = [
-            { username: '田中太郎', search_count: 245, rank: 1 },
-            { username: '佐藤花子', search_count: 198, rank: 2 },
-            { username: '山田次郎', search_count: 176, rank: 3 },
-            { username: '鈴木三郎', search_count: 154, rank: 4 },
-            { username: '高橋四郎', search_count: 142, rank: 5 },
-            { username: '渡辺五郎', search_count: 138, rank: 6 },
-            { username: '伊藤六郎', search_count: 125, rank: 7 },
-            { username: '中村七子', search_count: 118, rank: 8 },
-            { username: '小林八郎', search_count: 104, rank: 9 },
-            { username: '加藤九子', search_count: 98, rank: 10 }
-        ];
 
         return `
             <div class="row">
