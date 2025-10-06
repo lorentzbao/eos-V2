@@ -59,6 +59,10 @@ This document tracks ongoing development tasks, improvements, and technical debt
 - [ ] Optimize grouped results aggregation for large result sets
 - [ ] Add database for search history (currently file-based)
 - [ ] Profile and optimize tokenization pipeline for very large datasets (>100K records)
+- [ ] Optimize user rankings sorting (currently O(n log n) on every request)
+  - Option 1: Cache sorted rankings, invalidate on update
+  - Option 2: Use heapq.nlargest() for O(n + k log k) complexity
+  - Only needed if user count exceeds ~1000 users
 
 ### Testing
 - [ ] Add integration tests for multi-index search routing
