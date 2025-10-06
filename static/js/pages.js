@@ -86,14 +86,7 @@ app.pages = {
                                                 <option value="">都道府県を選択</option>
                                                 <option value="tokyo">東京都</option>
                                                 <option value="osaka">大阪府</option>
-                                                <option value="kanagawa">神奈川県</option>
-                                                <option value="saitama">埼玉県</option>
-                                                <option value="chiba">千葉県</option>
-                                                <option value="aichi">愛知県</option>
-                                                <option value="hyogo">兵庫県</option>
-                                                <option value="kyoto">京都府</option>
-                                                <option value="fukuoka">福岡県</option>
-                                                <option value="hokkaido">北海道</option>
+                                                <option value="kochi">高知県</option>
                                             </select>
                                         </div>
                                         <div class="col-md-6">
@@ -289,14 +282,7 @@ app.pages = {
                                                 <option value="">都道府県を選択</option>
                                                 <option value="tokyo" ${params.prefecture === 'tokyo' ? 'selected' : ''}>東京都</option>
                                                 <option value="osaka" ${params.prefecture === 'osaka' ? 'selected' : ''}>大阪府</option>
-                                                <option value="kanagawa" ${params.prefecture === 'kanagawa' ? 'selected' : ''}>神奈川県</option>
-                                                <option value="saitama" ${params.prefecture === 'saitama' ? 'selected' : ''}>埼玉県</option>
-                                                <option value="chiba" ${params.prefecture === 'chiba' ? 'selected' : ''}>千葉県</option>
-                                                <option value="aichi" ${params.prefecture === 'aichi' ? 'selected' : ''}>愛知県</option>
-                                                <option value="hyogo" ${params.prefecture === 'hyogo' ? 'selected' : ''}>兵庫県</option>
-                                                <option value="kyoto" ${params.prefecture === 'kyoto' ? 'selected' : ''}>京都府</option>
-                                                <option value="fukuoka" ${params.prefecture === 'fukuoka' ? 'selected' : ''}>福岡県</option>
-                                                <option value="hokkaido" ${params.prefecture === 'hokkaido' ? 'selected' : ''}>北海道</option>
+                                                <option value="kochi" ${params.prefecture === 'kochi' ? 'selected' : ''}>高知県</option>
                                             </select>
                                         </div>
                                         <div class="col-md-6">
@@ -508,14 +494,7 @@ app.pages = {
                                                 <option value="">都道府県を選択</option>
                                                 <option value="tokyo" ${params.prefecture === 'tokyo' ? 'selected' : ''}>東京都</option>
                                                 <option value="osaka" ${params.prefecture === 'osaka' ? 'selected' : ''}>大阪府</option>
-                                                <option value="kanagawa" ${params.prefecture === 'kanagawa' ? 'selected' : ''}>神奈川県</option>
-                                                <option value="saitama" ${params.prefecture === 'saitama' ? 'selected' : ''}>埼玉県</option>
-                                                <option value="chiba" ${params.prefecture === 'chiba' ? 'selected' : ''}>千葉県</option>
-                                                <option value="aichi" ${params.prefecture === 'aichi' ? 'selected' : ''}>愛知県</option>
-                                                <option value="hyogo" ${params.prefecture === 'hyogo' ? 'selected' : ''}>兵庫県</option>
-                                                <option value="kyoto" ${params.prefecture === 'kyoto' ? 'selected' : ''}>京都府</option>
-                                                <option value="fukuoka" ${params.prefecture === 'fukuoka' ? 'selected' : ''}>福岡県</option>
-                                                <option value="hokkaido" ${params.prefecture === 'hokkaido' ? 'selected' : ''}>北海道</option>
+                                                <option value="kochi" ${params.prefecture === 'kochi' ? 'selected' : ''}>高知県</option>
                                             </select>
                                         </div>
                                         <div class="col-md-6">
