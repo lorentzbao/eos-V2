@@ -13,13 +13,14 @@ This document tracks ongoing development tasks, improvements, and technical debt
   - [x] Implement dynamic city/district dropdown based on prefecture selection
   - [x] Add backend support for city filtering
   - [x] Implement CUST_STATUS2 filtering for target selection (白地・過去 with OR logic)
+  - [x] Sync prefecture dropdown with actual indexes (tokyo, osaka, kochi)
+  - [x] Implement real-time search suggestions update (incremental in-memory)
   - [ ] Implement regional_office, branch, solicitor filtering for 契約 target
-  - [ ] Sync hardcoded prefecture list with actual indexes in config.yaml
-- [~] Add missing API endpoints
-  - [ ] `/api/user-rankings` - User search count rankings
+- [x] Add missing API endpoints
+  - [x] `/api/user-rankings` - User search count rankings
   - [x] `/api/prefectures` - Dynamic prefecture list from config (already existed)
   - [x] `/api/cities/<prefecture>` - Cities by prefecture
-- [ ] Fix rankings page functionality
+- [x] Fix rankings page functionality (user rankings now load from search logs)
 - [ ] Fix history page functionality
 - [ ] Update documentation for SPA architecture
 
@@ -218,5 +219,5 @@ This TODO.md should be reviewed and updated:
 
 ---
 
-**Last Updated**: 2025-10-06 (Updated after CUST_STATUS2 target filtering implementation)
+**Last Updated**: 2025-10-06 (Updated after user rankings and search suggestions implementation)
 **Next Review**: TBD
