@@ -15,6 +15,11 @@ This document tracks ongoing development tasks, improvements, and technical debt
   - [x] Implement CUST_STATUS2 filtering for target selection (白地・過去 with OR logic)
   - [x] Sync prefecture dropdown with actual indexes (tokyo, osaka, kochi)
   - [x] Implement real-time search suggestions update (incremental in-memory)
+  - [ ] Fix 契約 target search 400 error when prefecture is empty
+    - Backend requires prefecture for MultiIndexSearchService
+    - 契約 form uses regional_office instead of prefecture
+    - Need to map regional_office -> prefecture in backend (e.g., osaka -> osaka)
+    - Or make prefecture optional when regional_office is provided
   - [ ] Implement regional_office, branch, solicitor filtering for 契約 target
 - [x] Add missing API endpoints
   - [x] `/api/user-rankings` - User search count rankings
