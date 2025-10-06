@@ -103,6 +103,33 @@ window.app = {
         }
     },
 
+    // Update popular queries incrementally in memory
+    updatePopularQueriesIncremental(newQuery) {
+        if (!newQuery || !newQuery.trim()) {
+            return;
+        }
+
+        const query = newQuery.trim();
+        const existing = this.state.popularQueries.find(q => q.query === query);
+
+        if (existing) {
+            // Increment count for existing query
+            existing.count++;
+        } else {
+            // Add new query with count 1
+            this.state.popularQueries.push({
+                query: query,
+                count: 1
+            });
+        }
+
+        // Re-sort by count (descending) and limit to top 10
+        this.state.popularQueries.sort((a, b) => b.count - a.count);
+        if (this.state.popularQueries.length > 10) {
+            this.state.popularQueries = this.state.popularQueries.slice(0, 10);
+        }
+    },
+
     // Utility functions
     utils: {
         // Format date

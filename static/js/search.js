@@ -16,21 +16,20 @@ app.search = {
             return;
         }
 
-        // Use app's popular queries
-        const popularQueries = app.state.popularQueries || [];
-
-        // Initialize suggestions
-        if (popularQueries.length > 0) {
-            this.suggestions = popularQueries.map(item => ({
+        // Initialize suggestions from current state
+        const initialQueries = app.state.popularQueries || [];
+        if (initialQueries.length > 0) {
+            this.suggestions = initialQueries.map(item => ({
                 text: item.query,
                 count: item.count,
                 type: 'ranking'
             }));
         }
 
-        // Input event handler
+        // Input event handler - always read fresh from app.state
         searchInput.addEventListener('input', () => {
             const query = searchInput.value.trim();
+            const popularQueries = app.state.popularQueries || [];
             this.getSuggestions(query, popularQueries, suggestionsList, suggestionsDropdown, searchInput);
         });
 
@@ -39,8 +38,9 @@ app.search = {
             // Only handle focus styling, no dropdown
         });
 
-        // Click event - show suggestions on click
+        // Click event - show suggestions on click, always read fresh from app.state
         searchInput.addEventListener('click', () => {
+            const popularQueries = app.state.popularQueries || [];
             this.getSuggestions(searchInput.value.trim(), popularQueries, suggestionsList, suggestionsDropdown, searchInput);
             if (this.suggestions.length > 0) {
                 suggestionsDropdown.style.display = 'block';
@@ -53,7 +53,7 @@ app.search = {
         });
 
         // Pre-render suggestions but keep hidden
-        if (popularQueries.length > 0) {
+        if (initialQueries.length > 0) {
             this.renderSuggestions(suggestionsList, suggestionsDropdown, searchInput);
             suggestionsDropdown.style.display = 'none';
         }
@@ -234,6 +234,11 @@ app.search = {
 
             const data = await response.json();
             app.state.searchResults = data;
+
+            // Update popular queries incrementally in memory
+            if (params.q) {
+                app.updatePopularQueriesIncremental(params.q);
+            }
 
             return data;
 
