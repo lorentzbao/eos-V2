@@ -49,6 +49,8 @@ uv run python run.py
 ## 📋 Key Features
 
 - **Enterprise Search** - Japanese company search with intelligent URL grouping
+- **Modular Tokenization** - Pluggable tokenizer architecture (Janome/MeCab) with easy switching
+- **Flexible File Resolution** - Configurable root paths for HTML files with automatic fallback
 - **HTML Content Extraction** - Extract and tokenize content from HTML files with configurable length limits
 - **Flexible Input Sources** - Support for CSV files and JSON folder structures
 - **Two-Step Tokenization** - Separate tokenization and indexing for preprocessing flexibility
@@ -183,16 +185,41 @@ uv run python run.py
 ## 🏗️ Technical Architecture
 
 ### **Core Technologies**
-- **Backend:** Flask + Whoosh (Japanese full-text search) + Janome (tokenization)
+- **Backend:** Flask + Whoosh (Japanese full-text search) + Modular Tokenizers (Janome/MeCab)
 - **Frontend:** Bootstrap 5 + Vanilla JavaScript (no jQuery dependency)
 - **Data Processing:** Pandas + BeautifulSoup4 for HTML content extraction
 - **Configuration:** Hydra for flexible configuration management
+- **Tokenization:** Abstract tokenizer layer with pluggable backends
 
 ### **Performance Features**
 - **Caching:** LRU cache + file-based CSV export caching
 - **Search:** O(1) dictionary lookups for data merging
 - **Japanese Support:** UTF-8 encoding with proper tokenization
 - **Scalability:** Multi-index support for prefecture-based search
+- **Flexible I/O:** Configurable root paths with automatic fallback for different environments
+
+### **Tokenization Architecture**
+
+EOS uses a modular tokenizer architecture that allows easy switching between different Japanese tokenizers:
+
+- **Abstract Base Layer:** `BaseTokenizer` defines the common interface
+- **Token Dataclass:** Unified representation across all tokenizers
+- **Pluggable Backends:**
+  - **Janome** - Pure Python, easy installation (default)
+  - **MeCab** - C++ based, faster performance (optional)
+  - Easy to add new tokenizers (Sudachi, Kuromoji, etc.)
+- **Factory Pattern:** Auto-detection with graceful fallback
+- **Configuration-based:** Switch tokenizers via config without code changes
+
+**File Structure:**
+```
+app/services/tokenizers/
+├── __init__.py           # Package exports
+├── base_tokenizer.py     # Abstract base class + Token dataclass
+├── janome_tokenizer.py   # Janome adapter
+├── mecab_tokenizer.py    # MeCab adapter
+└── factory.py            # get_tokenizer() factory function
+```
 
 ---
 
@@ -224,6 +251,25 @@ uv run python scripts/create_index.py --tokenized-dir data/tokenized/
 
 # Step 3: Verify index
 uv run python scripts/index_info.py
+```
+
+### **Advanced Tokenization Options**
+```bash
+# Use specific tokenizer backend
+uv run python scripts/tokenize_csv.py tokenizer.type=janome
+uv run python scripts/tokenize_csv.py tokenizer.type=mecab
+
+# Configure root paths for HTML files (useful for different mount points)
+uv run python scripts/tokenize_csv.py \
+  input.json_folder=data/raw/tokyo \
+  input.primary_root_path=/mnt/e/data \
+  input.secondary_root_path=/home/user/data
+
+# Combine options
+uv run python scripts/tokenize_csv.py \
+  --config-name json_companies \
+  tokenizer.type=janome \
+  input.primary_root_path=/mnt/e/data
 ```
 
 ### **Adding New Data**
@@ -260,9 +306,22 @@ uv run python run.py
 
 # Override settings
 uv run python run.py app.debug=false index.dir=data/production/
+
+# Tokenizer configuration
+uv run python run.py tokenizer.type=janome
 ```
 
-**Configuration files:** `config.yaml`, `json_companies.yaml`, `csv_companies.yaml`, `tokenize.yaml`
+**Configuration files:**
+- `conf/config.yaml` - Main application config with tokenizer settings
+- `conf/json_companies.yaml` - JSON processing preset
+- `conf/tokenize.yaml` - Tokenization defaults with root path configuration
+
+**Key Configuration Options:**
+- `tokenizer.type` - Choose tokenizer: `janome`, `mecab`, or `null` for auto-detect
+- `input.primary_root_path` - Primary root path for HTML file resolution
+- `input.secondary_root_path` - Fallback root path if primary fails
+- `processing.batch_size` - Records per batch for tokenization
+- `processing.use_multiprocessing` - Enable parallel processing
 
 📚 **Complete guide:** [CONFIGURATION.md](./CONFIGURATION.md)
 
