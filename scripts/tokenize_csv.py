@@ -116,7 +116,8 @@ class JapaneseTokenizer:
 
 def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None, max_content_length: int = 10000,
                     extra_columns: Optional[List[str]] = None, use_hybrid_pipeline: bool = False,
-                    num_processes: int = None, max_concurrent_io: int = 20, primary_root_path: str = '', secondary_root_path: str = '') -> List[Dict]:
+                    num_processes: int = None, max_concurrent_io: int = 20, primary_root_path: str = '', secondary_root_path: str = '',
+                    max_subdomains_per_company: int = None) -> List[Dict]:
     """Read JSON files from folder and optionally merge with DataFrame
     
     Args:
@@ -186,9 +187,10 @@ def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None, max
             # Convert JSON structure to URL-based records (one per URL)
             if use_hybrid_pipeline:
                 url_records = convert_json_to_records_hybrid(json_data, df_dict, max_content_length,
-                                                           num_processes, max_concurrent_io, primary_root_path, secondary_root_path)
+                                                           num_processes, max_concurrent_io, primary_root_path, secondary_root_path,
+                                                           max_subdomains_per_company)
             else:
-                url_records = convert_json_to_records(json_data, df_dict, max_content_length)
+                url_records = convert_json_to_records(json_data, df_dict, max_content_length, max_subdomains_per_company)
             records.extend(url_records)
             
             if i % 100 == 0:
@@ -343,7 +345,8 @@ def process_html_batch_cpu(html_batch: List[Tuple[str, str, int]]) -> List[Tuple
 
 def convert_json_to_records_hybrid(json_data: Dict, df_dict: Optional[Dict] = None,
                                   max_content_length: int = 10000, num_processes: int = None,
-                                  max_concurrent_io: int = 20, primary_root_path: str = '', secondary_root_path: str = '') -> List[Dict]:
+                                  max_concurrent_io: int = 20, primary_root_path: str = '', secondary_root_path: str = '',
+                                  max_subdomains_per_company: int = None) -> List[Dict]:
     """Convert JSON structure to multiple URL-based records using hybrid I/O + CPU processing"""
     try:
         # Extract basic company information from JSON
@@ -389,8 +392,11 @@ def convert_json_to_records_hybrid(json_data: Dict, df_dict: Optional[Dict] = No
                 'index': 0
             })
         
-        # Sub-domains
+        # Sub-domains (limit if max_subdomains_per_company is set)
         sub_domains = homepage.get('sub_domain', [])
+        if max_subdomains_per_company is not None:
+            sub_domains = sub_domains[:max_subdomains_per_company]
+
         for i, sub_domain in enumerate(sub_domains):
             if sub_domain.get('url'):
                 html_path = sub_domain.get('html_path', '')
@@ -483,7 +489,8 @@ def convert_json_to_records_hybrid(json_data: Dict, df_dict: Optional[Dict] = No
         return []
 
 
-def convert_json_to_records(json_data: Dict, df_dict: Optional[Dict] = None, max_content_length: int = 10000) -> List[Dict]:
+def convert_json_to_records(json_data: Dict, df_dict: Optional[Dict] = None, max_content_length: int = 10000,
+                           max_subdomains_per_company: int = None) -> List[Dict]:
     """Backward compatibility wrapper - uses sequential processing"""
     # Use original sequential processing for backward compatibility
     try:
@@ -538,8 +545,11 @@ def convert_json_to_records(json_data: Dict, df_dict: Optional[Dict] = None, max
             })
             records.append(main_record)
         
-        # Create records for each sub-domain
+        # Create records for each sub-domain (limit if max_subdomains_per_company is set)
         sub_domains = homepage.get('sub_domain', [])
+        if max_subdomains_per_company is not None:
+            sub_domains = sub_domains[:max_subdomains_per_company]
+
         for i, sub_domain in enumerate(sub_domains):
             if sub_domain.get('url'):
                 sub_record = base_info.copy()
@@ -793,6 +803,7 @@ def main(cfg: DictConfig) -> None:
     num_processes = cfg.processing.num_processes
     use_hybrid_pipeline = cfg.processing.get('use_hybrid_pipeline', False)
     max_concurrent_io = cfg.processing.get('max_concurrent_io', 20)
+    max_subdomains_per_company = cfg.processing.get('max_subdomains_per_company', None)
     tokenizer_type = cfg.tokenizer.get('type', None) if 'tokenizer' in cfg else None
     primary_root_path = cfg.input.get('primary_root_path', '')
     secondary_root_path = cfg.input.get('secondary_root_path', '')
@@ -874,7 +885,8 @@ def main(cfg: DictConfig) -> None:
     else:
         # Read JSON folder and create batches
         records = read_json_folder(json_folder, dataframe_file, max_content_length, extra_columns,
-                                 use_hybrid_pipeline, num_processes, max_concurrent_io, primary_root_path, secondary_root_path)
+                                 use_hybrid_pipeline, num_processes, max_concurrent_io, primary_root_path,
+                                 secondary_root_path, max_subdomains_per_company)
         if not records:
             print("❌ No data to process. Exiting.")
             sys.exit(1)

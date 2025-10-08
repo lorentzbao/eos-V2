@@ -24,6 +24,7 @@ processing:
   num_processes: null               # Auto-detect CPU cores
   use_hybrid_pipeline: true        # Enable hybrid async I/O + multiprocessing pipeline
   max_concurrent_io: 8             # Maximum concurrent I/O operations
+  max_subdomains_per_company: 100   # Limit sub-domains per company (null = no limit)
 
 output:
   output_dir: null                  # Auto-generate: data/tokenized/{prefecture}

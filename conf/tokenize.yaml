@@ -24,6 +24,7 @@ processing:
   num_processes: null               # Number of processes (null = auto-detect CPU cores)
   use_hybrid_pipeline: true        # Enable hybrid async I/O + multiprocessing pipeline
   max_concurrent_io: 20             # Maximum concurrent I/O operations
+  max_subdomains_per_company: 100   # Limit sub-domains per company (null = no limit)
 
 output:
   # Output configuration
