@@ -68,7 +68,7 @@ app.pages = {
                                     <div class="col-md-12">
                                         <label class="form-label fw-bold">対象 <span class="text-danger">*</span></label>
                                         <div class="btn-group w-100" role="group" id="targetSelection">
-                                            <input type="radio" class="btn-check" name="target" id="target-shirachi" value="白地・過去" required>
+                                            <input type="radio" class="btn-check" name="target" id="target-shirachi" value="白地・過去" checked required>
                                             <label class="btn btn-outline-primary" for="target-shirachi">白地・過去</label>
 
                                             <input type="radio" class="btn-check" name="target" id="target-keiyaku" value="契約" required>
@@ -264,7 +264,7 @@ app.pages = {
                                     <div class="col-md-12">
                                         <label class="form-label fw-bold">対象 <span class="text-danger">*</span></label>
                                         <div class="btn-group w-100" role="group" id="targetSelection">
-                                            <input type="radio" class="btn-check" name="target" id="target-shirachi-search" value="白地・過去" ${params.target === '白地・過去' ? 'checked' : ''} required>
+                                            <input type="radio" class="btn-check" name="target" id="target-shirachi-search" value="白地・過去" ${params.target ? (params.target === '白地・過去' ? 'checked' : '') : 'checked'} required>
                                             <label class="btn btn-outline-primary" for="target-shirachi-search">白地・過去</label>
 
                                             <input type="radio" class="btn-check" name="target" id="target-keiyaku-search" value="契約" ${params.target === '契約' ? 'checked' : ''} required>
@@ -476,7 +476,7 @@ app.pages = {
                                     <div class="col-md-12">
                                         <label class="form-label fw-bold">対象 <span class="text-danger">*</span></label>
                                         <div class="btn-group w-100" role="group" id="targetSelection">
-                                            <input type="radio" class="btn-check" name="target" id="target-shirachi-empty" value="白地・過去" ${params.target === '白地・過去' ? 'checked' : ''} required>
+                                            <input type="radio" class="btn-check" name="target" id="target-shirachi-empty" value="白地・過去" ${params.target ? (params.target === '白地・過去' ? 'checked' : '') : 'checked'} required>
                                             <label class="btn btn-outline-primary" for="target-shirachi-empty">白地・過去</label>
 
                                             <input type="radio" class="btn-check" name="target" id="target-keiyaku-empty" value="契約" ${params.target === '契約' ? 'checked' : ''} required>
