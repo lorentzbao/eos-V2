@@ -724,15 +724,6 @@ app.pages = {
                                     </thead>
                                     <tbody>
                                         ${searches.map((search, index) => {
-                                            // Dummy data for demonstration
-                                            const dummyConditions = [
-                                                { target: '白地・過去', prefecture: 'tokyo', city: 'shibuya' },
-                                                { target: '契約', regional_office: 'tokyo', branch: 'shibuya', solicitor: 'yamada' },
-                                                { target: '白地・過去', prefecture: 'osaka' },
-                                                { target: '契約', regional_office: 'osaka', branch: 'osaka' },
-                                                { target: '白地・過去', prefecture: 'kanagawa', city: 'yokohama' }
-                                            ];
-                                            const condition = dummyConditions[index % dummyConditions.length];
                                             const hasResults = (search.results_count || 0) > 0;
 
                                             return `
@@ -748,12 +739,8 @@ app.pages = {
                                             </td>
                                             <td>
                                                 <div class="d-flex flex-wrap gap-1">
-                                                    <span class="badge bg-primary">${condition.target}</span>
-                                                    ${condition.prefecture ? `<span class="badge bg-info">${condition.prefecture === 'tokyo' ? '東京都' : condition.prefecture === 'osaka' ? '大阪府' : condition.prefecture === 'kanagawa' ? '神奈川県' : condition.prefecture}</span>` : ''}
-                                                    ${condition.city ? `<span class="badge bg-secondary">${condition.city === 'shibuya' ? '渋谷区' : condition.city === 'yokohama' ? '横浜市' : condition.city}</span>` : ''}
-                                                    ${condition.regional_office ? `<span class="badge bg-success">${condition.regional_office === 'tokyo' ? '東京事業本部' : condition.regional_office === 'osaka' ? '大阪事業本部' : condition.regional_office}</span>` : ''}
-                                                    ${condition.branch ? `<span class="badge bg-warning">${condition.branch === 'shibuya' ? '渋谷支店' : condition.branch === 'osaka' ? '大阪支店' : condition.branch}</span>` : ''}
-                                                    ${condition.solicitor ? `<span class="badge bg-dark">${condition.solicitor === 'yamada' ? '山田太郎' : condition.solicitor}</span>` : ''}
+                                                    ${search.cust_status ? `<span class="badge bg-primary">${search.cust_status}</span>` : ''}
+                                                    ${search.prefecture ? `<span class="badge bg-info">${search.prefecture}</span>` : ''}
                                                 </div>
                                             </td>
                                             <td>
