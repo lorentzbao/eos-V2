@@ -458,36 +458,6 @@
     }
 }
 
-/* Display Options Styling */
-.display-options .card {
-    border: 1px solid #e1e5e9;
-    box-shadow: var(--shadow-light);
-}
-
-.display-options .card-body {
-    padding: 16px 20px;
-}
-
-.display-options .card-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 12px;
-    color: var(--primary-dark);
-}
-
-.display-options .form-select {
-    padding: 8px 12px;
-    font-size: 14px;
-    border: 1px solid #dee2e6;
-}
-
-.display-options .form-label {
-    font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 6px;
-    color: var(--primary-dark);
-}
-
 /* Company Details Badge Styling */
 .badge-outline-primary {
     background-color: transparent;

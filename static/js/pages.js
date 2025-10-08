@@ -361,40 +361,6 @@ app.pages = {
                         </form>
                     </div>
 
-                    <!-- Display Options (shown after search form) -->
-                    ${params.q ? `
-                    <div class="display-options mb-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <h6 class="card-title mb-3">表示オプション</h6>
-                                <form id="displayOptionsForm">
-                                    <!-- Copy current search parameters -->
-                                    <input type="hidden" name="q" value="${app.utils.escapeHtml(params.q || '')}">
-                                    <input type="hidden" name="target" value="${params.target || ''}">
-                                    <input type="hidden" name="prefecture" value="${params.prefecture || ''}">
-                                    <input type="hidden" name="city" value="${params.city || ''}">
-                                    <input type="hidden" name="regional_office" value="${params.regional_office || ''}">
-                                    <input type="hidden" name="branch" value="${params.branch || ''}">
-                                    <input type="hidden" name="solicitor" value="${params.solicitor || ''}">
-                                    <input type="hidden" name="limit" value="${params.limit || 100}">
-
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <select name="search_option" class="form-select" onchange="this.form.dispatchEvent(new Event('submit'))">
-                                                <option value="all" ${params.search_option === 'all' || !params.search_option ? 'selected' : ''}>マッチ方式を選ぶ</option>
-                                                <option value="exact" ${params.search_option === 'exact' ? 'selected' : ''}>すべてのキーワードがマッチ</option>
-                                                <option value="partial" ${params.search_option === 'partial' ? 'selected' : ''}>一部のキーワードがマッチ</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <!-- Future display options can be added here -->
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    ` : ''}
 
                     <!-- Search Stats -->
                     ${params.q ? `
