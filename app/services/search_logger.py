@@ -19,9 +19,10 @@ class SearchLogger:
         self._query_counts = defaultdict(int)
         self._keyword_counts = defaultdict(int)
         self._user_search_counts = {}  # User rankings cache
+        self._user_history_cache = defaultdict(list)  # User search history cache
         self._rankings_lock = threading.RLock()
 
-        # Initialize rankings from existing logs on startup
+        # Initialize rankings and history from existing logs on startup
         self._initialize_rankings()
     
     def _ensure_log_directory(self):
@@ -53,18 +54,20 @@ class SearchLogger:
             return [word.strip().lower() for word in query.split() if len(word.strip()) >= 2]
     
     def _initialize_rankings(self):
-        """Initialize in-memory rankings from existing log files on startup"""
-        print("Initializing search rankings from existing logs...")
+        """Initialize in-memory rankings and history from existing log files on startup"""
+        print("Initializing search rankings and history from existing logs...")
 
         try:
             user_files = glob.glob(os.path.join(self.log_dir, "*.jsonl"))
             total_queries_loaded = 0
             total_keywords_loaded = 0
             user_search_counts = defaultdict(int)
+            user_history = defaultdict(list)
 
             with self._rankings_lock:
                 for user_file in user_files:
                     username = os.path.basename(user_file).replace('.jsonl', '')
+                    user_entries = []
 
                     with open(user_file, 'r', encoding='utf-8') as f:
                         for line in f:
@@ -81,6 +84,9 @@ class SearchLogger:
                                     # Track user search count
                                     user_search_counts[username] += 1
 
+                                    # Store user history entry
+                                    user_entries.append(entry)
+
                                     # Extract and track individual keywords
                                     keywords = self._extract_keywords(normalized_query)
                                     for keyword in keywords:
@@ -90,12 +96,16 @@ class SearchLogger:
                             except json.JSONDecodeError:
                                 continue
 
-                # Cache user rankings
+                    # Store user history (most recent first)
+                    user_history[username] = sorted(user_entries, key=lambda x: x.get('timestamp', ''), reverse=True)
+
+                # Cache user rankings and history
                 self._user_search_counts = dict(user_search_counts)
+                self._user_history_cache = dict(user_history)
 
             print(f"Loaded {total_queries_loaded} queries and {total_keywords_loaded} keywords into rankings")
             print(f"Unique queries: {len(self._query_counts)}, Unique keywords: {len(self._keyword_counts)}")
-            print(f"Loaded {len(self._user_search_counts)} users into rankings")
+            print(f"Loaded {len(self._user_search_counts)} users with {sum(len(h) for h in user_history.values())} history entries")
 
         except Exception as e:
             print(f"Error initializing rankings: {e}")
@@ -103,6 +113,7 @@ class SearchLogger:
             self._query_counts = defaultdict(int)
             self._keyword_counts = defaultdict(int)
             self._user_search_counts = {}
+            self._user_history_cache = defaultdict(list)
     
     def log_search(self, username: str, query: str, results_count: int = 0,
                    search_time: float = 0.0, prefecture: str = "", cust_status: str = ""):
@@ -131,7 +142,7 @@ class SearchLogger:
             with open(user_log_file, 'a', encoding='utf-8') as f:
                 f.write(json.dumps(log_entry, ensure_ascii=False) + '\n')
 
-            # Update in-memory rankings in real-time
+            # Update in-memory rankings and history in real-time
             query_key = normalized_query.strip().lower()
             if query_key:
                 with self._rankings_lock:
@@ -140,6 +151,11 @@ class SearchLogger:
 
                     # Track user search count
                     self._user_search_counts[username] = self._user_search_counts.get(username, 0) + 1
+
+                    # Add to user history cache (prepend to keep most recent first)
+                    if username not in self._user_history_cache:
+                        self._user_history_cache[username] = []
+                    self._user_history_cache[username].insert(0, log_entry)
 
                     # Extract and track individual keywords
                     keywords = self._extract_keywords(query_key)
@@ -151,22 +167,15 @@ class SearchLogger:
             print(f"Failed to log search for {username}: {e}")
     
     def get_user_searches(self, username: str, limit: int = 10) -> List[Dict]:
-        """Get search history for a specific user - O(log n + k) complexity"""
-        searches = []
-        
+        """Get search history for a specific user from memory cache (loaded on startup)"""
         try:
-            user_log_file = self._get_user_log_file(username)
-            if not os.path.exists(user_log_file):
-                return searches
-            
-            # Read the user's specific log file and get recent entries
-            searches = self._read_user_file_reverse(user_log_file, limit)
-            
+            with self._rankings_lock:
+                user_history = self._user_history_cache.get(username, [])
+                # Return limited entries (already sorted by timestamp desc)
+                return user_history[:limit]
         except Exception as e:
             print(f"Failed to get user searches for {username}: {e}")
             return []
-        
-        return searches
     
     def _read_user_file_reverse(self, user_log_file: str, limit: int) -> List[Dict]:
         """Read user's log file in reverse order for efficiency"""
