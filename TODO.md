@@ -26,7 +26,16 @@ This document tracks ongoing development tasks, improvements, and technical debt
   - [x] `/api/prefectures` - Dynamic prefecture list from config (already existed)
   - [x] `/api/cities/<prefecture>` - Cities by prefecture
 - [x] Fix rankings page functionality (user rankings now load from search logs)
-- [ ] Fix history page functionality
+- [x] Fix history page functionality
+  - [x] Load user history in memory on app launch
+  - [x] Update history incrementally when user searches
+  - [x] Serve history from memory cache (no file I/O)
+  - [x] Display real search parameters instead of dummy data
+  - [x] Add city parameter to search logging and display
+- [x] Fix LRU cache not working
+  - [x] Create singleton search service instance in app factory
+  - [x] Reuse service across requests for cache persistence
+  - [x] Add cache hit indicator to search results
 - [ ] Update documentation for SPA architecture
 
 ### Documentation
@@ -224,5 +233,5 @@ This TODO.md should be reviewed and updated:
 
 ---
 
-**Last Updated**: 2025-10-06 (Updated after user rankings and search suggestions implementation)
+**Last Updated**: 2025-10-06 (Updated after history cache, LRU cache fix, and city logging implementation)
 **Next Review**: TBD
