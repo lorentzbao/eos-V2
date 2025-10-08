@@ -10,6 +10,9 @@ Practical API usage guide for frontend developers. This documentation focuses on
 ### **JSON APIs (`/api/xxx`) - For JavaScript/AJAX**
 - [`GET /api/search`](#json-search-api) - Get search results as JSON data
 - [`GET /api/prefectures`](#get-available-prefectures) - Get list of available prefecture indexes
+- [`GET /api/cities/<prefecture>`](#get-cities-by-prefecture) - Get cities for a specific prefecture
+- [`GET /api/popular-queries`](#get-popular-queries) - Get popular search terms and frequency
+- [`GET /api/user-rankings`](#get-user-rankings) - Get user search count rankings
 - [`GET /api/download-csv`](#download-search-results-as-csv) - Export search results to CSV file
 - [`GET /api/stats`](#search-engine-statistics) - Get search engine statistics and performance metrics
 - [`POST /api/add_document`](#add-single-document) - Add single document to search index
@@ -131,8 +134,15 @@ searchPage('AI', { prefecture: 'tokyo', custStatus: '白地', limit: 20 });
 **Purpose:** Get search results as JSON data for AJAX calls
 
 ```http
-GET /api/search?q=AI&prefecture=tokyo&limit=10
+GET /api/search?q=AI&prefecture=tokyo&city=渋谷区&limit=10
 ```
+
+**Parameters:**
+- `q` (required) - Search query
+- `prefecture` (required) - `tokyo`, `osaka`, `kochi`
+- `city` (optional) - City/district name (e.g., `渋谷区`, `新宿区`)
+- `cust_status` (optional) - `白地|過去` (prospects OR past), `契約` (contract)
+- `limit` (optional) - Results per page (default: 10)
 
 **Response Format:**
 ```json
@@ -170,6 +180,7 @@ async function searchAPI(query, options = {}) {
     const params = new URLSearchParams({ q: query });
 
     if (options.prefecture) params.append('prefecture', options.prefecture);
+    if (options.city) params.append('city', options.city);
     if (options.custStatus) params.append('cust_status', options.custStatus);
     if (options.limit) params.append('limit', options.limit);
 
@@ -200,10 +211,11 @@ if (results.success) {
     displayResults(results.grouped_results);
 }
 
-// With filters
+// With filters including city
 const filteredResults = await searchAPI('AI 機械学習', {
     prefecture: 'tokyo',
-    custStatus: '白地',
+    city: '渋谷区',
+    custStatus: '白地|過去',  // Use pipe | for OR logic
     limit: 20
 });
 ```
@@ -214,12 +226,13 @@ const filteredResults = await searchAPI('AI 機械学習', {
 async function performSearch() {
     const query = document.getElementById('searchInput').value;
     const prefecture = document.getElementById('prefectureSelect').value;
+    const city = document.getElementById('citySelect').value;
     const custStatus = document.getElementById('custStatusSelect').value;
 
     // Show loading
     document.getElementById('searchResults').innerHTML = '<div class="spinner">Searching...</div>';
 
-    const results = await searchAPI(query, { prefecture, custStatus, limit: 20 });
+    const results = await searchAPI(query, { prefecture, city, custStatus, limit: 20 });
 
     if (results.success) {
         displaySearchResults(results);
@@ -325,6 +338,198 @@ async function loadPrefectures() {
 
 // Call on page load
 document.addEventListener('DOMContentLoaded', loadPrefectures);
+```
+
+### Get Cities by Prefecture
+**Purpose:** Get list of cities/districts for a specific prefecture
+
+```http
+GET /api/cities/tokyo
+```
+
+**Response:**
+```json
+{
+  "cities": [
+    "千代田区",
+    "中央区",
+    "港区",
+    "新宿区",
+    "渋谷区",
+    "豊島区"
+  ]
+}
+```
+
+**How to use:**
+```javascript
+// Load cities when prefecture changes
+async function loadCities(prefecture) {
+    if (!prefecture) {
+        // Clear city dropdown if no prefecture selected
+        document.getElementById('citySelect').innerHTML = '<option value="">All Cities</option>';
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/cities/${prefecture}`);
+        const data = await response.json();
+
+        const select = document.getElementById('citySelect');
+        select.innerHTML = '<option value="">All Cities</option>';
+
+        data.cities.forEach(city => {
+            const option = document.createElement('option');
+            option.value = city;
+            option.textContent = city;
+            select.appendChild(option);
+        });
+
+    } catch (error) {
+        console.error('Failed to load cities:', error);
+    }
+}
+
+// Attach to prefecture dropdown change event
+document.getElementById('prefectureSelect').addEventListener('change', (e) => {
+    loadCities(e.target.value);
+});
+```
+
+### Get Popular Queries
+**Purpose:** Get popular search terms with frequency counts
+
+```http
+GET /api/popular-queries
+```
+
+**Response:**
+```json
+[
+  {
+    "query": "Python 開発",
+    "count": 45
+  },
+  {
+    "query": "AI 機械学習",
+    "count": 38
+  },
+  {
+    "query": "クラウド",
+    "count": 32
+  }
+]
+```
+
+**How to use:**
+```javascript
+// Display popular queries
+async function loadPopularQueries() {
+    try {
+        const response = await fetch('/api/popular-queries');
+        const queries = await response.json();
+
+        const container = document.getElementById('popularQueries');
+        container.innerHTML = '<h3>Popular Searches</h3>';
+
+        const list = document.createElement('ul');
+        queries.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <a href="#" onclick="searchWithQuery('${item.query}'); return false;">
+                    ${item.query}
+                </a>
+                <span class="count">(${item.count} searches)</span>
+            `;
+            list.appendChild(li);
+        });
+
+        container.appendChild(list);
+    } catch (error) {
+        console.error('Failed to load popular queries:', error);
+    }
+}
+
+function searchWithQuery(query) {
+    document.getElementById('searchInput').value = query;
+    performSearch();
+}
+```
+
+### Get User Rankings
+**Purpose:** Get user search count rankings
+
+```http
+GET /api/user-rankings?limit=10
+```
+
+**Parameters:**
+- `limit` (optional) - Number of top users to return (default: 10)
+
+**Response:**
+```json
+[
+  {
+    "username": "tanaka",
+    "count": 156
+  },
+  {
+    "username": "suzuki",
+    "count": 142
+  },
+  {
+    "username": "sato",
+    "count": 128
+  }
+]
+```
+
+**How to use:**
+```javascript
+// Display user rankings leaderboard
+async function loadUserRankings(limit = 10) {
+    try {
+        const response = await fetch(`/api/user-rankings?limit=${limit}`);
+        const rankings = await response.json();
+
+        const container = document.getElementById('userRankings');
+        container.innerHTML = '<h3>Top Users</h3>';
+
+        const table = document.createElement('table');
+        table.className = 'rankings-table';
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Username</th>
+                    <th>Searches</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        `;
+
+        const tbody = table.querySelector('tbody');
+        rankings.forEach((user, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${user.username}</td>
+                <td>${user.count}</td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        container.appendChild(table);
+    } catch (error) {
+        console.error('Failed to load user rankings:', error);
+    }
+}
+
+// Load rankings on page load
+document.addEventListener('DOMContentLoaded', () => {
+    loadUserRankings();
+});
 ```
 
 ---
@@ -751,6 +956,7 @@ class SearchInterface {
         this.searchForm = document.getElementById('searchForm');
         this.searchInput = document.getElementById('searchInput');
         this.prefectureSelect = document.getElementById('prefectureSelect');
+        this.citySelect = document.getElementById('citySelect');
         this.custStatusSelect = document.getElementById('custStatusSelect');
         this.resultsContainer = document.getElementById('searchResults');
         this.downloadBtn = document.getElementById('downloadBtn');
@@ -774,6 +980,29 @@ class SearchInterface {
         }
     }
 
+    async loadCities(prefecture) {
+        if (!prefecture) {
+            this.citySelect.innerHTML = '<option value="">All Cities</option>';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/cities/${prefecture}`);
+            const data = await response.json();
+
+            this.citySelect.innerHTML = '<option value="">All Cities</option>';
+
+            data.cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                this.citySelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Failed to load cities:', error);
+        }
+    }
+
     setupEventListeners() {
         this.searchForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -782,6 +1011,11 @@ class SearchInterface {
 
         this.downloadBtn.addEventListener('click', () => {
             this.downloadResults();
+        });
+
+        // Load cities when prefecture changes
+        this.prefectureSelect.addEventListener('change', (e) => {
+            this.loadCities(e.target.value);
         });
 
         // Auto-search on input (debounced)
@@ -802,6 +1036,7 @@ class SearchInterface {
 
         const options = {
             prefecture: this.prefectureSelect.value,
+            city: this.citySelect.value,
             custStatus: this.custStatusSelect.value,
             limit: 20
         };
@@ -891,6 +1126,7 @@ class SearchInterface {
 
         downloadCSV(query, {
             prefecture: this.prefectureSelect.value,
+            city: this.citySelect.value,
             custStatus: this.custStatusSelect.value
         });
     }
