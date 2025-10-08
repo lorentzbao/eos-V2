@@ -758,7 +758,7 @@ app.pages = {
                                                 }
                                             </td>
                                             <td>
-                                                <a href="#" onclick="app.router.navigate('search', {q: '${app.utils.escapeHtml(search.query)}', target: '${condition.target}', prefecture: '${condition.prefecture || ''}', city: '${condition.city || ''}', regional_office: '${condition.regional_office || ''}', branch: '${condition.branch || ''}', solicitor: '${condition.solicitor || ''}'})"
+                                                <a href="#" onclick="app.router.navigate('search', {q: '${app.utils.escapeHtml(search.query)}', prefecture: '${search.prefecture || ''}', cust_status: '${search.cust_status || ''}'})"
                                                    class="btn btn-sm btn-outline-primary">再検索</a>
                                             </td>
                                         </tr>
