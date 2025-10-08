@@ -741,6 +741,7 @@ app.pages = {
                                                 <div class="d-flex flex-wrap gap-1">
                                                     ${search.cust_status ? `<span class="badge bg-primary">${search.cust_status}</span>` : ''}
                                                     ${search.prefecture ? `<span class="badge bg-info">${search.prefecture}</span>` : ''}
+                                                    ${search.city ? `<span class="badge bg-secondary">${search.city}</span>` : ''}
                                                 </div>
                                             </td>
                                             <td>
@@ -758,7 +759,7 @@ app.pages = {
                                                 }
                                             </td>
                                             <td>
-                                                <a href="#" onclick="app.router.navigate('search', {q: '${app.utils.escapeHtml(search.query)}', prefecture: '${search.prefecture || ''}', cust_status: '${search.cust_status || ''}'})"
+                                                <a href="#" onclick="app.router.navigate('search', {q: '${app.utils.escapeHtml(search.query)}', prefecture: '${search.prefecture || ''}', city: '${search.city || ''}', cust_status: '${search.cust_status || ''}'})"
                                                    class="btn btn-sm btn-outline-primary">再検索</a>
                                             </td>
                                         </tr>

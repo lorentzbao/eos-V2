@@ -148,7 +148,8 @@ def search():
         search_results['total_found'],
         search_results['search_time'],
         prefecture,
-        cust_status
+        cust_status,
+        city
     )
 
     return jsonify({
