@@ -78,7 +78,7 @@ app.pages = {
                                 </div>
 
                                 <!-- Conditional Fields for 白地・過去 -->
-                                <div id="shirachi-fields" class="conditional-fields" style="display: none;">
+                                <div id="shirachi-fields" class="conditional-fields" style="display: block;">
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label">都道府県 <span class="text-danger">*</span></label>
@@ -274,7 +274,7 @@ app.pages = {
                                 </div>
 
                                 <!-- Conditional Fields for 白地・過去 -->
-                                <div id="shirachi-fields" class="conditional-fields" style="display: ${params.target === '白地・過去' ? 'block' : 'none'};">
+                                <div id="shirachi-fields" class="conditional-fields" style="display: ${!params.target || params.target === '白地・過去' ? 'block' : 'none'};">
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label">都道府県 <span class="text-danger">*</span></label>
@@ -486,7 +486,7 @@ app.pages = {
                                 </div>
 
                                 <!-- Conditional Fields for 白地・過去 -->
-                                <div id="shirachi-fields" class="conditional-fields" style="display: ${params.target === '白地・過去' ? 'block' : 'none'};">
+                                <div id="shirachi-fields" class="conditional-fields" style="display: ${!params.target || params.target === '白地・過去' ? 'block' : 'none'};">
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label">都道府県 <span class="text-danger">*</span></label>
