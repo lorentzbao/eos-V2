@@ -1,6 +1,4 @@
 from flask import Blueprint, render_template, request, session, redirect, url_for, current_app, jsonify
-from app.services.search_service import SearchService
-from app.services.multi_index_search_service import MultiIndexSearchService
 from app.services.search_logger import SearchLogger
 
 main = Blueprint('main', __name__)

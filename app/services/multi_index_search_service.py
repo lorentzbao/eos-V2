@@ -1,5 +1,4 @@
 from typing import Dict, List
-from functools import lru_cache
 from .search_service import SearchService
 from omegaconf import DictConfig
 
