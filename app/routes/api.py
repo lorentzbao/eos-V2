@@ -11,14 +11,8 @@ from datetime import datetime
 api = Blueprint('api', __name__, url_prefix='/api')
 
 def get_search_service():
-    """Get appropriate search service (multi-index or single-index)"""
-    # Check if multi-index configuration is available
-    if 'INDEXES' in current_app.config:
-        return MultiIndexSearchService(current_app.config['INDEXES'])
-    else:
-        # Fallback to single index
-        index_dir = current_app.config.get('INDEX_DIR', 'data/whoosh_index')
-        return SearchService(index_dir)
+    """Get the singleton search service instance (for cache reuse)"""
+    return current_app.search_service
 
 @api.route('/search')
 def api_search():

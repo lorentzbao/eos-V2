@@ -247,7 +247,7 @@ app.pages = {
             return this.renderEmptySearchPage(params);
         }
 
-        const { grouped_results, total_found, total_companies, search_time, processed_query, stats } = data;
+        const { grouped_results, total_found, total_companies, search_time, processed_query, stats, cache_hit } = data;
 
         let content = `
             <div class="row">
@@ -402,7 +402,7 @@ app.pages = {
                         <small class="text-muted">
                             "${app.utils.escapeHtml(params.q)}" の検索結果${params.prefecture ? ` (${params.prefecture}のみ)` : ''}:
                             <strong>${total_found}</strong> 件 (${total_companies} 社) 見つかりました
-                            ${search_time ? `(${search_time}秒)` : ''}
+                            ${search_time ? `(${search_time}秒${cache_hit ? ' - キャッシュ' : ''})` : ''}
                             <br>
                             ${processed_query ? `処理済みクエリ: ${app.utils.escapeHtml(processed_query)}` : ''}
                         </small>

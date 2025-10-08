@@ -37,26 +37,34 @@ class SearchService:
                 'processed_query': '',
                 'search_time': 0
             }
-        
+
         import time
         start_time = time.time()
-        
+
+        # Check cache info before search
+        cache_info_before = self._cached_search.cache_info()
+
         # Use cached search
         try:
             results, processed_query = self._cached_search(query, limit, prefecture, cust_status, sort_by, city)
-            
+
+            # Check cache info after search to detect hit/miss
+            cache_info_after = self._cached_search.cache_info()
+            cache_hit = cache_info_after.hits > cache_info_before.hits
+
             # Group results by company on the Python side
             grouped_results = self._group_by_company(results)
-            
+
             search_time = time.time() - start_time
-            
+
             return {
                 'grouped_results': grouped_results,
                 'total_found': len(results),
                 'total_companies': len(grouped_results),
                 'query': query,
                 'processed_query': processed_query,
-                'search_time': round(search_time, 3)
+                'search_time': round(search_time, 3),
+                'cache_hit': cache_hit  # Indicates if result came from cache
             }
         
         except Exception as e:
