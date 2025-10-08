@@ -6,6 +6,10 @@ input:
   csv_file: null                    # Path to CSV file
   json_folder: null                 # Path to JSON folder (enables HTML processing)
   dataframe_file: null              # Path to DataFrame CSV for merging (requires json_folder)
+
+  # Root path configuration for HTML files
+  primary_root_path: ""             # Primary root path to prepend to HTML file paths (e.g., "/mnt/e/data")
+  secondary_root_path: ""           # Secondary root path to try if primary fails (e.g., "/home/user/data")
   
 processing:
   # Processing configuration
@@ -20,17 +24,18 @@ processing:
   num_processes: null               # Number of processes (null = auto-detect CPU cores)
   use_hybrid_pipeline: true        # Enable hybrid async I/O + multiprocessing pipeline
   max_concurrent_io: 20             # Maximum concurrent I/O operations
-  
+
 output:
   # Output configuration
   output_dir: null                  # Output directory (auto-generated if null)
   clear_output: false               # Clear output directory before processing
-  
+
 tokenizer:
   # Tokenizer settings
-  included_pos: 
+  type: janome                      # Tokenizer backend: 'janome', 'mecab', or null for auto-detect (tries MeCab first, falls back to Janome)
+  included_pos:
     - "名詞"                        # Nouns
-    - "動詞"                        # Verbs  
+    - "動詞"                        # Verbs
     - "形容詞"                      # Adjectives
     - "副詞"                        # Adverbs
   min_word_length: 2                # Minimum word length

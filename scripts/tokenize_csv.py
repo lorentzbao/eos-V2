@@ -41,7 +41,6 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_compl
 from queue import Queue, Empty
 from threading import Thread
 from typing import List, Dict, Tuple, Optional, NamedTuple
-from janome.tokenizer import Tokenizer
 from multiprocessing import Pool, cpu_count, Manager
 import multiprocessing as mp
 import pandas as pd
@@ -77,17 +76,17 @@ class ProcessedResult(NamedTuple):
 
 
 class JapaneseTokenizer:
-    """Japanese text tokenizer using Janome"""
-    
-    def __init__(self):
-        self.tokenizer = Tokenizer()
-        # Common stop words to filter out
-        self.stop_words = set([
-            'する', 'ある', 'この', 'その', 'あの', 'という', 'といった', 'など', 'により',
-            'について', 'において', 'に関して', 'に対して', 'として', 'による', 'から',
-            'まで', 'では', 'には', 'にて', 'での', 'への', 'からの', 'までの'
-        ])
-    
+    """Japanese text tokenizer using modular tokenizer backend"""
+
+    def __init__(self, tokenizer_type: Optional[str] = None):
+        """
+        Initialize tokenizer with configurable backend.
+
+        Args:
+            tokenizer_type: Type of tokenizer ('janome', 'mecab', or None for auto-detect)
+        """
+        self.tokenizer = get_tokenizer(tokenizer_type)
+
     def tokenize_text(self, text: str) -> dict:
         """
         Tokenize Japanese text and return essential token information
@@ -98,30 +97,26 @@ class JapaneseTokenizer:
                 'content_tokens': '',
                 'token_count': 0
             }
-        
-        tokens = []
-        
-        for token in self.tokenizer.tokenize(text):
-            word = token.surface.lower().strip()
-            pos = token.part_of_speech.split(',')[0]
-            
-            # Include meaningful parts of speech
-            if pos in ['名詞', '動詞', '形容詞', '副詞'] and len(word) > 1:
-                # Skip numeric tokens and pure digits
-                if word.isdigit():
-                    continue
-                if word not in self.stop_words:
-                    tokens.append(word)
-        
+
+        # Use the tokenizer's built-in filtering
+        tokens = self.tokenizer.tokenize_and_filter(text, min_length=2)
+
+        # Additional filtering for numeric tokens
+        filtered_tokens = [
+            token.lower().strip()
+            for token in tokens
+            if not token.isdigit()
+        ]
+
         return {
-            'content_tokens': ' '.join(tokens),
-            'token_count': len(tokens)
+            'content_tokens': ' '.join(filtered_tokens),
+            'token_count': len(filtered_tokens)
         }
 
 
-def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None, max_content_length: int = 10000, 
-                    extra_columns: Optional[List[str]] = None, use_hybrid_pipeline: bool = False, 
-                    num_processes: int = None, max_concurrent_io: int = 20) -> List[Dict]:
+def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None, max_content_length: int = 10000,
+                    extra_columns: Optional[List[str]] = None, use_hybrid_pipeline: bool = False,
+                    num_processes: int = None, max_concurrent_io: int = 20, primary_root_path: str = '', secondary_root_path: str = '') -> List[Dict]:
     """Read JSON files from folder and optionally merge with DataFrame
     
     Args:
@@ -190,8 +185,8 @@ def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None, max
             
             # Convert JSON structure to URL-based records (one per URL)
             if use_hybrid_pipeline:
-                url_records = convert_json_to_records_hybrid(json_data, df_dict, max_content_length, 
-                                                           num_processes, max_concurrent_io)
+                url_records = convert_json_to_records_hybrid(json_data, df_dict, max_content_length,
+                                                           num_processes, max_concurrent_io, primary_root_path, secondary_root_path)
             else:
                 url_records = convert_json_to_records(json_data, df_dict, max_content_length)
             records.extend(url_records)
@@ -247,32 +242,52 @@ def extract_html_content_mp(html_task: Tuple[str, int]) -> str:
     return extract_text_from_html(html_path, max_length)
 
 
-def read_file_sync(file_path: str, encoding: str = 'utf-8') -> Tuple[str, str]:
-    """Synchronously read a file for ThreadPoolExecutor"""
+def read_file_sync(file_path: str, encoding: str = 'utf-8', primary_root_path: str = '', secondary_root_path: str = '') -> Tuple[str, str]:
+    """Synchronously read a file for ThreadPoolExecutor with configurable root paths"""
     try:
-        if not file_path or not os.path.exists(file_path):
+        if not file_path:
             return file_path, ""
-        with open(file_path, 'r', encoding=encoding) as f:
-            content = f.read()
-        return file_path, content
+
+        # Try primary_root_path + file_path first
+        if primary_root_path:
+            full_path = primary_root_path + file_path
+            if os.path.exists(full_path):
+                with open(full_path, 'r', encoding=encoding) as f:
+                    content = f.read()
+                return file_path, content
+
+        # Try secondary_root_path + file_path if primary failed
+        if secondary_root_path:
+            full_path = secondary_root_path + file_path
+            if os.path.exists(full_path):
+                with open(full_path, 'r', encoding=encoding) as f:
+                    content = f.read()
+                return file_path, content
+
+        # Try file_path as-is (absolute path)
+        if os.path.exists(file_path):
+            with open(file_path, 'r', encoding=encoding) as f:
+                content = f.read()
+            return file_path, content
+
+        return file_path, ""
     except Exception as e:
         print(f"⚠️ Warning: Could not read {file_path}: {e}")
         return file_path, ""
 
 
-def read_files_concurrently(file_paths: List[str], max_concurrent: int = 20) -> Dict[str, str]:
-    """Read multiple files concurrently using ThreadPoolExecutor"""
+def read_files_concurrently(file_paths: List[str], max_concurrent: int = 20, primary_root_path: str = '', secondary_root_path: str = '') -> Dict[str, str]:
+    """Read multiple files concurrently using ThreadPoolExecutor with configurable root paths"""
     results = {}
-    valid_paths = [path for path in file_paths if path and os.path.exists(path)]
-    
-    if not valid_paths:
+
+    if not file_paths:
         return results
-    
+
     # Use ThreadPoolExecutor for concurrent I/O
-    with ThreadPoolExecutor(max_workers=min(max_concurrent, len(valid_paths))) as executor:
+    with ThreadPoolExecutor(max_workers=min(max_concurrent, len(file_paths))) as executor:
         # Submit all file reading tasks
-        futures = {executor.submit(read_file_sync, path): path for path in valid_paths}
-        
+        futures = {executor.submit(read_file_sync, path, 'utf-8', primary_root_path, secondary_root_path): path for path in file_paths}
+
         # Collect results as they complete
         for future in as_completed(futures):
             try:
@@ -282,7 +297,7 @@ def read_files_concurrently(file_paths: List[str], max_concurrent: int = 20) -> 
                 path = futures[future]
                 print(f"⚠️ Warning: Error reading {path}: {e}")
                 results[path] = ""
-    
+
     return results
 
 
@@ -326,9 +341,9 @@ def process_html_batch_cpu(html_batch: List[Tuple[str, str, int]]) -> List[Tuple
     return results
 
 
-def convert_json_to_records_hybrid(json_data: Dict, df_dict: Optional[Dict] = None, 
-                                  max_content_length: int = 10000, num_processes: int = None, 
-                                  max_concurrent_io: int = 20) -> List[Dict]:
+def convert_json_to_records_hybrid(json_data: Dict, df_dict: Optional[Dict] = None,
+                                  max_content_length: int = 10000, num_processes: int = None,
+                                  max_concurrent_io: int = 20, primary_root_path: str = '', secondary_root_path: str = '') -> List[Dict]:
     """Convert JSON structure to multiple URL-based records using hybrid I/O + CPU processing"""
     try:
         # Extract basic company information from JSON
@@ -392,7 +407,7 @@ def convert_json_to_records_hybrid(json_data: Dict, df_dict: Optional[Dict] = No
         # Stage 1: Concurrent I/O - Read all HTML files at once
         html_contents = {}
         if html_paths:
-            html_contents = read_files_concurrently(html_paths, max_concurrent_io)
+            html_contents = read_files_concurrently(html_paths, max_concurrent_io, primary_root_path, secondary_root_path)
         
         # Stage 2: CPU-intensive processing - Parse HTML in parallel
         parsed_contents = {}
@@ -606,24 +621,25 @@ def read_csv_batch(csv_file: str, batch_size: int) -> List[List[Dict]]:
         return []
 
 
-def tokenize_record_mp(record: Dict) -> Dict:
+def tokenize_record_mp(args: Tuple[Dict, Optional[str]]) -> Dict:
     """Multiprocessing-compatible function to tokenize a single record"""
-    tokenizer = JapaneseTokenizer()  # Each process creates its own tokenizer
-    
+    record, tokenizer_type = args
+    tokenizer = JapaneseTokenizer(tokenizer_type)  # Each process creates its own tokenizer
+
     # Tokenize the content field
     content_analysis = tokenizer.tokenize_text(record.get('content', ''))
-    
+
     # Create tokenized record
     tokenized_record = record.copy()  # Keep all original fields
-    
+
     # Add tokenization results
     tokenized_record['content_tokens'] = content_analysis['content_tokens']
     tokenized_record['token_count'] = content_analysis['token_count']
-    
+
     # Remove original content to save space (keeping only tokenized version)
     if 'content' in tokenized_record:
         del tokenized_record['content']
-    
+
     return tokenized_record
 
 
@@ -661,22 +677,25 @@ def process_batch_tokenization(tokenizer: JapaneseTokenizer, batch: List[Dict], 
     return tokenized_records
 
 
-def process_batch_tokenization_mp(batch: List[Dict], batch_num: int, num_processes: int = None) -> List[Dict]:
+def process_batch_tokenization_mp(batch: List[Dict], batch_num: int, num_processes: int = None, tokenizer_type: Optional[str] = None) -> List[Dict]:
     """Process a batch of records using multiprocessing"""
     if not num_processes:
         num_processes = cpu_count()
-    
+
     print(f"🔄 Tokenizing batch {batch_num} ({len(batch)} records) using {num_processes} processes...")
-    
+
     start_time = time.time()
-    
+
+    # Prepare args with tokenizer_type for each record
+    args_list = [(record, tokenizer_type) for record in batch]
+
     # Use multiprocessing pool to tokenize records in parallel
     with Pool(processes=num_processes) as pool:
-        tokenized_records = pool.map(tokenize_record_mp, batch)
-    
+        tokenized_records = pool.map(tokenize_record_mp, args_list)
+
     elapsed = time.time() - start_time
     print(f"✅ Batch {batch_num} tokenized in {elapsed:.2f} seconds with multiprocessing")
-    
+
     return tokenized_records
 
 
@@ -697,11 +716,11 @@ def save_tokenized_batch(tokenized_records: List[Dict], output_dir: str, batch_n
         return None
 
 
-def create_processing_summary(output_dir: str, total_batches: int, total_records: int, processing_time: float, 
-                             use_multiprocessing: bool = False, num_processes: int = None) -> str:
+def create_processing_summary(output_dir: str, total_batches: int, total_records: int, processing_time: float,
+                             use_multiprocessing: bool = False, num_processes: int = None, tokenizer_type: Optional[str] = None) -> str:
     """Create a summary file of the tokenization process"""
     summary_file = os.path.join(output_dir, "tokenization_summary.json")
-    
+
     summary = {
         'processing_info': {
             'total_batches': total_batches,
@@ -719,7 +738,7 @@ def create_processing_summary(output_dir: str, total_batches: int, total_records
             'included_pos': ['名詞', '動詞', '形容詞', '副詞'],
             'min_word_length': 2,
             'stop_words_filtered': True,
-            'tokenizer': 'janome',
+            'tokenizer': tokenizer_type if tokenizer_type else 'auto-detect',
             'multiprocessing_enabled': use_multiprocessing,
             'num_processes': num_processes if use_multiprocessing else 1
         }
@@ -753,9 +772,11 @@ def get_output_dir(csv_file: str = None, json_folder: str = None, output_dir: st
         return "data/tokenized"
 
 
-# Add the parent directory to the path to import app modules  
+# Add the parent directory to the path to import app modules
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
+
+from app.services.tokenizers import get_tokenizer
 
 @hydra.main(version_base=None, config_path="../conf", config_name="tokenize")
 def main(cfg: DictConfig) -> None:
@@ -763,7 +784,7 @@ def main(cfg: DictConfig) -> None:
     
     # Extract configuration values
     csv_file = cfg.input.csv_file
-    json_folder = cfg.input.json_folder  
+    json_folder = cfg.input.json_folder
     dataframe_file = cfg.input.dataframe_file
     batch_size = cfg.processing.batch_size
     max_content_length = cfg.processing.max_content_length
@@ -772,6 +793,9 @@ def main(cfg: DictConfig) -> None:
     num_processes = cfg.processing.num_processes
     use_hybrid_pipeline = cfg.processing.get('use_hybrid_pipeline', False)
     max_concurrent_io = cfg.processing.get('max_concurrent_io', 20)
+    tokenizer_type = cfg.tokenizer.get('type', None) if 'tokenizer' in cfg else None
+    primary_root_path = cfg.input.get('primary_root_path', '')
+    secondary_root_path = cfg.input.get('secondary_root_path', '')
     output_dir = cfg.output.output_dir
     clear_output = cfg.output.clear_output
     
@@ -834,8 +858,11 @@ def main(cfg: DictConfig) -> None:
     
     # Initialize tokenizer
     print("Initializing Japanese tokenizer...")
-    tokenizer = JapaneseTokenizer()
-    print("✅ Tokenizer ready")
+    tokenizer = JapaneseTokenizer(tokenizer_type)
+    if tokenizer_type:
+        print(f"✅ Tokenizer ready (using {tokenizer_type})")
+    else:
+        print("✅ Tokenizer ready (using auto-detect)")
     print()
     
     # Read input data
@@ -847,7 +874,7 @@ def main(cfg: DictConfig) -> None:
     else:
         # Read JSON folder and create batches
         records = read_json_folder(json_folder, dataframe_file, max_content_length, extra_columns,
-                                 use_hybrid_pipeline, num_processes, max_concurrent_io)
+                                 use_hybrid_pipeline, num_processes, max_concurrent_io, primary_root_path, secondary_root_path)
         if not records:
             print("❌ No data to process. Exiting.")
             sys.exit(1)
@@ -876,7 +903,7 @@ def main(cfg: DictConfig) -> None:
     for i, batch in enumerate(batches, 1):
         # Tokenize batch using multiprocessing or single-threaded approach
         if use_multiprocessing:
-            tokenized_records = process_batch_tokenization_mp(batch, i, num_processes)
+            tokenized_records = process_batch_tokenization_mp(batch, i, num_processes, tokenizer_type)
         else:
             tokenized_records = process_batch_tokenization(tokenizer, batch, i)
         
@@ -903,7 +930,7 @@ def main(cfg: DictConfig) -> None:
     print(f"Output directory: {output_dir}")
     
     # Create summary file
-    create_processing_summary(output_dir, len(batches), total_records, elapsed_total, use_multiprocessing, num_processes)
+    create_processing_summary(output_dir, len(batches), total_records, elapsed_total, use_multiprocessing, num_processes, tokenizer_type)
     
     if successful_batches == len(batches):
         print("✅ Tokenization completed successfully!")

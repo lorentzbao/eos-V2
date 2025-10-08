@@ -3,20 +3,23 @@ import shutil
 from whoosh import fields, index
 from whoosh.qparser import QueryParser, MultifieldParser, OrGroup
 from whoosh.analysis import StandardAnalyzer
-from janome.tokenizer import Tokenizer
-from typing import List, Dict
+from typing import List, Dict, Optional
+from .tokenizers import get_tokenizer
 
 class WhooshSimpleJapanese:
     """Whoosh search engine with pre-processed Japanese text"""
-    
-    def __init__(self, index_dir: str = "data/whoosh_index"):
+
+    def __init__(self, index_dir: str = "data/whoosh_index", tokenizer_type: Optional[str] = None):
+        """
+        Initialize Whoosh search engine.
+
+        Args:
+            index_dir: Directory to store the search index
+            tokenizer_type: Type of tokenizer ('janome', 'mecab', or None for auto-detect)
+        """
         self.index_dir = index_dir
-        self.tokenizer = Tokenizer()
-        self.stop_words = {
-            'する', 'ある', 'なる', 'いる', 'できる', 'という', 'として', 
-            'の', 'に', 'は', 'を', 'が', 'で', 'て', 'と', 'から', 'まで',
-            'だ', 'である', 'です', 'ます'
-        }
+        self.tokenizer = get_tokenizer(tokenizer_type)
+        # Stop words are now handled in the tokenizer base class
         
         # Enterprise schema - lightweight with no raw content storage
         self.schema = fields.Schema(
@@ -81,21 +84,18 @@ class WhooshSimpleJapanese:
         """Tokenize Japanese text and return space-separated tokens"""
         if not text:
             return ""
-        
-        tokens = []
-        for token in self.tokenizer.tokenize(text):
-            word = token.surface.lower().strip()
-            pos = token.part_of_speech.split(',')[0]
-            
-            # Include meaningful parts of speech
-            if pos in ['名詞', '動詞', '形容詞', '副詞'] and len(word) > 1:
-                # Skip numeric tokens and pure digits
-                if word.isdigit():
-                    continue
-                if word not in self.stop_words:
-                    tokens.append(word)
-        
-        return ' '.join(tokens)
+
+        # Use the tokenizer's built-in filtering
+        tokens = self.tokenizer.tokenize_and_filter(text, min_length=2)
+
+        # Additional filtering for numeric tokens
+        filtered_tokens = [
+            token.lower().strip()
+            for token in tokens
+            if not token.isdigit()
+        ]
+
+        return ' '.join(filtered_tokens)
     
     def add_document(self, doc_id: str, url: str = "", content: str = "", 
                    jcn: str = "", CUST_STATUS2: str = "", company_name_kj: str = "",

@@ -6,7 +6,11 @@ input:
   csv_file: null
   json_folder: "data/raw/tokyo"  # Default to tokyo, can be overridden
   dataframe_file: "data/sample_companies.csv"
-  
+
+  # Root path configuration for HTML files
+  primary_root_path: ""             # Primary root path to prepend to HTML file paths (e.g., "/mnt/e/data")
+  secondary_root_path: ""           # Secondary root path to try if primary fails (e.g., "/home/user/data")
+
 processing:
   batch_size: 256
   max_content_length: 5000
@@ -20,13 +24,14 @@ processing:
   num_processes: null               # Auto-detect CPU cores
   use_hybrid_pipeline: true        # Enable hybrid async I/O + multiprocessing pipeline
   max_concurrent_io: 8             # Maximum concurrent I/O operations
-  
+
 output:
   output_dir: null                  # Auto-generate: data/tokenized/{prefecture}
   clear_output: false
-  
+
 tokenizer:
-  included_pos: 
+  type: janome                      # Tokenizer backend: 'janome', 'mecab', or null for auto-detect
+  included_pos:
     - "名詞"
     - "動詞"
     - "形容詞"

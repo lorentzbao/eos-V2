@@ -2,6 +2,10 @@ app:
   secret_key: "your-secret-key-here"
   debug: true
 
+# Tokenizer configuration
+tokenizer:
+  type: janome  # Options: 'janome', 'mecab', or null for auto-detect (tries MeCab first, falls back to Janome)
+
 # Multi-index configuration - users must select a prefecture
 indexes:
   tokyo:

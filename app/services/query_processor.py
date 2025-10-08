@@ -1,10 +1,16 @@
 import re
 from typing import Dict, List, Optional
-from janome.tokenizer import Tokenizer
+from .tokenizers import get_tokenizer
 
 class QueryProcessor:
-    def __init__(self):
-        self.tokenizer = Tokenizer()
+    def __init__(self, tokenizer_type: Optional[str] = None):
+        """
+        Initialize QueryProcessor with a Japanese tokenizer.
+
+        Args:
+            tokenizer_type: Type of tokenizer ('janome', 'mecab', or None for auto-detect)
+        """
+        self.tokenizer = get_tokenizer(tokenizer_type)
         self.operators = ['AND', 'OR', 'NOT', '+', '-', '"']
     
     def normalize_query(self, query: str) -> str:
@@ -20,13 +26,8 @@ class QueryProcessor:
         return clean_query, phrases
     
     def tokenize_japanese(self, text: str) -> List[str]:
-        tokens = []
-        for token in self.tokenizer.tokenize(text):
-            word = token.surface
-            pos = token.part_of_speech.split(',')[0]
-            if pos in ['名詞', '動詞', '形容詞', '副詞'] and len(word) > 1:
-                tokens.append(word)
-        return tokens
+        """Tokenize Japanese text with POS filtering"""
+        return self.tokenizer.tokenize_and_filter(text, min_length=2)
     
     def build_whoosh_query(self, query: str) -> str:
         query = self.normalize_query(query)
