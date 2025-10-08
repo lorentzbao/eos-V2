@@ -44,6 +44,7 @@ This document tracks ongoing development tasks, improvements, and technical debt
 - [x] Restructure README.md with improved organization
 - [x] Add CLAUDE.md for AI assistant guidance
 - [x] Add INTEGRATION_PLAN.md for frontend-dev merge
+- [x] Update README.md with tokenizer architecture and root path features
 - [ ] Create ADMIN_GUIDE.md for data processing and administration
 
 ### Features
@@ -94,6 +95,11 @@ This document tracks ongoing development tasks, improvements, and technical debt
 - [ ] Add monitoring and alerting (search performance, error rates)
 
 ### Code Quality
+- [x] Refactor tokenizer to modular architecture
+  - [x] Create abstract BaseTokenizer class
+  - [x] Implement Janome and MeCab adapters
+  - [x] Add factory pattern for tokenizer creation
+  - [x] Update all services to use new tokenizer abstraction
 - [ ] Add type hints to all service layer functions
 - [ ] Improve error handling in API endpoints (return proper HTTP status codes)
 - [ ] Refactor search service to separate concerns (search, filtering, grouping)
@@ -118,6 +124,10 @@ This document tracks ongoing development tasks, improvements, and technical debt
 - [ ] Create shared utilities module for common functions
 
 ### Data Management
+- [x] Add configurable root paths for HTML file resolution
+  - [x] Implement primary/secondary root path with fallback
+  - [x] Update read_file_sync and pipeline functions
+  - [x] Add configuration options to YAML files
 - [ ] Implement automatic CSV cache cleanup (currently manual)
 - [ ] Add index versioning for migrations
 - [ ] Create data validation layer for incoming documents
@@ -132,6 +142,9 @@ This document tracks ongoing development tasks, improvements, and technical debt
 - [ ] Add accessibility improvements (ARIA labels, keyboard navigation)
 
 ### Configuration
+- [x] Standardize tokenizer configuration across all config files
+  - [x] Set janome as default in config.yaml, tokenize.yaml, json_companies.yaml
+  - [x] Add tokenizer.type configuration option
 - [ ] Add environment-specific configuration files (dev, staging, production)
 - [ ] Implement configuration validation on startup
 - [ ] Document all configuration options with examples
@@ -164,6 +177,35 @@ This document tracks ongoing development tasks, improvements, and technical debt
 - [x] Add outputs/ folder to .gitignore
 - [x] Remove outputs/ from repository
 - [x] Commit and push all documentation changes
+
+### Phase 4: Tokenizer Architecture Refactoring (Completed - 2025-10-08)
+- [x] Create abstract tokenizer architecture
+  - [x] BaseTokenizer abstract class with Token dataclass
+  - [x] JanomeTokenizer adapter implementation
+  - [x] MeCabTokenizer adapter implementation
+  - [x] Factory pattern with get_tokenizer() function
+- [x] Update all services to use new tokenizer
+  - [x] QueryProcessor refactored to use modular tokenizer
+  - [x] WhooshSimpleJapanese refactored to use modular tokenizer
+  - [x] tokenize_csv.py script updated with tokenizer_type parameter
+- [x] Add configurable root paths for HTML file resolution
+  - [x] Implement primary_root_path and secondary_root_path with fallback
+  - [x] Update read_file_sync to support root paths
+  - [x] Update read_files_concurrently pipeline
+  - [x] Pass root paths through convert_json_to_records_hybrid
+- [x] Configuration updates
+  - [x] Add tokenizer.type to all config files (default: janome)
+  - [x] Add input.primary_root_path and secondary_root_path to tokenize configs
+  - [x] Test configuration loading and overrides
+- [x] Documentation
+  - [x] Update README.md with tokenizer architecture section
+  - [x] Document advanced tokenization options
+  - [x] Add configuration examples for root paths
+- [x] Testing
+  - [x] Test Janome tokenizer functionality
+  - [x] Test auto-detect fallback mechanism
+  - [x] Test root path fallback logic
+  - [x] Test configuration overrides
 
 ## Ideas for Future Enhancement
 
@@ -233,5 +275,5 @@ This TODO.md should be reviewed and updated:
 
 ---
 
-**Last Updated**: 2025-10-06 (Updated after history cache, LRU cache fix, and city logging implementation)
+**Last Updated**: 2025-10-08 (Updated after modular tokenizer refactoring and root path configuration)
 **Next Review**: TBD
