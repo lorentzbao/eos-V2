@@ -114,6 +114,233 @@ class JapaneseTokenizer:
         }
 
 
+def build_company_records(json_data: Dict, df_dict: Optional[Dict], parsed_html_contents: Dict[str, str],
+                         max_subdomains_per_company: int = None) -> List[Dict]:
+    """Build records for a single company using pre-parsed HTML content
+
+    Args:
+        json_data: Company JSON data
+        df_dict: DataFrame dictionary for merging additional info
+        parsed_html_contents: Dictionary mapping html_path -> parsed_content
+        max_subdomains_per_company: Maximum number of sub-domains to process
+
+    Returns:
+        List of URL-based records for this company
+    """
+    try:
+        jcn = str(json_data.get('jcn', ''))
+        if not jcn:
+            return []
+
+        # Base company information
+        base_info = {
+            'jcn': jcn,
+            'company_name_kj': json_data.get('company_name', {}).get('kj', ''),
+            'company_address_all': json_data.get('company_address', {}).get('all', ''),
+            'prefecture': json_data.get('company_address', {}).get('prefecture', ''),
+            'city': json_data.get('company_address', {}).get('city', ''),
+            'main_domain_url': json_data.get('homepage', {}).get('main_domain', {}).get('url', ''),
+        }
+
+        # Merge DataFrame data
+        if df_dict is not None and jcn in df_dict:
+            df_record = df_dict[jcn]
+            for col, value in df_record.items():
+                if col not in base_info and pd.notna(value):
+                    base_info[col] = value
+
+        homepage = json_data.get('homepage', {})
+        records = []
+
+        # Main domain
+        main_domain = homepage.get('main_domain', {})
+        if main_domain.get('url'):
+            html_path = main_domain.get('html_path', '')
+            html_content = parsed_html_contents.get(html_path, '') if html_path else ''
+
+            content_parts = [base_info['company_name_kj']]
+            if html_content:
+                content_parts.append(html_content)
+            else:
+                content_parts.append(main_domain['url'])
+
+            record = base_info.copy()
+            record.update({
+                'id': f"{jcn}_main",
+                'url': main_domain['url'],
+                'url_name': 'メインサイト',
+                'content': ' '.join(filter(None, content_parts))
+            })
+            records.append(record)
+
+        # Sub-domains
+        sub_domains = homepage.get('sub_domain', [])
+        if max_subdomains_per_company is not None:
+            sub_domains = sub_domains[:max_subdomains_per_company]
+
+        for i, sub_domain in enumerate(sub_domains):
+            if sub_domain.get('url'):
+                html_path = sub_domain.get('html_path', '')
+                html_content = parsed_html_contents.get(html_path, '') if html_path else ''
+
+                content_parts = [base_info['company_name_kj']]
+                if html_content:
+                    content_parts.append(html_content)
+                else:
+                    content_parts.extend(sub_domain.get('tags', []))
+
+                record = base_info.copy()
+                record.update({
+                    'id': f"{jcn}_sub_{i + 1}",
+                    'url': sub_domain['url'],
+                    'url_name': ' '.join(sub_domain.get('tags', [])) if sub_domain.get('tags') else f"サブページ{i + 1}",
+                    'content': ' '.join(filter(None, content_parts))
+                })
+                records.append(record)
+
+        return records
+    except Exception as e:
+        print(f"⚠️  Warning: Error building records for company: {e}")
+        return []
+
+
+def read_json_folder_batch_optimized(json_files: List[str], df_dict: Optional[Dict], max_content_length: int,
+                                    num_processes: int, max_concurrent_io: int, primary_root_path: str,
+                                    secondary_root_path: str, max_subdomains_per_company: int = None) -> List[Dict]:
+    """Optimized batch processing for all companies - creates pools ONCE for all files
+
+    This function processes all companies in batch mode, creating ThreadPoolExecutor and
+    ProcessPoolExecutor only once instead of once per company, resulting in massive performance gains.
+
+    Args:
+        json_files: List of JSON file paths
+        df_dict: DataFrame dictionary for merging
+        max_content_length: Max HTML content length
+        num_processes: Number of CPU processes for HTML parsing
+        max_concurrent_io: Number of I/O threads for file reading
+        primary_root_path: Primary root path for HTML files
+        secondary_root_path: Secondary root path for HTML files
+        max_subdomains_per_company: Max sub-domains per company
+
+    Returns:
+        List of all records from all companies
+    """
+    total_files = len(json_files)
+    print(f"Stage 1/3: Loading {total_files} JSON files...")
+
+    # Step 1: Load all JSON files and collect HTML paths
+    all_json_data = []
+    all_html_paths = []
+
+    for i, json_file in enumerate(json_files, 1):
+        try:
+            with open(json_file, 'r', encoding='utf-8') as f:
+                json_data = json.load(f)
+
+            jcn = str(json_data.get('jcn', ''))
+            if not jcn:
+                continue
+
+            all_json_data.append(json_data)
+
+            # Collect HTML paths from this company
+            homepage = json_data.get('homepage', {})
+
+            # Main domain
+            main_domain = homepage.get('main_domain', {})
+            if main_domain.get('html_path'):
+                all_html_paths.append(main_domain['html_path'])
+
+            # Sub-domains (with limit)
+            sub_domains = homepage.get('sub_domain', [])
+            if max_subdomains_per_company is not None:
+                sub_domains = sub_domains[:max_subdomains_per_company]
+
+            for sub_domain in sub_domains:
+                if sub_domain.get('html_path'):
+                    all_html_paths.append(sub_domain['html_path'])
+
+            if i % 100 == 0:
+                print(f"   📝 Loaded {i}/{total_files} JSON files")
+
+        except Exception as e:
+            print(f"⚠️ Warning: Could not load {json_file}: {e}")
+            continue
+
+    # Remove duplicate paths
+    unique_html_paths = list(set(all_html_paths))
+    print(f"✅ Loaded {len(all_json_data)} companies with {len(unique_html_paths)} unique HTML files")
+
+    # Step 2: Read ALL HTML files concurrently with ONE ThreadPoolExecutor
+    print(f"Stage 2/3: Reading {len(unique_html_paths)} HTML files with {max_concurrent_io} I/O threads...")
+    html_contents = {}
+
+    if unique_html_paths:
+        with ThreadPoolExecutor(max_workers=max_concurrent_io) as executor:
+            futures = {executor.submit(read_file_sync, path, 'utf-8', primary_root_path, secondary_root_path): path
+                      for path in unique_html_paths}
+
+            completed = 0
+            for future in as_completed(futures):
+                path = futures[future]
+                try:
+                    file_path, content = future.result()
+                    html_contents[file_path] = content
+                    completed += 1
+
+                    if completed % 500 == 0:
+                        print(f"   📝 Read {completed}/{len(unique_html_paths)} HTML files")
+                except Exception as e:
+                    print(f"⚠️ Warning: Error reading {path}: {e}")
+                    html_contents[path] = ""
+
+    print(f"✅ Read {len(html_contents)} HTML files")
+
+    # Step 3: Parse ALL HTML content with ONE ProcessPoolExecutor
+    print(f"Stage 3/3: Parsing {len(html_contents)} HTML files with {num_processes or cpu_count()} CPU processes...")
+    parsed_contents = {}
+
+    if html_contents:
+        if not num_processes:
+            num_processes = cpu_count()
+
+        html_tasks = [(path, content, max_content_length) for path, content in html_contents.items() if content]
+
+        with ProcessPoolExecutor(max_workers=num_processes) as executor:
+            futures = {executor.submit(parse_html_content_cpu, content, max_length): path
+                      for path, content, max_length in html_tasks}
+
+            completed = 0
+            for future in as_completed(futures):
+                path = futures[future]
+                try:
+                    parsed_content = future.result()
+                    parsed_contents[path] = parsed_content
+                    completed += 1
+
+                    if completed % 500 == 0:
+                        print(f"   📝 Parsed {completed}/{len(html_tasks)} HTML files")
+                except Exception as e:
+                    print(f"⚠️ Warning: Error parsing HTML for {path}: {e}")
+                    parsed_contents[path] = ""
+
+    print(f"✅ Parsed {len(parsed_contents)} HTML files")
+
+    # Step 4: Build final records using pre-processed content
+    print(f"Building records for {len(all_json_data)} companies...")
+    all_records = []
+
+    for i, json_data in enumerate(all_json_data, 1):
+        company_records = build_company_records(json_data, df_dict, parsed_contents, max_subdomains_per_company)
+        all_records.extend(company_records)
+
+        if i % 100 == 0:
+            print(f"   📝 Built records for {i}/{len(all_json_data)} companies")
+
+    print(f"✅ Successfully loaded {len(all_records)} records from {len(all_json_data)} companies")
+    return all_records
+
+
 def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None, max_content_length: int = 10000,
                     extra_columns: Optional[List[str]] = None, use_hybrid_pipeline: bool = False,
                     num_processes: int = None, max_concurrent_io: int = 20, primary_root_path: str = '', secondary_root_path: str = '',
@@ -176,30 +403,33 @@ def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None, max
             print(f"⚠️  Warning: Could not load DataFrame: {e}")
             df_dict = None
 
+    # Use hybrid pipeline with batch processing (creates pools once for all companies)
+    if use_hybrid_pipeline:
+        print("Using hybrid pipeline with batch processing (optimized)...")
+        return read_json_folder_batch_optimized(json_files, df_dict, max_content_length, num_processes,
+                                               max_concurrent_io, primary_root_path, secondary_root_path,
+                                               max_subdomains_per_company)
+
+    # Sequential processing (fallback for non-hybrid mode)
     records = []
     total_files = len(json_files)
-    
+
     for i, json_file in enumerate(json_files, 1):
         try:
             with open(json_file, 'r', encoding='utf-8') as f:
                 json_data = json.load(f)
-            
+
             # Convert JSON structure to URL-based records (one per URL)
-            if use_hybrid_pipeline:
-                url_records = convert_json_to_records_hybrid(json_data, df_dict, max_content_length,
-                                                           num_processes, max_concurrent_io, primary_root_path, secondary_root_path,
-                                                           max_subdomains_per_company)
-            else:
-                url_records = convert_json_to_records(json_data, df_dict, max_content_length, max_subdomains_per_company)
+            url_records = convert_json_to_records(json_data, df_dict, max_content_length, max_subdomains_per_company)
             records.extend(url_records)
-            
+
             if i % 100 == 0:
                 print(f"   📝 Processed {i}/{total_files} JSON files")
-                
+
         except Exception as e:
             print(f"⚠️ Warning: Could not process {json_file}: {e}")
             continue
-    
+
     print(f"✅ Successfully loaded {len(records)} records from JSON files")
     return records
 
@@ -631,13 +861,20 @@ def read_csv_batch(csv_file: str, batch_size: int) -> List[List[Dict]]:
         return []
 
 
-def tokenize_record_mp(args: Tuple[Dict, Optional[str]]) -> Dict:
-    """Multiprocessing-compatible function to tokenize a single record"""
-    record, tokenizer_type = args
-    tokenizer = JapaneseTokenizer(tokenizer_type)  # Each process creates its own tokenizer
+# Global variable for process-local tokenizer (used in multiprocessing)
+_process_tokenizer = None
 
-    # Tokenize the content field
-    content_analysis = tokenizer.tokenize_text(record.get('content', ''))
+
+def init_tokenizer_worker(tokenizer_type: Optional[str]):
+    """Initialize tokenizer once per worker process"""
+    global _process_tokenizer
+    _process_tokenizer = JapaneseTokenizer(tokenizer_type)
+
+
+def tokenize_record_mp(record: Dict) -> Dict:
+    """Multiprocessing-compatible function to tokenize a single record using pre-initialized tokenizer"""
+    # Tokenize the content field using the pre-initialized tokenizer
+    content_analysis = _process_tokenizer.tokenize_text(record.get('content', ''))
 
     # Create tokenized record
     tokenized_record = record.copy()  # Keep all original fields
@@ -688,7 +925,7 @@ def process_batch_tokenization(tokenizer: JapaneseTokenizer, batch: List[Dict], 
 
 
 def process_batch_tokenization_mp(batch: List[Dict], batch_num: int, num_processes: int = None, tokenizer_type: Optional[str] = None) -> List[Dict]:
-    """Process a batch of records using multiprocessing"""
+    """Process a batch of records using multiprocessing with pre-initialized tokenizers"""
     if not num_processes:
         num_processes = cpu_count()
 
@@ -696,12 +933,12 @@ def process_batch_tokenization_mp(batch: List[Dict], batch_num: int, num_process
 
     start_time = time.time()
 
-    # Prepare args with tokenizer_type for each record
-    args_list = [(record, tokenizer_type) for record in batch]
+    # Calculate optimal chunksize for better load distribution
+    chunksize = max(1, len(batch) // (num_processes * 4))
 
-    # Use multiprocessing pool to tokenize records in parallel
-    with Pool(processes=num_processes) as pool:
-        tokenized_records = pool.map(tokenize_record_mp, args_list)
+    # Use multiprocessing pool with initializer to create tokenizer once per process
+    with Pool(processes=num_processes, initializer=init_tokenizer_worker, initargs=(tokenizer_type,)) as pool:
+        tokenized_records = pool.map(tokenize_record_mp, batch, chunksize=chunksize)
 
     elapsed = time.time() - start_time
     print(f"✅ Batch {batch_num} tokenized in {elapsed:.2f} seconds with multiprocessing")
