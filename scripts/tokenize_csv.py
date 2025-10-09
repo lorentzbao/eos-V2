@@ -375,7 +375,7 @@ def read_json_folder(json_folder: str, dataframe_file: Optional[str] = None, max
             if extra_columns:
                 # Read only DOMESTIC_DESCRIMI_NO + extra_columns for better performance
                 columns_to_read = ['DOMESTIC_DESCRIMI_NO'] + extra_columns
-                df_data = pd.read_csv(dataframe_file, usecols=lambda x: x in columns_to_read)
+                df_data = pd.read_csv(dataframe_file, usecols=lambda x: x in columns_to_read, encoding="cp932")
                 
                 # Check which columns were actually found
                 available_columns = ['DOMESTIC_DESCRIMI_NO'] + [col for col in extra_columns if col in df_data.columns and col != 'DOMESTIC_DESCRIMI_NO']
