@@ -35,7 +35,7 @@ def get_tokenizer(tokenizer_type: Optional[str] = None) -> BaseTokenizer:
         try:
             return MeCabTokenizer()
         except ImportError:
-            print("MeCab not available, falling back to Janome")
+            # Silently fallback to Janome
             return JanomeTokenizer()
 
     tokenizer_type = tokenizer_type.lower()
