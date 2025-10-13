@@ -1712,36 +1712,33 @@ def main(cfg: DictConfig) -> None:
             try:
                 # Determine which columns to read (only read what's needed)
                 if extra_columns:
-                    # Read only jcn + extra_columns for better performance
-                    columns_to_read = ['jcn'] + extra_columns
+                    # Read only DOMESTIC_DESCRIMI_NO + extra_columns for better performance
+                    columns_to_read = ['DOMESTIC_DESCRIMI_NO'] + extra_columns
                     df = pd.read_csv(dataframe_file, usecols=lambda x: x in columns_to_read,
                                     encoding='cp932')
 
                     # Check which columns were actually found
-                    available_columns = [col for col in extra_columns if col in df.columns]
+                    available_columns = ['DOMESTIC_DESCRIMI_NO'] + [col for col in extra_columns if col in df.columns and col != 'DOMESTIC_DESCRIMI_NO']
                     missing_columns = [col for col in extra_columns if col not in df.columns]
 
                     if missing_columns:
                         print(f"⚠️  Warning: Columns not found in DataFrame: {missing_columns}")
 
-                    if available_columns:
-                        print(f"Using specific columns: {available_columns} (+ jcn as key)")
-                    else:
-                        print(f"Loaded DataFrame with {len(df)} records (no extra columns found)")
+                    print(f"Using specific columns: {available_columns[1:]} (+ DOMESTIC_DESCRIMI_NO as key)")
                 else:
                     # Read all columns if no specific columns requested
                     df = pd.read_csv(dataframe_file, encoding='cp932')
                     print(f"Using all DataFrame columns ({len(df.columns)} columns)")
 
                 # Clean the data
-                df = df[df['jcn'].notnull()]
-                df.drop_duplicates(subset=['jcn'], inplace=True)
+                df = df[df['DOMESTIC_DESCRIMI_NO'].notnull()]
+                df.drop_duplicates(subset=['DOMESTIC_DESCRIMI_NO'], inplace=True)
 
-                # Convert to dictionary with jcn as key for O(1) lookup (FAST method)
-                df['jcn'] = df['jcn'].apply(lambda x: str(int(float(x))))
-                df_dict = df.set_index('jcn').to_dict('index')
+                # Convert to dictionary with DOMESTIC_DESCRIMI_NO as key for O(1) lookup (FAST method)
+                df['DOMESTIC_DESCRIMI_NO'] = df['DOMESTIC_DESCRIMI_NO'].apply(lambda x: str(int(float(x))))
+                df_dict = df.set_index('DOMESTIC_DESCRIMI_NO').to_dict('index')
                 print(f"✅ Loaded DataFrame with {len(df)} records from {dataframe_file}")
-                print(f"   Created lookup dictionary with {len(df_dict)} jcn keys")
+                print(f"   Created lookup dictionary with {len(df_dict)} DOMESTIC_DESCRIMI_NO keys")
             except Exception as e:
                 print(f"⚠️  Warning: Could not load DataFrame: {e}")
                 df_dict = None
