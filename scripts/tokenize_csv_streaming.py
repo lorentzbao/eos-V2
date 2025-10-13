@@ -1718,7 +1718,7 @@ def main(cfg: DictConfig) -> None:
                     # Read only jcn + extra_columns for better performance
                     columns_to_read = ['jcn'] + extra_columns
                     df = pd.read_csv(dataframe_file, usecols=lambda x: x in columns_to_read,
-                                    encoding='cp932', dtype=str)
+                                    encoding='cp932')
 
                     # Check which columns were actually found
                     available_columns = [col for col in extra_columns if col in df.columns]
@@ -1728,16 +1728,23 @@ def main(cfg: DictConfig) -> None:
                         print(f"⚠️  Warning: Columns not found in DataFrame: {missing_columns}")
 
                     if available_columns:
-                        print(f"✅ Loaded DataFrame with {len(df)} records, using columns: {available_columns}")
+                        print(f"Using specific columns: {available_columns} (+ jcn as key)")
                     else:
-                        print(f"✅ Loaded DataFrame with {len(df)} records (no extra columns found)")
+                        print(f"Loaded DataFrame with {len(df)} records (no extra columns found)")
                 else:
                     # Read all columns if no specific columns requested
-                    df = pd.read_csv(dataframe_file, encoding='cp932', dtype=str)
-                    print(f"✅ Loaded DataFrame with {len(df)} records, using all {len(df.columns)} columns")
+                    df = pd.read_csv(dataframe_file, encoding='cp932')
+                    print(f"Using all DataFrame columns ({len(df.columns)} columns)")
 
-                # Convert to dictionary with jcn as key
-                df_dict = {str(row.get('jcn', '')): row.to_dict() for _, row in df.iterrows() if row.get('jcn')}
+                # Clean the data
+                df = df[df['jcn'].notnull()]
+                df.drop_duplicates(subset=['jcn'], inplace=True)
+
+                # Convert to dictionary with jcn as key for O(1) lookup (FAST method)
+                df['jcn'] = df['jcn'].apply(lambda x: str(int(float(x))))
+                df_dict = df.set_index('jcn').to_dict('index')
+                print(f"✅ Loaded DataFrame with {len(df)} records from {dataframe_file}")
+                print(f"   Created lookup dictionary with {len(df_dict)} jcn keys")
             except Exception as e:
                 print(f"⚠️  Warning: Could not load DataFrame: {e}")
                 df_dict = None
