@@ -124,9 +124,14 @@ class SearchService:
                 }
             
             # Add URL data to the company group
+            url_name = result.get('url_name') or result.get('title', '')
+            # Truncate url_name to max 50 characters for display
+            if len(url_name) > 50:
+                url_name = url_name[:50] + '...'
+
             company_groups[jcn]['urls'].append({
                 'url': result.get('url', ''),
-                'url_name': result.get('url_name') or result.get('title', ''),
+                'url_name': url_name,
                 'content': result.get('content') or result.get('introduction', ''),
                 'matched_terms': result.get('matched_terms', []),
                 'score': result.get('score', 0),
