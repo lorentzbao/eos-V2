@@ -24,3 +24,6 @@ indexes:
   oita:
     dir: "data/indexes/oita"
     name: "Oita"
+  tochigi:
+    dir: "data/indexes/tochigi"
+    name: "Tochigi"
