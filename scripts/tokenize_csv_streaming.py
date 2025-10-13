@@ -1713,9 +1713,31 @@ def main(cfg: DictConfig) -> None:
         df_dict = None
         if dataframe_file:
             try:
-                df = pd.read_csv(dataframe_file, encoding='utf-8', dtype=str)
+                # Determine which columns to read (only read what's needed)
+                if extra_columns:
+                    # Read only jcn + extra_columns for better performance
+                    columns_to_read = ['jcn'] + extra_columns
+                    df = pd.read_csv(dataframe_file, usecols=lambda x: x in columns_to_read,
+                                    encoding='cp932', dtype=str)
+
+                    # Check which columns were actually found
+                    available_columns = [col for col in extra_columns if col in df.columns]
+                    missing_columns = [col for col in extra_columns if col not in df.columns]
+
+                    if missing_columns:
+                        print(f"⚠️  Warning: Columns not found in DataFrame: {missing_columns}")
+
+                    if available_columns:
+                        print(f"✅ Loaded DataFrame with {len(df)} records, using columns: {available_columns}")
+                    else:
+                        print(f"✅ Loaded DataFrame with {len(df)} records (no extra columns found)")
+                else:
+                    # Read all columns if no specific columns requested
+                    df = pd.read_csv(dataframe_file, encoding='cp932', dtype=str)
+                    print(f"✅ Loaded DataFrame with {len(df)} records, using all {len(df.columns)} columns")
+
+                # Convert to dictionary with jcn as key
                 df_dict = {str(row.get('jcn', '')): row.to_dict() for _, row in df.iterrows() if row.get('jcn')}
-                print(f"✅ Loaded DataFrame with {len(df_dict)} records")
             except Exception as e:
                 print(f"⚠️  Warning: Could not load DataFrame: {e}")
                 df_dict = None
