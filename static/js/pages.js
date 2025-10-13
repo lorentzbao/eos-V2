@@ -160,7 +160,7 @@ app.pages = {
                             </div>
 
                             <!-- Hidden inputs for defaults -->
-                            <input type="hidden" name="limit" value="100">
+                            <input type="hidden" name="limit" value="${app.config.searchDefaultLimit}">
                             <input type="hidden" name="search_option" value="all">
                         </form>
                     </div>
@@ -356,7 +356,7 @@ app.pages = {
                             </div>
 
                             <!-- Hidden inputs for defaults -->
-                            <input type="hidden" name="limit" value="${params.limit || 100}">
+                            <input type="hidden" name="limit" value="${params.limit || app.config.searchDefaultLimit}">
                             <input type="hidden" name="search_option" value="${params.search_option || 'all'}">
                         </form>
                     </div>
@@ -534,7 +534,7 @@ app.pages = {
                             </div>
 
                             <!-- Hidden inputs for defaults -->
-                            <input type="hidden" name="limit" value="${params.limit || 100}">
+                            <input type="hidden" name="limit" value="${params.limit || app.config.searchDefaultLimit}">
                             <input type="hidden" name="search_option" value="${params.search_option || 'all'}">
                         </form>
                     </div>

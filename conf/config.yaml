@@ -2,6 +2,10 @@ app:
   secret_key: "your-secret-key-here"
   debug: true
 
+# Search configuration
+search:
+  default_limit: 100  # Default number of URLs to return in search results
+
 # Tokenizer configuration
 tokenizer:
   type: janome  # Options: 'janome', 'mecab', or null for auto-detect (tries MeCab first, falls back to Janome)

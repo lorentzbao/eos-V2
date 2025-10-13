@@ -11,7 +11,8 @@ window.app = {
     // Application configuration
     config: {
         apiBase: '/api',
-        pages: ['login', 'home', 'search', 'history', 'rankings']
+        pages: ['login', 'home', 'search', 'history', 'rankings'],
+        searchDefaultLimit: 100  // Default search results limit, can be overridden by config.yaml
     },
 
     // Initialize the application

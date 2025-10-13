@@ -10,6 +10,11 @@ def create_app(config: DictConfig = None):
     # Use config if provided, otherwise use defaults
     if config:
         app.config['SECRET_KEY'] = config.app.secret_key
+        # Store search configuration
+        if hasattr(config, 'search'):
+            app.config['SEARCH_DEFAULT_LIMIT'] = config.search.get('default_limit', 100)
+        else:
+            app.config['SEARCH_DEFAULT_LIMIT'] = 100
         # Store multi-index configuration
         if hasattr(config, 'indexes'):
             app.config['INDEXES'] = config.indexes
@@ -19,6 +24,7 @@ def create_app(config: DictConfig = None):
     else:
         app.config['SECRET_KEY'] = 'your-secret-key-here'
         app.config['INDEX_DIR'] = 'data/whoosh_index'
+        app.config['SEARCH_DEFAULT_LIMIT'] = 100
 
     # Initialize search service ONCE (for cache reuse)
     from app.services.search_service import SearchService
