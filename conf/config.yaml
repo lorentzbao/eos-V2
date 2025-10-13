@@ -21,3 +21,6 @@ indexes:
   kochi:
     dir: "data/indexes/kochi"
     name: "Kochi"
+  oita:
+    dir: "data/indexes/oita"
+    name: "Oita"

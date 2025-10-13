@@ -87,6 +87,7 @@ app.pages = {
                                                 <option value="tokyo">東京都</option>
                                                 <option value="osaka">大阪府</option>
                                                 <option value="kochi">高知県</option>
+                                                <option value="oita">大分県</option>
                                             </select>
                                         </div>
                                         <div class="col-md-6">
@@ -283,6 +284,7 @@ app.pages = {
                                                 <option value="tokyo" ${params.prefecture === 'tokyo' ? 'selected' : ''}>東京都</option>
                                                 <option value="osaka" ${params.prefecture === 'osaka' ? 'selected' : ''}>大阪府</option>
                                                 <option value="kochi" ${params.prefecture === 'kochi' ? 'selected' : ''}>高知県</option>
+                                                <option value="oita" ${params.prefecture === 'oita' ? 'selected' : ''}>大分県</option>
                                             </select>
                                         </div>
                                         <div class="col-md-6">
@@ -461,6 +463,7 @@ app.pages = {
                                                 <option value="tokyo" ${params.prefecture === 'tokyo' ? 'selected' : ''}>東京都</option>
                                                 <option value="osaka" ${params.prefecture === 'osaka' ? 'selected' : ''}>大阪府</option>
                                                 <option value="kochi" ${params.prefecture === 'kochi' ? 'selected' : ''}>高知県</option>
+                                                <option value="oita" ${params.prefecture === 'oita' ? 'selected' : ''}>大分県</option>
                                             </select>
                                         </div>
                                         <div class="col-md-6">
