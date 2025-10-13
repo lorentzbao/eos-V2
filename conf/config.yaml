@@ -4,7 +4,7 @@ app:
 
 # Search configuration
 search:
-  default_limit: 100  # Default number of URLs to return in search results
+  default_limit: 50  # Default number of URLs to return in search results
 
 # Tokenizer configuration
 tokenizer:
