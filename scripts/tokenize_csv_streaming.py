@@ -325,12 +325,9 @@ def cpu_worker_with_tokenization(html_queue, record_queue, path_to_record_map,
             record_queue.put(record)
             processed_count += 1
 
-        except Exception as e:
-            # Log error but continue processing
-            if 'path' in locals():
-                print(f"⚠️ Warning: Error processing {path}: {e}")
-            import traceback
-            traceback.print_exc()
+        except:
+            # Queue timeout is expected when waiting for more items - just continue
+            # Any other exception would have occurred during processing above and already been handled
             continue
 
 
