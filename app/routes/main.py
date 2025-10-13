@@ -12,9 +12,12 @@ def get_search_service():
 @main.route('/')
 def index():
     """Main application page - serves the SPA"""
+    # Get search default limit from config
+    search_default_limit = current_app.config.get('SEARCH_DEFAULT_LIMIT', 100)
+
     # If user is not logged in, serve app.html for login page
     if 'username' not in session:
-        return render_template('app.html')
+        return render_template('app.html', search_default_limit=search_default_limit)
 
     # If user is logged in, serve app.html with user context
     # Get popular queries for search suggestions
@@ -22,7 +25,8 @@ def index():
 
     return render_template('app.html',
                          username=session.get('username'),
-                         popular_queries=popular_queries)
+                         popular_queries=popular_queries,
+                         search_default_limit=search_default_limit)
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():

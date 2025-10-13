@@ -100,12 +100,14 @@
         {% if popular_queries %}
         window.serverData = {
             popularQueries: {{ popular_queries | tojson }},
-            username: {{ username | tojson if username else 'null' }}
+            username: {{ username | tojson if username else 'null' }},
+            searchDefaultLimit: {{ search_default_limit | default(100) }}
         };
         {% else %}
         window.serverData = {
             popularQueries: [],
-            username: null
+            username: null,
+            searchDefaultLimit: {{ search_default_limit | default(100) }}
         };
         {% endif %}
 
@@ -116,6 +118,10 @@
                 app.state.popularQueries = window.serverData.popularQueries || [];
                 if (window.serverData.username) {
                     app.state.user = window.serverData.username;
+                }
+                // Override config with server value if provided
+                if (window.serverData.searchDefaultLimit) {
+                    app.config.searchDefaultLimit = window.serverData.searchDefaultLimit;
                 }
             }
 
