@@ -12,7 +12,7 @@ window.app = {
     config: {
         apiBase: '/api',
         pages: ['login', 'home', 'search', 'history', 'rankings'],
-        searchDefaultLimit: 100  // Default search results limit, can be overridden by config.yaml
+        searchDefaultLimit: (window.serverData && window.serverData.searchDefaultLimit) || 100  // Default search results limit from config.yaml
     },
 
     // Initialize the application

@@ -86,17 +86,8 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/router.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/pages.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/search.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/csv-download.js') }}"></script>
-
     <script>
-        // Pass server-side data to JavaScript
+        // Pass server-side data to JavaScript - MUST be set before loading app.js
         {% if popular_queries %}
         window.serverData = {
             popularQueries: {{ popular_queries | tojson }},
@@ -110,7 +101,18 @@
             searchDefaultLimit: {{ search_default_limit | default(100) }}
         };
         {% endif %}
+    </script>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/router.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pages.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/search.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/csv-download.js') }}"></script>
+
+    <script>
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             // Set initial data from server
@@ -118,10 +120,6 @@
                 app.state.popularQueries = window.serverData.popularQueries || [];
                 if (window.serverData.username) {
                     app.state.user = window.serverData.username;
-                }
-                // Override config with server value if provided
-                if (window.serverData.searchDefaultLimit) {
-                    app.config.searchDefaultLimit = window.serverData.searchDefaultLimit;
                 }
             }
 
