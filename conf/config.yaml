@@ -2,6 +2,13 @@ app:
   secret_key: "your-secret-key-here"
   debug: true
 
+# Server configuration
+server:
+  type: "development"  # Options: 'development' or 'production'
+  host: "0.0.0.0"
+  port: 5000
+  threads: 4           # Number of threads for production server (Waitress)
+
 # Search configuration
 search:
   default_limit: 50  # Default number of URLs to return in search results
