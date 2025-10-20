@@ -15,10 +15,14 @@ cd eos-V2
 uv sync
 
 # 2. Start the server
+# Development mode (Flask built-in server, default in config):
+uv run python run.py server.type=development
+
+# Production mode (Waitress WSGI server, default in config):
 uv run python run.py
 
 # 3. Open browser
-# → http://127.0.0.1:5000
+# → http://0.0.0.0:5000 (production) or http://127.0.0.1:5000 (development)
 ```
 
 **Login:** Enter any username (e.g., "demo") to access the search interface.
@@ -81,15 +85,17 @@ uv run python run.py
 ## 🔗 Quick Links
 
 ### Common Tasks
-- **Run the server:** `uv run python run.py`
+- **Run server (production):** `uv run python run.py`
+- **Run server (development):** `uv run python run.py server.type=development`
 - **Tokenize data:** `uv run python scripts/tokenize_csv.py --config-name json_companies`
 - **Create index:** `uv run python scripts/create_index.py --tokenized-dir data/tokenized/`
 - **Check index stats:** `uv run python scripts/index_info.py`
 
 ### Configuration
+- **Switch to dev server:** `uv run python run.py server.type=development`
+- **Change host/port:** `uv run python run.py server.host=127.0.0.1 server.port=8080`
 - **Switch tokenizer:** `uv run python scripts/tokenize_csv.py tokenizer.type=mecab`
 - **Set root paths:** `uv run python scripts/tokenize_csv.py input.primary_root_path=/mnt/e/data`
-- **Override settings:** `uv run python run.py app.debug=false app.host=0.0.0.0`
 
 ### Documentation
 - **API Examples:** [API Reference](./docs/api/API_REFERENCE.md)

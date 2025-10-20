@@ -88,9 +88,10 @@ This document tracks ongoing development tasks, improvements, and technical debt
 - [ ] Add CSV export format validation tests
 
 ### Infrastructure
+- [x] Add production server support (Waitress WSGI server with --prod flag)
 - [ ] Set up CI/CD pipeline (GitHub Actions)
 - [ ] Add Docker containerization
-- [ ] Create production deployment guide with nginx/gunicorn
+- [ ] Create production deployment guide with nginx/Waitress
 - [ ] Set up automated index backup strategy
 - [ ] Add monitoring and alerting (search performance, error rates)
 
@@ -275,5 +276,5 @@ This TODO.md should be reviewed and updated:
 
 ---
 
-**Last Updated**: 2025-10-08 (Updated after modular tokenizer refactoring and root path configuration)
+**Last Updated**: 2025-10-20 (Updated after 3-stage streaming pipeline and production server support)
 **Next Review**: TBD
