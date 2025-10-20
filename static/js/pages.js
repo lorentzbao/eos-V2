@@ -384,14 +384,6 @@ app.pages = {
                     <div class="search-results" id="searchResults">
                         ${grouped_results.map(company => this.renderCompanyResult(company)).join('')}
                     </div>
-
-                    <!-- Pagination Controls -->
-                    <nav id="pagination" class="mt-4" style="display: none;">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <small class="text-muted" id="pagination-info"></small>
-                        </div>
-                        <ul class="pagination justify-content-center" id="pagination-buttons"></ul>
-                    </nav>
                     ` : params.q ? `
                     <div class="alert alert-info">
                         <h5>検索結果が見つかりませんでした</h5>
