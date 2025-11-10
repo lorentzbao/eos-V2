@@ -111,7 +111,9 @@ def search():
         return jsonify({'error': 'Unauthorized'}), 401
 
     query = request.args.get('q', '')
-    limit = int(request.args.get('limit', 10))
+    # Get default limit from config
+    default_limit = current_app.config.get('SEARCH_DEFAULT_LIMIT', 50)
+    limit = int(request.args.get('limit', default_limit))
     prefecture = request.args.get('prefecture', '')
     city = request.args.get('city', '')
     target = request.args.get('target', '')
