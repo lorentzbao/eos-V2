@@ -4,7 +4,7 @@ app:
 
 # Server configuration
 server:
-  type: "development"  # Options: 'development' or 'production'
+  type: "production"  # Options: 'development' or 'production'
   host: "0.0.0.0"
   port: 5000
   threads: 4           # Number of threads for production server (Waitress)
@@ -25,12 +25,69 @@ indexes:
   osaka:
     dir: "data/indexes/osaka"
     name: "Osaka"
-  kochi:
-    dir: "data/indexes/kochi"
-    name: "Kochi"
+  shiga:
+    dir: "data/indexes/shiga"
+    name: "Shiga"
+  ehime:
+    dir: "data/indexes/ehime"
+    name: "Ehime"
+  toyama:
+    dir: "data/indexes/toyama"
+    name: "Toyama"
+  yamaguchi:
+    dir: "data/indexes/yamaguchi"
+    name: "Yamaguchi"
+  yamagata:
+    dir: "data/indexes/yamagata"
+    name: "Yamagata"
+  iwate:
+    dir: "data/indexes/iwate"
+    name: "Iwate"
+  nagasaki:
+    dir: "data/indexes/nagasaki"
+    name: "Nagasaki"
+  kagawa:
+    dir: "data/indexes/kagawa"
+    name: "Kagawa"
+  aomori:
+    dir: "data/indexes/aomori"
+    name: "Aomori"
+  nara:
+    dir: "data/indexes/nara"
+    name: "Nara"
   oita:
     dir: "data/indexes/oita"
     name: "Oita"
+  fukui:
+    dir: "data/indexes/fukui"
+    name: "Fukui"
+  miyazaki:
+    dir: "data/indexes/miyazaki"
+    name: "Miyazaki"
+  yamanashi:
+    dir: "data/indexes/yamanashi"
+    name: "Yamanashi"
+  akita:
+    dir: "data/indexes/akita"
+    name: "Akita"
+  wakayama:
+    dir: "data/indexes/wakayama"
+    name: "Wakayama"
+  tokushima:
+    dir: "data/indexes/tokushima"
+    name: "Tokushima"
+  saga:
+    dir: "data/indexes/saga"
+    name: "Saga"
   tochigi:
     dir: "data/indexes/tochigi"
     name: "Tochigi"
+  tottori:
+    dir: "data/indexes/tottori"
+    name: "Tottori"
+  kochi:
+    dir: "data/indexes/kochi"
+    name: "Kochi"
+  shimane:
+    dir: "data/indexes/shimane"
+    name: "Shimane"
