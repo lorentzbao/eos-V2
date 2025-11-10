@@ -40,6 +40,7 @@ data/whoosh_index_optimized/  # Ignore optimized index (was deleted)
 data/search_index.json       # Ignore legacy JSON index
 data/documents/*.txt          # Ignore document files
 data/documents/*.html         # Ignore document files
+data/indexes/                 # Ignore all index files
 # Note: data/whoosh_index/ is now tracked to share sample data
 # Note: data/sample_companies.json is tracked for test data
 
