@@ -34,6 +34,7 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         if username:
+            session.permanent = True  # Enable session timeout
             session['username'] = username
             return redirect(url_for('main.index'))
         else:

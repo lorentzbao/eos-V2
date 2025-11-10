@@ -1,6 +1,7 @@
 app:
   secret_key: "your-secret-key-here"
   debug: true
+  session_lifetime_hours: 8  # Session expires after 8 hours of inactivity
 
 # Server configuration
 server:
@@ -11,7 +12,7 @@ server:
 
 # Search configuration
 search:
-  default_limit: 50  # Default number of URLs to return in search results
+  default_limit: 25  # Default number of URLs to return in search results
 
 # Tokenizer configuration
 tokenizer:

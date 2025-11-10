@@ -1,5 +1,6 @@
 from flask import Flask
 import os
+from datetime import timedelta
 from omegaconf import DictConfig
 
 def create_app(config: DictConfig = None):
@@ -10,6 +11,9 @@ def create_app(config: DictConfig = None):
     # Use config if provided, otherwise use defaults
     if config:
         app.config['SECRET_KEY'] = config.app.secret_key
+        # Configure session lifetime
+        session_hours = config.app.get('session_lifetime_hours', 8)
+        app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=session_hours)
         # Store search configuration
         if hasattr(config, 'search'):
             app.config['SEARCH_DEFAULT_LIMIT'] = config.search.get('default_limit', 100)
@@ -25,6 +29,7 @@ def create_app(config: DictConfig = None):
         app.config['SECRET_KEY'] = 'your-secret-key-here'
         app.config['INDEX_DIR'] = 'data/whoosh_index'
         app.config['SEARCH_DEFAULT_LIMIT'] = 100
+        app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
 
     # Initialize search service ONCE (for cache reuse)
     from app.services.search_service import SearchService
