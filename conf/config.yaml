@@ -13,6 +13,7 @@ server:
 # Search configuration
 search:
   default_limit: 25  # Default number of URLs to return in search results
+  csv_output_dir: "data/csv_output"  # Directory where downloaded CSV files are copied
 
 # Tokenizer configuration
 tokenizer:

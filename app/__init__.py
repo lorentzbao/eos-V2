@@ -17,8 +17,10 @@ def create_app(config: DictConfig = None):
         # Store search configuration
         if hasattr(config, 'search'):
             app.config['SEARCH_DEFAULT_LIMIT'] = config.search.get('default_limit', 100)
+            app.config['CSV_OUTPUT_DIR'] = config.search.get('csv_output_dir', 'data/csv_output')
         else:
             app.config['SEARCH_DEFAULT_LIMIT'] = 100
+            app.config['CSV_OUTPUT_DIR'] = 'data/csv_output'
         # Store multi-index configuration
         if hasattr(config, 'indexes'):
             app.config['INDEXES'] = config.indexes
@@ -29,6 +31,7 @@ def create_app(config: DictConfig = None):
         app.config['SECRET_KEY'] = 'your-secret-key-here'
         app.config['INDEX_DIR'] = 'data/whoosh_index'
         app.config['SEARCH_DEFAULT_LIMIT'] = 100
+        app.config['CSV_OUTPUT_DIR'] = 'data/csv_output'
         app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
 
     # Initialize search service ONCE (for cache reuse)

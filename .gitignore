@@ -76,6 +76,7 @@ htmlcov/
 data/search_logs.jsonl
 data/search_logs/
 data/csv_cache/
+data/csv_output/
 
 # Hydra outputs
 outputs/

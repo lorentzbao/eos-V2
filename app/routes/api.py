@@ -5,6 +5,7 @@ import io
 import os
 import hashlib
 import json
+import shutil
 from datetime import datetime
 
 api = Blueprint('api', __name__, url_prefix='/api')
@@ -136,34 +137,58 @@ def get_cache_key(query, prefecture, cust_status):
     params = f"{query}:{prefecture}:{cust_status}"
     return hashlib.md5(params.encode('utf-8')).hexdigest()
 
+def copy_to_output_dir(cache_file, filename):
+    """Copy cached CSV file to output directory"""
+    try:
+        # Get output directory from config
+        output_dir = current_app.config.get('CSV_OUTPUT_DIR', 'data/csv_output')
+
+        # Use absolute path from project root
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        output_path = os.path.join(project_root, output_dir)
+
+        # Create output directory if it doesn't exist
+        os.makedirs(output_path, exist_ok=True)
+
+        # Copy file to output directory
+        output_file = os.path.join(output_path, filename)
+        shutil.copy2(cache_file, output_file)
+
+    except Exception as e:
+        # Log error but don't fail the download
+        print(f"Warning: Failed to copy CSV to output directory: {e}")
+
 @api.route('/download-csv')
 def download_csv():
     """Download search results as CSV with file-based caching"""
     # Check authentication
     if 'username' not in session:
         return jsonify({'error': 'Authentication required'}), 401
-    
+
     # Get search parameters
     query = request.args.get('q', '').strip()
     prefecture = request.args.get('prefecture', '')
     cust_status = request.args.get('cust_status', '')
-    
+
     if not query:
         return jsonify({'error': 'Query parameter required'}), 400
-    
+
     # Generate cache key and file path
     cache_key = get_cache_key(query, prefecture, cust_status)
     # Use absolute path from project root
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     cache_dir = os.path.join(project_root, "data", "csv_cache")
     cache_file = os.path.join(cache_dir, f"{cache_key}.csv")
-    
+
+    # Generate filename for download
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f"search_results_{timestamp}.csv"
+
     # Check if cached file exists
     if os.path.exists(cache_file):
-        # Generate filename for download
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"search_results_{timestamp}.csv"
-        
+        # Cache hit: copy cached file to output directory
+        copy_to_output_dir(cache_file, filename)
+
         # Serve cached file immediately
         return send_file(cache_file, as_attachment=True, download_name=filename)
     
@@ -238,11 +263,10 @@ def download_csv():
     
     # Generate and cache the CSV
     generate_csv_content()
-    
-    # Generate filename for download
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    filename = f"search_results_{timestamp}.csv"
-    
+
+    # Cache miss: copy newly generated file to output directory
+    copy_to_output_dir(cache_file, filename)
+
     # Serve the newly created cached file
     return send_file(cache_file, as_attachment=True, download_name=filename)
 
