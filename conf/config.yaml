@@ -26,6 +26,42 @@ indexes:
   osaka:
     dir: "data/indexes/osaka"
     name: "Osaka"
+  miyagi:
+    dir: "data/indexes/miyagi"
+    name: "Miyagi"
+  niigata:
+    dir: "data/indexes/niigata"
+    name: "Niigata"
+  gunma:
+    dir: "data/indexes/gunma"
+    name: "Gunma"
+  gifu:
+    dir: "data/indexes/gifu"
+    name: "Gifu"
+  okayama:
+    dir: "data/indexes/okayama"
+    name: "Okayama"
+  tochigi:
+    dir: "data/indexes/tochigi"
+    name: "Tochigi"
+  fukushima:
+    dir: "data/indexes/fukushima"
+    name: "Fukushima"
+  kumamoto:
+    dir: "data/indexes/kumamoto"
+    name: "Kumamoto"
+  mie:
+    dir: "data/indexes/mie"
+    name: "Mie"
+  kagoshima:
+    dir: "data/indexes/kagoshima"
+    name: "Kagoshima"
+  okinawa:
+    dir: "data/indexes/okinawa"
+    name: "Okinawa"
+  ishigawa:
+    dir: "data/indexes/ishigawa"
+    name: "Ishigawa"
   shiga:
     dir: "data/indexes/shiga"
     name: "Shiga"
@@ -80,9 +116,6 @@ indexes:
   saga:
     dir: "data/indexes/saga"
     name: "Saga"
-  tochigi:
-    dir: "data/indexes/tochigi"
-    name: "Tochigi"
   tottori:
     dir: "data/indexes/tottori"
     name: "Tottori"
