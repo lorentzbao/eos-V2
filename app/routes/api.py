@@ -208,7 +208,7 @@ def download_csv():
             # Return success message without serving file
             return jsonify({
                 'success': True,
-                'message': 'CSV file generated and saved to output directory',
+                'message': 'ダウンロード処理中です。完了次第、メールでお知らせいたします。',
                 'filename': filename
             })
     
@@ -295,7 +295,7 @@ def download_csv():
         # Return success message without serving file
         return jsonify({
             'success': True,
-            'message': 'CSV file generated and saved to output directory',
+            'message': 'ダウンロード処理中です。完了次第、メールでお知らせいたします。',
             'filename': filename
         })
 

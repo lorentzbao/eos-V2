@@ -28,20 +28,52 @@ app.csvDownload = {
             // Build download URL
             const downloadUrl = `/api/download-csv?${searchParams.toString()}`;
 
-            // Create temporary download link
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.style.display = 'none';
-            document.body.appendChild(link);
+            // Use fetch to handle both file and JSON responses
+            const response = await fetch(downloadUrl);
 
-            // Trigger download
-            link.click();
+            // Check content type to determine if it's a file or JSON
+            const contentType = response.headers.get('content-type');
 
-            // Clean up
-            document.body.removeChild(link);
+            if (contentType && contentType.includes('application/json')) {
+                // Handle JSON response (when browser download is disabled)
+                const data = await response.json();
+                if (data.success) {
+                    // Show the message to user
+                    app.utils.showAlert(data.message, 'info');
+                } else {
+                    app.utils.showAlert('CSVダウンロード中にエラーが発生しました', 'danger');
+                }
+            } else {
+                // Handle file download response
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
 
-            // Show success message
-            this.showDownloadSuccess();
+                // Create temporary download link
+                const link = document.createElement('a');
+                link.href = url;
+
+                // Extract filename from Content-Disposition header
+                const contentDisposition = response.headers.get('content-disposition');
+                let filename = 'search_results.csv';
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+                    if (filenameMatch) {
+                        filename = filenameMatch[1];
+                    }
+                }
+                link.download = filename;
+                link.style.display = 'none';
+
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // Clean up blob URL
+                window.URL.revokeObjectURL(url);
+
+                // Show success message
+                this.showDownloadSuccess();
+            }
 
         } catch (error) {
             console.error('CSV download error:', error);
