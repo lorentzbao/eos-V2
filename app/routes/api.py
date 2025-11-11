@@ -6,6 +6,7 @@ import os
 import hashlib
 import json
 import shutil
+import threading
 from datetime import datetime
 
 api = Blueprint('api', __name__, url_prefix='/api')
@@ -137,12 +138,9 @@ def get_cache_key(query, prefecture, cust_status):
     params = f"{query}:{prefecture}:{cust_status}"
     return hashlib.md5(params.encode('utf-8')).hexdigest()
 
-def copy_to_output_dir(cache_file, filename):
-    """Copy cached CSV file to output directory"""
+def _copy_to_output_dir_sync(cache_file, filename, output_dir):
+    """Internal synchronous copy function"""
     try:
-        # Get output directory from config
-        output_dir = current_app.config.get('CSV_OUTPUT_DIR', 'data/csv_output')
-
         # Use absolute path from project root
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         output_path = os.path.join(project_root, output_dir)
@@ -157,6 +155,19 @@ def copy_to_output_dir(cache_file, filename):
     except Exception as e:
         # Log error but don't fail the download
         print(f"Warning: Failed to copy CSV to output directory: {e}")
+
+def copy_to_output_dir_async(cache_file, filename):
+    """Copy cached CSV file to output directory asynchronously (non-blocking)"""
+    # Get output directory from config
+    output_dir = current_app.config.get('CSV_OUTPUT_DIR', 'data/csv_output')
+
+    # Start copy in background thread
+    thread = threading.Thread(
+        target=_copy_to_output_dir_sync,
+        args=(cache_file, filename, output_dir),
+        daemon=True
+    )
+    thread.start()
 
 @api.route('/download-csv')
 def download_csv():
@@ -186,11 +197,20 @@ def download_csv():
 
     # Check if cached file exists
     if os.path.exists(cache_file):
-        # Cache hit: copy cached file to output directory
-        copy_to_output_dir(cache_file, filename)
+        # Cache hit: copy cached file to output directory (async, non-blocking)
+        copy_to_output_dir_async(cache_file, filename)
 
-        # Serve cached file immediately
-        return send_file(cache_file, as_attachment=True, download_name=filename)
+        # Check if browser download is enabled
+        if current_app.config.get('CSV_ENABLE_BROWSER_DOWNLOAD', True):
+            # Serve cached file immediately
+            return send_file(cache_file, as_attachment=True, download_name=filename)
+        else:
+            # Return success message without serving file
+            return jsonify({
+                'success': True,
+                'message': 'CSV file generated and saved to output directory',
+                'filename': filename
+            })
     
     # File doesn't exist, generate and cache it
     def generate_csv_content():
@@ -264,11 +284,20 @@ def download_csv():
     # Generate and cache the CSV
     generate_csv_content()
 
-    # Cache miss: copy newly generated file to output directory
-    copy_to_output_dir(cache_file, filename)
+    # Cache miss: copy newly generated file to output directory (async, non-blocking)
+    copy_to_output_dir_async(cache_file, filename)
 
-    # Serve the newly created cached file
-    return send_file(cache_file, as_attachment=True, download_name=filename)
+    # Check if browser download is enabled
+    if current_app.config.get('CSV_ENABLE_BROWSER_DOWNLOAD', True):
+        # Serve the newly created cached file
+        return send_file(cache_file, as_attachment=True, download_name=filename)
+    else:
+        # Return success message without serving file
+        return jsonify({
+            'success': True,
+            'message': 'CSV file generated and saved to output directory',
+            'filename': filename
+        })
 
 @api.route('/cities/<prefecture>')
 def api_cities(prefecture):
