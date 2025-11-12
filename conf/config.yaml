@@ -14,7 +14,7 @@ server:
 search:
   default_limit: 25  # Default number of URLs to return in search results
   csv_output_dir: "data/csv_output"  # Directory where downloaded CSV files are copied
-  csv_enable_browser_download: true  # If true, serve CSV to browser; if false, only copy to output dir
+  csv_enable_browser_download: false  # If true, serve CSV to browser; if false, only copy to output dir
 
 # Tokenizer configuration
 tokenizer:
@@ -28,6 +28,24 @@ indexes:
   osaka:
     dir: "data/indexes/osaka"
     name: "Osaka"
+  kanagawa:
+    dir: "data/indexes/kanagawa"
+    name: "Kanagawa"
+  saitama:
+    dir: "data/indexes/saitama"
+    name: "Saitama"
+  kyoto:
+    dir: "data/indexes/kyoto"
+    name: "Kyoto"
+  hiroshima:
+    dir: "data/indexes/hiroshima"
+    name: "Hiroshima"
+  ibaraki:
+    dir: "data/indexes/ibaraki"
+    name: "Ibaraki"
+  nagano:
+    dir: "data/indexes/nagano"
+    name: "Nagano"
   miyagi:
     dir: "data/indexes/miyagi"
     name: "Miyagi"

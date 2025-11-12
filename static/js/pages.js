@@ -86,6 +86,12 @@ app.pages = {
                                                 <option value="">都道府県を選択</option>
                                                 <option value="tokyo">東京都</option>
                                                 <option value="osaka">大阪府</option>
+                                                <option value="kanagawa">神奈川県</option>
+                                                <option value="saitama">埼玉県</option>
+                                                <option value="kyoto">京都府</option>
+                                                <option value="hiroshima">広島県</option>
+                                                <option value="ibaraki">茨城県</option>
+                                                <option value="nagano">長野県</option>
                                                 <option value="miyagi">宮城県</option>
                                                 <option value="niigata">新潟県</option>
                                                 <option value="gunma">群馬県</option>
@@ -314,6 +320,12 @@ app.pages = {
                                                 <option value="">都道府県を選択</option>
                                                 <option value="tokyo" ${params.prefecture === 'tokyo' ? 'selected' : ''}>東京都</option>
                                                 <option value="osaka" ${params.prefecture === 'osaka' ? 'selected' : ''}>大阪府</option>
+                                                <option value="kanagawa" ${params.prefecture === 'kanagawa' ? 'selected' : ''}>神奈川県</option>
+                                                <option value="saitama" ${params.prefecture === 'saitama' ? 'selected' : ''}>埼玉県</option>
+                                                <option value="kyoto" ${params.prefecture === 'kyoto' ? 'selected' : ''}>京都府</option>
+                                                <option value="hiroshima" ${params.prefecture === 'hiroshima' ? 'selected' : ''}>広島県</option>
+                                                <option value="ibaraki" ${params.prefecture === 'ibaraki' ? 'selected' : ''}>茨城県</option>
+                                                <option value="nagano" ${params.prefecture === 'nagano' ? 'selected' : ''}>長野県</option>
                                                 <option value="miyagi" ${params.prefecture === 'miyagi' ? 'selected' : ''}>宮城県</option>
                                                 <option value="niigata" ${params.prefecture === 'niigata' ? 'selected' : ''}>新潟県</option>
                                                 <option value="gunma" ${params.prefecture === 'gunma' ? 'selected' : ''}>群馬県</option>
@@ -516,6 +528,12 @@ app.pages = {
                                                 <option value="">都道府県を選択</option>
                                                 <option value="tokyo" ${params.prefecture === 'tokyo' ? 'selected' : ''}>東京都</option>
                                                 <option value="osaka" ${params.prefecture === 'osaka' ? 'selected' : ''}>大阪府</option>
+                                                <option value="kanagawa" ${params.prefecture === 'kanagawa' ? 'selected' : ''}>神奈川県</option>
+                                                <option value="saitama" ${params.prefecture === 'saitama' ? 'selected' : ''}>埼玉県</option>
+                                                <option value="kyoto" ${params.prefecture === 'kyoto' ? 'selected' : ''}>京都府</option>
+                                                <option value="hiroshima" ${params.prefecture === 'hiroshima' ? 'selected' : ''}>広島県</option>
+                                                <option value="ibaraki" ${params.prefecture === 'ibaraki' ? 'selected' : ''}>茨城県</option>
+                                                <option value="nagano" ${params.prefecture === 'nagano' ? 'selected' : ''}>長野県</option>
                                                 <option value="miyagi" ${params.prefecture === 'miyagi' ? 'selected' : ''}>宮城県</option>
                                                 <option value="niigata" ${params.prefecture === 'niigata' ? 'selected' : ''}>新潟県</option>
                                                 <option value="gunma" ${params.prefecture === 'gunma' ? 'selected' : ''}>群馬県</option>
