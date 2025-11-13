@@ -288,18 +288,23 @@ def download_csv():
                 f.write(error_csv)
             return error_csv
     
-    # Generate and cache the CSV
-    generate_csv_content()
-
-    # Cache miss: copy newly generated file to output directory (async, non-blocking)
-    copy_to_output_dir_async(cache_file, filename)
-
     # Check if browser download is enabled
     if current_app.config.get('CSV_ENABLE_BROWSER_DOWNLOAD', True):
-        # Serve the newly created cached file
+        # Browser download enabled: generate synchronously and serve file
+        generate_csv_content()
+        copy_to_output_dir_async(cache_file, filename)
         return send_file(cache_file, as_attachment=True, download_name=filename)
     else:
-        # Return success message without serving file
+        # Browser download disabled: return immediately and generate in background
+        # Start CSV generation in background thread
+        def generate_in_background():
+            generate_csv_content()
+            copy_to_output_dir_async(cache_file, filename)
+
+        thread = threading.Thread(target=generate_in_background, daemon=True)
+        thread.start()
+
+        # Return success message immediately (modal shows now!)
         return jsonify({
             'success': True,
             'message': 'ダウンロード処理中です。完了次第、メールでお知らせいたします。',
