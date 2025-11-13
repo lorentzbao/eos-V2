@@ -227,10 +227,14 @@ def download_csv():
             
             # Create CSV writer with enterprise data field order
             fieldnames = [
-                'jcn', 'CUST_STATUS2', 'company_name_kj', 'company_address_all', 
-                'LARGE_CLASS_NAME', 'MIDDLE_CLASS_NAME', 'CURR_SETLMNT_TAKING_AMT', 'EMPLOYEE_ALL_NUM',
-                'prefecture', 'city', 'district_finalized_cd', 'branch_name_cd', 
-                'main_domain_url', 'url_name', 'url', 'content', 'matched_terms', 'id'
+                'jcn',
+                # 'CUST_STATUS2', 'company_name_kj', 'company_address_all',
+                # 'LARGE_CLASS_NAME', 'MIDDLE_CLASS_NAME', 'CURR_SETLMNT_TAKING_AMT', 'EMPLOYEE_ALL_NUM',
+                # 'prefecture', 'city', 'district_finalized_cd', 'branch_name_cd',
+                'main_domain_url',
+                # 'url_name', 'url', 'content',
+                'matched_terms',
+                # 'id'
             ]
             writer = csv.DictWriter(output, fieldnames=fieldnames)
             
@@ -247,23 +251,23 @@ def download_csv():
                     # Format result data with enterprise structure
                     result_data = {
                         'jcn': company.get('jcn', ''),
-                        'CUST_STATUS2': company.get('CUST_STATUS2', ''),
-                        'company_name_kj': company.get('company_name_kj', ''),
-                        'company_address_all': company.get('company_address_all', ''),
-                        'LARGE_CLASS_NAME': company.get('LARGE_CLASS_NAME', ''),
-                        'MIDDLE_CLASS_NAME': company.get('MIDDLE_CLASS_NAME', ''),
-                        'CURR_SETLMNT_TAKING_AMT': company.get('CURR_SETLMNT_TAKING_AMT', ''),
-                        'EMPLOYEE_ALL_NUM': company.get('EMPLOYEE_ALL_NUM', ''),
-                        'prefecture': company.get('prefecture', ''),
-                        'city': company.get('city', ''),
-                        'district_finalized_cd': company.get('district_finalized_cd', ''),
-                        'branch_name_cd': company.get('branch_name_cd', ''),
+                        # 'CUST_STATUS2': company.get('CUST_STATUS2', ''),
+                        # 'company_name_kj': company.get('company_name_kj', ''),
+                        # 'company_address_all': company.get('company_address_all', ''),
+                        # 'LARGE_CLASS_NAME': company.get('LARGE_CLASS_NAME', ''),
+                        # 'MIDDLE_CLASS_NAME': company.get('MIDDLE_CLASS_NAME', ''),
+                        # 'CURR_SETLMNT_TAKING_AMT': company.get('CURR_SETLMNT_TAKING_AMT', ''),
+                        # 'EMPLOYEE_ALL_NUM': company.get('EMPLOYEE_ALL_NUM', ''),
+                        # 'prefecture': company.get('prefecture', ''),
+                        # 'city': company.get('city', ''),
+                        # 'district_finalized_cd': company.get('district_finalized_cd', ''),
+                        # 'branch_name_cd': company.get('branch_name_cd', ''),
                         'main_domain_url': company.get('main_domain_url', ''),
-                        'url_name': url.get('url_name', ''),
-                        'url': url.get('url', ''),
-                        'content': url.get('content', '')[:500],  # Limit content length
+                        # 'url_name': url.get('url_name', ''),
+                        # 'url': url.get('url', ''),
+                        # 'content': url.get('content', '')[:500],  # Limit content length
                         'matched_terms': '|'.join(url.get('matched_terms', [])),
-                        'id': url.get('id', '')
+                        # 'id': url.get('id', '')
                     }
                     
                     writer.writerow(result_data)
