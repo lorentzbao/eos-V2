@@ -184,8 +184,10 @@ def download_csv():
     # Get username from session
     username = session.get('username', 'UNKNOWN').upper()
 
-    # Get output directory from config (before any threading)
+    # Get values from Flask context (before any threading)
     output_dir = current_app.config.get('CSV_OUTPUT_DIR', 'data/csv_output')
+    search_service = get_search_service()
+    enable_browser_download = current_app.config.get('CSV_ENABLE_BROWSER_DOWNLOAD', True)
 
     # Generate cache key and file path
     cache_key = get_cache_key(query, prefecture, cust_status)
@@ -204,7 +206,7 @@ def download_csv():
         copy_to_output_dir_async(cache_file, filename, output_dir)
 
         # Check if browser download is enabled
-        if current_app.config.get('CSV_ENABLE_BROWSER_DOWNLOAD', True):
+        if enable_browser_download:
             # Serve cached file immediately
             return send_file(cache_file, as_attachment=True, download_name=filename)
         else:
@@ -216,7 +218,7 @@ def download_csv():
             })
     
     # File doesn't exist, generate and cache it
-    def generate_csv_content():
+    def generate_csv_content(search_service):
         """Generate CSV content and save to cache file"""
         try:
             # Create cache directory if it doesn't exist
@@ -242,7 +244,7 @@ def download_csv():
             writer.writeheader()
             
             # Single search to get all results - most efficient approach with JCN sorting
-            search_results = get_search_service().search(query, limit=10000, prefecture=prefecture, cust_status=cust_status, sort_by="jcn")
+            search_results = search_service.search(query, limit=10000, prefecture=prefecture, cust_status=cust_status, sort_by="jcn")
             grouped_results = search_results.get('grouped_results', [])
             
             # Write all results by flattening grouped results
@@ -289,16 +291,16 @@ def download_csv():
             return error_csv
     
     # Check if browser download is enabled
-    if current_app.config.get('CSV_ENABLE_BROWSER_DOWNLOAD', True):
+    if enable_browser_download:
         # Browser download enabled: generate synchronously and serve file
-        generate_csv_content()
+        generate_csv_content(search_service)
         copy_to_output_dir_async(cache_file, filename, output_dir)
         return send_file(cache_file, as_attachment=True, download_name=filename)
     else:
         # Browser download disabled: return immediately and generate in background
         # Start CSV generation in background thread
         def generate_in_background():
-            generate_csv_content()
+            generate_csv_content(search_service)
             copy_to_output_dir_async(cache_file, filename, output_dir)
 
         thread = threading.Thread(target=generate_in_background, daemon=True)
