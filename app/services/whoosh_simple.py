@@ -9,16 +9,18 @@ from .tokenizers import get_tokenizer
 class WhooshSimpleJapanese:
     """Whoosh search engine with pre-processed Japanese text"""
 
-    def __init__(self, index_dir: str = "data/whoosh_index", tokenizer_type: Optional[str] = None):
+    def __init__(self, index_dir: str = "data/whoosh_index", tokenizer_type: Optional[str] = None, prewarm: bool = False):
         """
         Initialize Whoosh search engine.
 
         Args:
             index_dir: Directory to store the search index
             tokenizer_type: Type of tokenizer ('janome', 'mecab', or None for auto-detect)
+            prewarm: If True, pre-load index structures at initialization
         """
         self.index_dir = index_dir
         self.tokenizer = get_tokenizer(tokenizer_type)
+        self.prewarm = prewarm
         # Stop words are now handled in the tokenizer base class
         
         # Enterprise schema - lightweight with no raw content storage
@@ -56,7 +58,8 @@ class WhooshSimpleJapanese:
         
         self.ix = None
         self._setup_index()
-        self._prewarm_index()
+        if self.prewarm:
+            self._prewarm_index()
 
     def _setup_index(self):
         """Setup or create the Whoosh index"""

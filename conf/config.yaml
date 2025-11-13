@@ -15,6 +15,7 @@ search:
   default_limit: 25  # Default number of URLs to return in search results
   csv_output_dir: "data/csv_output"  # Directory where downloaded CSV files are copied
   csv_enable_browser_download: false  # If true, serve CSV to browser; if false, only copy to output dir
+  prewarm_indexes: false  # If true, pre-load all indexes at startup to eliminate first-search delay
 
 # Tokenizer configuration
 tokenizer:

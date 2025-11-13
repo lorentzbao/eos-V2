@@ -4,8 +4,8 @@ from .whoosh_simple import WhooshSimpleJapanese
 from .query_processor import QueryProcessor
 
 class SearchService:
-    def __init__(self, index_dir: str = "data/whoosh_index"):
-        self.search_engine = WhooshSimpleJapanese(index_dir)
+    def __init__(self, index_dir: str = "data/whoosh_index", prewarm: bool = False):
+        self.search_engine = WhooshSimpleJapanese(index_dir, prewarm=prewarm)
         self.query_processor = QueryProcessor()
     
     @lru_cache(maxsize=128)

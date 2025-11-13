@@ -19,10 +19,12 @@ def create_app(config: DictConfig = None):
             app.config['SEARCH_DEFAULT_LIMIT'] = config.search.get('default_limit', 100)
             app.config['CSV_OUTPUT_DIR'] = config.search.get('csv_output_dir', 'data/csv_output')
             app.config['CSV_ENABLE_BROWSER_DOWNLOAD'] = config.search.get('csv_enable_browser_download', True)
+            app.config['PREWARM_INDEXES'] = config.search.get('prewarm_indexes', False)
         else:
             app.config['SEARCH_DEFAULT_LIMIT'] = 100
             app.config['CSV_OUTPUT_DIR'] = 'data/csv_output'
             app.config['CSV_ENABLE_BROWSER_DOWNLOAD'] = True
+            app.config['PREWARM_INDEXES'] = False
         # Store multi-index configuration
         if hasattr(config, 'indexes'):
             app.config['INDEXES'] = config.indexes
@@ -41,11 +43,13 @@ def create_app(config: DictConfig = None):
     from app.services.search_service import SearchService
     from app.services.multi_index_search_service import MultiIndexSearchService
 
+    prewarm = app.config.get('PREWARM_INDEXES', False)
+
     if 'INDEXES' in app.config:
-        app.search_service = MultiIndexSearchService(app.config['INDEXES'])
+        app.search_service = MultiIndexSearchService(app.config['INDEXES'], prewarm=prewarm)
     else:
         index_dir = app.config.get('INDEX_DIR', 'data/whoosh_index')
-        app.search_service = SearchService(index_dir)
+        app.search_service = SearchService(index_dir, prewarm=prewarm)
 
     # Register blueprints
     from app.routes.main import main
