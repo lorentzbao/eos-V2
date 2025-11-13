@@ -184,6 +184,9 @@ def download_csv():
     if not query:
         return jsonify({'error': 'Query parameter required'}), 400
 
+    # Get username from session
+    username = session.get('username', 'UNKNOWN').upper()
+
     # Generate cache key and file path
     cache_key = get_cache_key(query, prefecture, cust_status)
     # Use absolute path from project root
@@ -193,7 +196,7 @@ def download_csv():
 
     # Generate filename for download
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    filename = f"search_results_{timestamp}.csv"
+    filename = f"EOS_{username}_{timestamp}.csv"
 
     # Check if cached file exists
     if os.path.exists(cache_file):
