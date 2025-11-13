@@ -156,11 +156,8 @@ def _copy_to_output_dir_sync(cache_file, filename, output_dir):
         # Log error but don't fail the download
         print(f"Warning: Failed to copy CSV to output directory: {e}")
 
-def copy_to_output_dir_async(cache_file, filename):
+def copy_to_output_dir_async(cache_file, filename, output_dir):
     """Copy cached CSV file to output directory asynchronously (non-blocking)"""
-    # Get output directory from config
-    output_dir = current_app.config.get('CSV_OUTPUT_DIR', 'data/csv_output')
-
     # Start copy in background thread
     thread = threading.Thread(
         target=_copy_to_output_dir_sync,
@@ -187,6 +184,9 @@ def download_csv():
     # Get username from session
     username = session.get('username', 'UNKNOWN').upper()
 
+    # Get output directory from config (before any threading)
+    output_dir = current_app.config.get('CSV_OUTPUT_DIR', 'data/csv_output')
+
     # Generate cache key and file path
     cache_key = get_cache_key(query, prefecture, cust_status)
     # Use absolute path from project root
@@ -201,7 +201,7 @@ def download_csv():
     # Check if cached file exists
     if os.path.exists(cache_file):
         # Cache hit: copy cached file to output directory (async, non-blocking)
-        copy_to_output_dir_async(cache_file, filename)
+        copy_to_output_dir_async(cache_file, filename, output_dir)
 
         # Check if browser download is enabled
         if current_app.config.get('CSV_ENABLE_BROWSER_DOWNLOAD', True):
@@ -292,14 +292,14 @@ def download_csv():
     if current_app.config.get('CSV_ENABLE_BROWSER_DOWNLOAD', True):
         # Browser download enabled: generate synchronously and serve file
         generate_csv_content()
-        copy_to_output_dir_async(cache_file, filename)
+        copy_to_output_dir_async(cache_file, filename, output_dir)
         return send_file(cache_file, as_attachment=True, download_name=filename)
     else:
         # Browser download disabled: return immediately and generate in background
         # Start CSV generation in background thread
         def generate_in_background():
             generate_csv_content()
-            copy_to_output_dir_async(cache_file, filename)
+            copy_to_output_dir_async(cache_file, filename, output_dir)
 
         thread = threading.Thread(target=generate_in_background, daemon=True)
         thread.start()
