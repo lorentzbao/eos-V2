@@ -56,18 +56,19 @@ class WhooshSimpleJapanese:
         
         self.ix = None
         self._setup_index()
-    
+        self._prewarm_index()
+
     def _setup_index(self):
         """Setup or create the Whoosh index"""
         try:
             if not os.path.exists(self.index_dir):
                 os.makedirs(self.index_dir)
-            
+
             if index.exists_in(self.index_dir):
                 self.ix = index.open_dir(self.index_dir)
             else:
                 self.ix = index.create_in(self.index_dir, self.schema)
-                
+
         except Exception as e:
             print(f"Error setting up index: {e}")
             # Try to clear and recreate
@@ -79,6 +80,19 @@ class WhooshSimpleJapanese:
             except Exception as e2:
                 print(f"Failed to recreate index: {e2}")
                 raise e2
+
+    def _prewarm_index(self):
+        """Pre-warm the index by loading it into memory (speeds up first search)"""
+        try:
+            print(f"Pre-warming index: {self.index_dir}")
+            # Open a searcher to force loading of index structures
+            with self.ix.searcher() as searcher:
+                # Read document count to force index file loading
+                _ = searcher.doc_count_all()
+                # This loads the index's field cache and segment readers into memory
+        except Exception as e:
+            # Don't fail startup if pre-warming fails
+            print(f"Warning: Failed to pre-warm index {self.index_dir}: {e}")
     
     def _tokenize_japanese(self, text: str) -> str:
         """Tokenize Japanese text and return space-separated tokens"""
