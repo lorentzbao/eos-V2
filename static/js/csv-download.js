@@ -10,6 +10,48 @@ app.csvDownload = {
         });
     },
 
+    // Show message in modal popup
+    showMessageModal(message) {
+        // Create modal HTML
+        const modalHTML = `
+            <div class="modal fade" id="csvMessageModal" tabindex="-1" aria-labelledby="csvMessageModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="csvMessageModalLabel">CSV作成リクエスト</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="mb-0">${message}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal if any
+        const existingModal = document.getElementById('csvMessageModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // Show modal using Bootstrap
+        const modalElement = document.getElementById('csvMessageModal');
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+
+        // Remove modal from DOM after it's hidden
+        modalElement.addEventListener('hidden.bs.modal', () => {
+            modalElement.remove();
+        });
+    },
+
     // Download CSV file
     async downloadCSV() {
         const downloadBtn = document.getElementById('downloadBtn');
@@ -38,8 +80,8 @@ app.csvDownload = {
                 // Handle JSON response (when browser download is disabled)
                 const data = await response.json();
                 if (data.success) {
-                    // Show the message to user
-                    app.utils.showAlert(data.message, 'info');
+                    // Show the message to user in modal popup
+                    this.showMessageModal(data.message);
                 } else {
                     app.utils.showAlert('CSVダウンロード中にエラーが発生しました', 'danger');
                 }
