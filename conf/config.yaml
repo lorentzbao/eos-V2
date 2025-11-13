@@ -28,12 +28,30 @@ indexes:
   osaka:
     dir: "data/indexes/osaka"
     name: "Osaka"
+  aichi:
+    dir: "data/indexes/aichi"
+    name: "Aichi"
   kanagawa:
     dir: "data/indexes/kanagawa"
     name: "Kanagawa"
   saitama:
     dir: "data/indexes/saitama"
     name: "Saitama"
+  hokkaido:
+    dir: "data/indexes/hokkaido"
+    name: "Hokkaido"
+  fukuoka:
+    dir: "data/indexes/fukuoka"
+    name: "Fukuoka"
+  hyougo:
+    dir: "data/indexes/hyougo"
+    name: "Hyougo"
+  chiba:
+    dir: "data/indexes/chiba"
+    name: "Chiba"
+  shizuoka:
+    dir: "data/indexes/shizuoka"
+    name: "Shizuoka"
   kyoto:
     dir: "data/indexes/kyoto"
     name: "Kyoto"
