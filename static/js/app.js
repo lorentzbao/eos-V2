@@ -19,10 +19,10 @@ window.app = {
     init() {
         console.log('Initializing Enterprise Online Search App...');
 
-        // Check if user is already logged in
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            this.state.user = savedUser;
+        // Check if user is already logged in (from server session)
+        // window.serverData.username is set in template from Flask session
+        if (window.serverData && window.serverData.username) {
+            this.state.user = window.serverData.username;
             this.updateUserDisplay();
             this.router.navigate('home');
         } else {

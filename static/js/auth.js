@@ -24,7 +24,7 @@ app.auth = {
                 // Check if response is a redirect (successful login)
                 if (response.redirected || response.url.includes('/')) {
                     app.state.user = username.trim();
-                    localStorage.setItem('currentUser', username.trim());
+                    // Session is stored server-side in Flask, no localStorage needed
                     app.updateUserDisplay();
                     app.router.navigate('home');
                     return true;
@@ -54,14 +54,14 @@ app.auth = {
 
             // Clear local state regardless of response
             app.state.user = null;
-            localStorage.removeItem('currentUser');
+            // Session cleared server-side by Flask, no localStorage to remove
             app.updateUserDisplay();
             app.router.navigate('login');
         } catch (error) {
             console.error('Logout error:', error);
             // Still clear local state on error
             app.state.user = null;
-            localStorage.removeItem('currentUser');
+            // Session cleared server-side by Flask, no localStorage to remove
             app.updateUserDisplay();
             app.router.navigate('login');
         } finally {
