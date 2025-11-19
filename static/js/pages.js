@@ -400,10 +400,9 @@ app.pages = {
                             (${search_time}秒${cache_hit ? ' - キャッシュ' : ''})
                             <br>
                             ${processed_query ? `処理済みクエリ: ${app.utils.escapeHtml(processed_query)}` : ''}
+                            <br>
+                            <span class="badge bg-info text-dark mt-1">💡 画面表示は最大${params.limit || app.config.searchDefaultLimit}件まで。全件は「リスト作成」で確認</span>
                         </small>
-                        <div class="alert alert-info mt-2 py-2 px-3" role="alert">
-                            <small>💡 画面表示は最大${params.limit || app.config.searchDefaultLimit}件までです。全件確認は「リスト作成」をご利用ください。</small>
-                        </div>
                     </div>
                     ` : ''}
 
