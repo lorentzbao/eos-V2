@@ -401,11 +401,9 @@ app.pages = {
                             <br>
                             ${processed_query ? `処理済みクエリ: ${app.utils.escapeHtml(processed_query)}` : ''}
                         </small>
-                        ${total_found > (params.limit || app.config.searchDefaultLimit) ? `
-                        <div class="alert alert-warning mt-2 py-2 px-3" role="alert">
-                            <small><strong>⚠️ 最初の${params.limit || app.config.searchDefaultLimit}件のみ表示しています。</strong></small>
+                        <div class="alert alert-info mt-2 py-2 px-3" role="alert">
+                            <small>💡 画面表示は最大${params.limit || app.config.searchDefaultLimit}件までです。全件確認は「リスト作成」をご利用ください。</small>
                         </div>
-                        ` : ''}
                     </div>
                     ` : ''}
 
