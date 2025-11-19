@@ -394,15 +394,17 @@ app.pages = {
                     <!-- Search Stats -->
                     ${params.q ? `
                     <div class="search-stats mb-3">
-                        <small class="text-muted">
-                            "${app.utils.escapeHtml(params.q)}" の検索結果${params.prefecture ? ` (${params.prefecture}のみ)` : ''}:
-                            <strong>${total_found}</strong> 件 (${total_companies} 社) 見つかりました
-                            (${search_time}秒${cache_hit ? ' - キャッシュ' : ''})
-                            <br>
-                            ${processed_query ? `処理済みクエリ: ${app.utils.escapeHtml(processed_query)}` : ''}
-                            <br>
-                            <span class="badge bg-info text-dark mt-1">💡 画面表示は最大${params.limit || app.config.searchDefaultLimit}件まで。全件は「リスト作成」で確認</span>
-                        </small>
+                        <div class="mb-1">
+                            <small class="text-muted">
+                                "${app.utils.escapeHtml(params.q)}" の検索結果${params.prefecture ? ` (${params.prefecture})` : ''}
+                            </small>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="badge bg-primary">${total_found}件</span>
+                            <span class="badge bg-secondary">${total_companies}社</span>
+                            <small class="text-muted">${search_time}秒${cache_hit ? ' • キャッシュ' : ''}</small>
+                            <small class="text-muted ms-auto">💡 最大${params.limit || app.config.searchDefaultLimit}件表示</small>
+                        </div>
                     </div>
                     ` : ''}
 
