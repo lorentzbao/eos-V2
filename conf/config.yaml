@@ -74,7 +74,7 @@ indexes:
   tokyo:
     code: "13"
     dir: "data/indexes/tokyo"
-    name: "東京都"
+    name: "東京都(準備中)"
   kanagawa:
     code: "14"
     dir: "data/indexes/kanagawa"
