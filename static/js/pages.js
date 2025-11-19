@@ -738,7 +738,7 @@ app.pages = {
                                             <td>
                                                 ${hasResults ?
                                                     `<button class="btn btn-sm btn-outline-success" onclick="alert('ダミー: リスト${index + 1}.csvをダウンロードしました')">
-                                                        📥 CSV
+                                                        再発行
                                                     </button>` :
                                                     '<span class="text-muted">-</span>'
                                                 }
