@@ -71,6 +71,18 @@ This document tracks ongoing development tasks, improvements, and technical debt
 
 ### Performance Optimization
 - [ ] Add Redis caching layer for frequently accessed searches
+- [ ] **Implement Redis for shared rankings cache (multi-worker support)**
+  - **Problem**: Rankings stored in-memory (`search_logger.py:18-26`) not shared across Gunicorn workers
+  - **Current**: Each worker has separate `_query_counts`, `_keyword_counts`, `_user_search_counts`
+  - **Issue**: Client A → Worker 1 → updates memory, Client B → Worker 2 → sees stale data
+  - **Solution**: Migrate to Redis for cross-worker shared state
+  - **Implementation**:
+    - Use Redis sorted sets for rankings (`ZADD`, `ZINCRBY` for atomic updates)
+    - Use Redis hashes for user search counts
+    - Keep JSONL files as persistent backup/audit trail
+    - Add fallback to in-memory if Redis unavailable
+  - **Benefits**: True real-time updates, scalable to 10+ workers, industry standard
+  - **Dependencies**: `redis-py`, Redis server (6.x+)
 - [ ] Implement CSV cache expiration/cleanup strategy
 - [ ] Optimize grouped results aggregation for large result sets
 - [ ] Add database for search history (currently file-based)
