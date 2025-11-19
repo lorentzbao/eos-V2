@@ -23,144 +23,191 @@ tokenizer:
 
 # Multi-index configuration - users must select a prefecture
 indexes:
-  tokyo:
-    dir: "data/indexes/tokyo"
-    name: "Tokyo"
-  osaka:
-    dir: "data/indexes/osaka"
-    name: "Osaka"
-  aichi:
-    dir: "data/indexes/aichi"
-    name: "Aichi"
-  kanagawa:
-    dir: "data/indexes/kanagawa"
-    name: "Kanagawa"
-  saitama:
-    dir: "data/indexes/saitama"
-    name: "Saitama"
   hokkaido:
+    code: "01"
     dir: "data/indexes/hokkaido"
-    name: "Hokkaido"
-  fukuoka:
-    dir: "data/indexes/fukuoka"
-    name: "Fukuoka"
-  hyougo:
-    dir: "data/indexes/hyougo"
-    name: "Hyougo"
-  chiba:
-    dir: "data/indexes/chiba"
-    name: "Chiba"
-  shizuoka:
-    dir: "data/indexes/shizuoka"
-    name: "Shizuoka"
-  kyoto:
-    dir: "data/indexes/kyoto"
-    name: "Kyoto"
-  hiroshima:
-    dir: "data/indexes/hiroshima"
-    name: "Hiroshima"
-  ibaraki:
-    dir: "data/indexes/ibaraki"
-    name: "Ibaraki"
-  nagano:
-    dir: "data/indexes/nagano"
-    name: "Nagano"
-  miyagi:
-    dir: "data/indexes/miyagi"
-    name: "Miyagi"
-  niigata:
-    dir: "data/indexes/niigata"
-    name: "Niigata"
-  gunma:
-    dir: "data/indexes/gunma"
-    name: "Gunma"
-  gifu:
-    dir: "data/indexes/gifu"
-    name: "Gifu"
-  okayama:
-    dir: "data/indexes/okayama"
-    name: "Okayama"
-  tochigi:
-    dir: "data/indexes/tochigi"
-    name: "Tochigi"
-  fukushima:
-    dir: "data/indexes/fukushima"
-    name: "Fukushima"
-  kumamoto:
-    dir: "data/indexes/kumamoto"
-    name: "Kumamoto"
-  mie:
-    dir: "data/indexes/mie"
-    name: "Mie"
-  kagoshima:
-    dir: "data/indexes/kagoshima"
-    name: "Kagoshima"
-  okinawa:
-    dir: "data/indexes/okinawa"
-    name: "Okinawa"
-  ishigawa:
-    dir: "data/indexes/ishigawa"
-    name: "Ishigawa"
-  shiga:
-    dir: "data/indexes/shiga"
-    name: "Shiga"
-  ehime:
-    dir: "data/indexes/ehime"
-    name: "Ehime"
-  toyama:
-    dir: "data/indexes/toyama"
-    name: "Toyama"
-  yamaguchi:
-    dir: "data/indexes/yamaguchi"
-    name: "Yamaguchi"
-  yamagata:
-    dir: "data/indexes/yamagata"
-    name: "Yamagata"
-  iwate:
-    dir: "data/indexes/iwate"
-    name: "Iwate"
-  nagasaki:
-    dir: "data/indexes/nagasaki"
-    name: "Nagasaki"
-  kagawa:
-    dir: "data/indexes/kagawa"
-    name: "Kagawa"
+    name: "北海道"
   aomori:
+    code: "02"
     dir: "data/indexes/aomori"
-    name: "Aomori"
-  nara:
-    dir: "data/indexes/nara"
-    name: "Nara"
-  oita:
-    dir: "data/indexes/oita"
-    name: "Oita"
-  fukui:
-    dir: "data/indexes/fukui"
-    name: "Fukui"
-  miyazaki:
-    dir: "data/indexes/miyazaki"
-    name: "Miyazaki"
-  yamanashi:
-    dir: "data/indexes/yamanashi"
-    name: "Yamanashi"
+    name: "青森県"
+  iwate:
+    code: "03"
+    dir: "data/indexes/iwate"
+    name: "岩手県"
+  miyagi:
+    code: "04"
+    dir: "data/indexes/miyagi"
+    name: "宮城県"
   akita:
+    code: "05"
     dir: "data/indexes/akita"
-    name: "Akita"
+    name: "秋田県"
+  yamagata:
+    code: "06"
+    dir: "data/indexes/yamagata"
+    name: "山形県"
+  fukushima:
+    code: "07"
+    dir: "data/indexes/fukushima"
+    name: "福島県"
+  ibaraki:
+    code: "08"
+    dir: "data/indexes/ibaraki"
+    name: "茨城県"
+  tochigi:
+    code: "09"
+    dir: "data/indexes/tochigi"
+    name: "栃木県"
+  gunma:
+    code: "10"
+    dir: "data/indexes/gunma"
+    name: "群馬県"
+  saitama:
+    code: "11"
+    dir: "data/indexes/saitama"
+    name: "埼玉県"
+  chiba:
+    code: "12"
+    dir: "data/indexes/chiba"
+    name: "千葉県"
+  tokyo:
+    code: "13"
+    dir: "data/indexes/tokyo"
+    name: "東京都"
+  kanagawa:
+    code: "14"
+    dir: "data/indexes/kanagawa"
+    name: "神奈川県"
+  niigata:
+    code: "15"
+    dir: "data/indexes/niigata"
+    name: "新潟県"
+  toyama:
+    code: "16"
+    dir: "data/indexes/toyama"
+    name: "富山県"
+  ishigawa:
+    code: "17"
+    dir: "data/indexes/ishigawa"
+    name: "石川県"
+  fukui:
+    code: "18"
+    dir: "data/indexes/fukui"
+    name: "福井県"
+  yamanashi:
+    code: "19"
+    dir: "data/indexes/yamanashi"
+    name: "山梨県"
+  nagano:
+    code: "20"
+    dir: "data/indexes/nagano"
+    name: "長野県"
+  gifu:
+    code: "21"
+    dir: "data/indexes/gifu"
+    name: "岐阜県"
+  shizuoka:
+    code: "22"
+    dir: "data/indexes/shizuoka"
+    name: "静岡県"
+  aichi:
+    code: "23"
+    dir: "data/indexes/aichi"
+    name: "愛知県"
+  mie:
+    code: "24"
+    dir: "data/indexes/mie"
+    name: "三重県"
+  shiga:
+    code: "25"
+    dir: "data/indexes/shiga"
+    name: "滋賀県"
+  kyoto:
+    code: "26"
+    dir: "data/indexes/kyoto"
+    name: "京都府"
+  osaka:
+    code: "27"
+    dir: "data/indexes/osaka"
+    name: "大阪府"
+  hyougo:
+    code: "28"
+    dir: "data/indexes/hyougo"
+    name: "兵庫県"
+  nara:
+    code: "29"
+    dir: "data/indexes/nara"
+    name: "奈良県"
   wakayama:
+    code: "30"
     dir: "data/indexes/wakayama"
-    name: "Wakayama"
-  tokushima:
-    dir: "data/indexes/tokushima"
-    name: "Tokushima"
-  saga:
-    dir: "data/indexes/saga"
-    name: "Saga"
+    name: "和歌山県"
   tottori:
+    code: "31"
     dir: "data/indexes/tottori"
-    name: "Tottori"
-  kochi:
-    dir: "data/indexes/kochi"
-    name: "Kochi"
+    name: "鳥取県"
   shimane:
+    code: "32"
     dir: "data/indexes/shimane"
-    name: "Shimane"
+    name: "島根県"
+  okayama:
+    code: "33"
+    dir: "data/indexes/okayama"
+    name: "岡山県"
+  hiroshima:
+    code: "34"
+    dir: "data/indexes/hiroshima"
+    name: "広島県"
+  yamaguchi:
+    code: "35"
+    dir: "data/indexes/yamaguchi"
+    name: "山口県"
+  tokushima:
+    code: "36"
+    dir: "data/indexes/tokushima"
+    name: "徳島県"
+  kagawa:
+    code: "37"
+    dir: "data/indexes/kagawa"
+    name: "香川県"
+  ehime:
+    code: "38"
+    dir: "data/indexes/ehime"
+    name: "愛媛県"
+  kochi:
+    code: "39"
+    dir: "data/indexes/kochi"
+    name: "高知県"
+  fukuoka:
+    code: "40"
+    dir: "data/indexes/fukuoka"
+    name: "福岡県"
+  saga:
+    code: "41"
+    dir: "data/indexes/saga"
+    name: "佐賀県"
+  nagasaki:
+    code: "42"
+    dir: "data/indexes/nagasaki"
+    name: "長崎県"
+  kumamoto:
+    code: "43"
+    dir: "data/indexes/kumamoto"
+    name: "熊本県"
+  oita:
+    code: "44"
+    dir: "data/indexes/oita"
+    name: "大分県"
+  miyazaki:
+    code: "45"
+    dir: "data/indexes/miyazaki"
+    name: "宮崎県"
+  kagoshima:
+    code: "46"
+    dir: "data/indexes/kagoshima"
+    name: "鹿児島県"
+  okinawa:
+    code: "47"
+    dir: "data/indexes/okinawa"
+    name: "沖縄県"

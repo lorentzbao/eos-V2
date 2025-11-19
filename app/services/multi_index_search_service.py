@@ -16,17 +16,21 @@ class MultiIndexSearchService:
             self.search_services[prefecture] = SearchService(index_dir, prewarm=prewarm)
     
     def get_available_prefectures(self) -> List[Dict]:
-        """Get list of available prefectures for frontend selection"""
+        """Get list of available prefectures for frontend selection, sorted by prefecture code"""
         prefectures = []
         for prefecture, config in self.indexes_config.items():
             # Handle both DictConfig and regular dict
             name = config.name if hasattr(config, 'name') else config['name']
             index_dir = config.dir if hasattr(config, 'dir') else config['dir']
+            code = config.code if hasattr(config, 'code') else config.get('code', '99')
             prefectures.append({
                 'value': prefecture,
                 'name': name,
-                'index_dir': index_dir
+                'index_dir': index_dir,
+                'code': code
             })
+        # Sort by prefecture code
+        prefectures.sort(key=lambda x: x['code'])
         return prefectures
     
     def search(self, query: str, prefecture: str, limit: int = 10,

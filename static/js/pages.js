@@ -1,5 +1,38 @@
 // Page rendering module
 app.pages = {
+    // Prefecture data cache
+    _prefectureData: null,
+
+    // Load prefecture data from API
+    async loadPrefectures() {
+        if (this._prefectureData) {
+            return this._prefectureData;
+        }
+
+        try {
+            const response = await fetch('/api/prefectures');
+            const data = await response.json();
+            this._prefectureData = data.prefectures || [];
+            return this._prefectureData;
+        } catch (error) {
+            console.error('Failed to load prefectures:', error);
+            return [];
+        }
+    },
+
+    // Generate prefecture options HTML
+    getPrefectureOptions(selectedValue = '') {
+        if (!this._prefectureData) {
+            // Return empty if data not loaded yet
+            return '';
+        }
+
+        return this._prefectureData.map(pref => {
+            const selected = pref.value === selectedValue ? 'selected' : '';
+            return `<option value="${pref.value}" ${selected}>${pref.name}</option>`;
+        }).join('\n');
+    },
+
     // Render login page
     renderLoginPage() {
         return `
@@ -84,53 +117,7 @@ app.pages = {
                                             <label class="form-label">都道府県 <span class="text-danger">*</span></label>
                                             <select name="prefecture" class="form-select">
                                                 <option value="">都道府県を選択</option>
-                                                <option value="tokyo">東京都</option>
-                                                <option value="osaka">大阪府</option>
-                                                <option value="aichi">愛知県</option>
-                                                <option value="kanagawa">神奈川県</option>
-                                                <option value="saitama">埼玉県</option>
-                                                <option value="hokkaido">北海道</option>
-                                                <option value="fukuoka">福岡県</option>
-                                                <option value="hyougo">兵庫県</option>
-                                                <option value="chiba">千葉県</option>
-                                                <option value="shizuoka">静岡県</option>
-                                                <option value="kyoto">京都府</option>
-                                                <option value="hiroshima">広島県</option>
-                                                <option value="ibaraki">茨城県</option>
-                                                <option value="nagano">長野県</option>
-                                                <option value="miyagi">宮城県</option>
-                                                <option value="niigata">新潟県</option>
-                                                <option value="gunma">群馬県</option>
-                                                <option value="gifu">岐阜県</option>
-                                                <option value="okayama">岡山県</option>
-                                                <option value="tochigi">栃木県</option>
-                                                <option value="fukushima">福島県</option>
-                                                <option value="kumamoto">熊本県</option>
-                                                <option value="mie">三重県</option>
-                                                <option value="kagoshima">鹿児島県</option>
-                                                <option value="okinawa">沖縄県</option>
-                                                <option value="ishigawa">石川県</option>
-                                                <option value="shiga">滋賀県</option>
-                                                <option value="ehime">愛媛県</option>
-                                                <option value="toyama">富山県</option>
-                                                <option value="yamaguchi">山口県</option>
-                                                <option value="yamagata">山形県</option>
-                                                <option value="iwate">岩手県</option>
-                                                <option value="nagasaki">長崎県</option>
-                                                <option value="kagawa">香川県</option>
-                                                <option value="aomori">青森県</option>
-                                                <option value="nara">奈良県</option>
-                                                <option value="oita">大分県</option>
-                                                <option value="fukui">福井県</option>
-                                                <option value="miyazaki">宮崎県</option>
-                                                <option value="yamanashi">山梨県</option>
-                                                <option value="akita">秋田県</option>
-                                                <option value="wakayama">和歌山県</option>
-                                                <option value="tokushima">徳島県</option>
-                                                <option value="saga">佐賀県</option>
-                                                <option value="shimane">島根県</option>
-                                                <option value="kochi">高知県</option>
-                                                <option value="tottori">鳥取県</option>
+                                                ${this.getPrefectureOptions()}
                                             </select>
                                         </div>
                                         <div class="col-md-6">
@@ -324,53 +311,7 @@ app.pages = {
                                             <label class="form-label">都道府県 <span class="text-danger">*</span></label>
                                             <select name="prefecture" class="form-select" ${params.target === '白地・過去' ? 'required' : ''}>
                                                 <option value="">都道府県を選択</option>
-                                                <option value="tokyo" ${params.prefecture === 'tokyo' ? 'selected' : ''}>東京都</option>
-                                                <option value="osaka" ${params.prefecture === 'osaka' ? 'selected' : ''}>大阪府</option>
-                                                <option value="aichi" ${params.prefecture === 'aichi' ? 'selected' : ''}>愛知県</option>
-                                                <option value="kanagawa" ${params.prefecture === 'kanagawa' ? 'selected' : ''}>神奈川県</option>
-                                                <option value="saitama" ${params.prefecture === 'saitama' ? 'selected' : ''}>埼玉県</option>
-                                                <option value="hokkaido" ${params.prefecture === 'hokkaido' ? 'selected' : ''}>北海道</option>
-                                                <option value="fukuoka" ${params.prefecture === 'fukuoka' ? 'selected' : ''}>福岡県</option>
-                                                <option value="hyougo" ${params.prefecture === 'hyougo' ? 'selected' : ''}>兵庫県</option>
-                                                <option value="chiba" ${params.prefecture === 'chiba' ? 'selected' : ''}>千葉県</option>
-                                                <option value="shizuoka" ${params.prefecture === 'shizuoka' ? 'selected' : ''}>静岡県</option>
-                                                <option value="kyoto" ${params.prefecture === 'kyoto' ? 'selected' : ''}>京都府</option>
-                                                <option value="hiroshima" ${params.prefecture === 'hiroshima' ? 'selected' : ''}>広島県</option>
-                                                <option value="ibaraki" ${params.prefecture === 'ibaraki' ? 'selected' : ''}>茨城県</option>
-                                                <option value="nagano" ${params.prefecture === 'nagano' ? 'selected' : ''}>長野県</option>
-                                                <option value="miyagi" ${params.prefecture === 'miyagi' ? 'selected' : ''}>宮城県</option>
-                                                <option value="niigata" ${params.prefecture === 'niigata' ? 'selected' : ''}>新潟県</option>
-                                                <option value="gunma" ${params.prefecture === 'gunma' ? 'selected' : ''}>群馬県</option>
-                                                <option value="gifu" ${params.prefecture === 'gifu' ? 'selected' : ''}>岐阜県</option>
-                                                <option value="okayama" ${params.prefecture === 'okayama' ? 'selected' : ''}>岡山県</option>
-                                                <option value="tochigi" ${params.prefecture === 'tochigi' ? 'selected' : ''}>栃木県</option>
-                                                <option value="fukushima" ${params.prefecture === 'fukushima' ? 'selected' : ''}>福島県</option>
-                                                <option value="kumamoto" ${params.prefecture === 'kumamoto' ? 'selected' : ''}>熊本県</option>
-                                                <option value="mie" ${params.prefecture === 'mie' ? 'selected' : ''}>三重県</option>
-                                                <option value="kagoshima" ${params.prefecture === 'kagoshima' ? 'selected' : ''}>鹿児島県</option>
-                                                <option value="okinawa" ${params.prefecture === 'okinawa' ? 'selected' : ''}>沖縄県</option>
-                                                <option value="ishigawa" ${params.prefecture === 'ishigawa' ? 'selected' : ''}>石川県</option>
-                                                <option value="shiga" ${params.prefecture === 'shiga' ? 'selected' : ''}>滋賀県</option>
-                                                <option value="ehime" ${params.prefecture === 'ehime' ? 'selected' : ''}>愛媛県</option>
-                                                <option value="toyama" ${params.prefecture === 'toyama' ? 'selected' : ''}>富山県</option>
-                                                <option value="yamaguchi" ${params.prefecture === 'yamaguchi' ? 'selected' : ''}>山口県</option>
-                                                <option value="yamagata" ${params.prefecture === 'yamagata' ? 'selected' : ''}>山形県</option>
-                                                <option value="iwate" ${params.prefecture === 'iwate' ? 'selected' : ''}>岩手県</option>
-                                                <option value="nagasaki" ${params.prefecture === 'nagasaki' ? 'selected' : ''}>長崎県</option>
-                                                <option value="kagawa" ${params.prefecture === 'kagawa' ? 'selected' : ''}>香川県</option>
-                                                <option value="aomori" ${params.prefecture === 'aomori' ? 'selected' : ''}>青森県</option>
-                                                <option value="nara" ${params.prefecture === 'nara' ? 'selected' : ''}>奈良県</option>
-                                                <option value="oita" ${params.prefecture === 'oita' ? 'selected' : ''}>大分県</option>
-                                                <option value="fukui" ${params.prefecture === 'fukui' ? 'selected' : ''}>福井県</option>
-                                                <option value="miyazaki" ${params.prefecture === 'miyazaki' ? 'selected' : ''}>宮崎県</option>
-                                                <option value="yamanashi" ${params.prefecture === 'yamanashi' ? 'selected' : ''}>山梨県</option>
-                                                <option value="akita" ${params.prefecture === 'akita' ? 'selected' : ''}>秋田県</option>
-                                                <option value="wakayama" ${params.prefecture === 'wakayama' ? 'selected' : ''}>和歌山県</option>
-                                                <option value="tokushima" ${params.prefecture === 'tokushima' ? 'selected' : ''}>徳島県</option>
-                                                <option value="saga" ${params.prefecture === 'saga' ? 'selected' : ''}>佐賀県</option>
-                                                <option value="shimane" ${params.prefecture === 'shimane' ? 'selected' : ''}>島根県</option>
-                                                <option value="kochi" ${params.prefecture === 'kochi' ? 'selected' : ''}>高知県</option>
-                                                <option value="tottori" ${params.prefecture === 'tottori' ? 'selected' : ''}>鳥取県</option>
+                                                ${this.getPrefectureOptions(params.prefecture)}
                                             </select>
                                         </div>
                                         <div class="col-md-6">
@@ -538,53 +479,7 @@ app.pages = {
                                             <label class="form-label">都道府県 <span class="text-danger">*</span></label>
                                             <select name="prefecture" class="form-select" ${params.target === '白地・過去' ? 'required' : ''}>
                                                 <option value="">都道府県を選択</option>
-                                                <option value="tokyo" ${params.prefecture === 'tokyo' ? 'selected' : ''}>東京都</option>
-                                                <option value="osaka" ${params.prefecture === 'osaka' ? 'selected' : ''}>大阪府</option>
-                                                <option value="aichi" ${params.prefecture === 'aichi' ? 'selected' : ''}>愛知県</option>
-                                                <option value="kanagawa" ${params.prefecture === 'kanagawa' ? 'selected' : ''}>神奈川県</option>
-                                                <option value="saitama" ${params.prefecture === 'saitama' ? 'selected' : ''}>埼玉県</option>
-                                                <option value="hokkaido" ${params.prefecture === 'hokkaido' ? 'selected' : ''}>北海道</option>
-                                                <option value="fukuoka" ${params.prefecture === 'fukuoka' ? 'selected' : ''}>福岡県</option>
-                                                <option value="hyougo" ${params.prefecture === 'hyougo' ? 'selected' : ''}>兵庫県</option>
-                                                <option value="chiba" ${params.prefecture === 'chiba' ? 'selected' : ''}>千葉県</option>
-                                                <option value="shizuoka" ${params.prefecture === 'shizuoka' ? 'selected' : ''}>静岡県</option>
-                                                <option value="kyoto" ${params.prefecture === 'kyoto' ? 'selected' : ''}>京都府</option>
-                                                <option value="hiroshima" ${params.prefecture === 'hiroshima' ? 'selected' : ''}>広島県</option>
-                                                <option value="ibaraki" ${params.prefecture === 'ibaraki' ? 'selected' : ''}>茨城県</option>
-                                                <option value="nagano" ${params.prefecture === 'nagano' ? 'selected' : ''}>長野県</option>
-                                                <option value="miyagi" ${params.prefecture === 'miyagi' ? 'selected' : ''}>宮城県</option>
-                                                <option value="niigata" ${params.prefecture === 'niigata' ? 'selected' : ''}>新潟県</option>
-                                                <option value="gunma" ${params.prefecture === 'gunma' ? 'selected' : ''}>群馬県</option>
-                                                <option value="gifu" ${params.prefecture === 'gifu' ? 'selected' : ''}>岐阜県</option>
-                                                <option value="okayama" ${params.prefecture === 'okayama' ? 'selected' : ''}>岡山県</option>
-                                                <option value="tochigi" ${params.prefecture === 'tochigi' ? 'selected' : ''}>栃木県</option>
-                                                <option value="fukushima" ${params.prefecture === 'fukushima' ? 'selected' : ''}>福島県</option>
-                                                <option value="kumamoto" ${params.prefecture === 'kumamoto' ? 'selected' : ''}>熊本県</option>
-                                                <option value="mie" ${params.prefecture === 'mie' ? 'selected' : ''}>三重県</option>
-                                                <option value="kagoshima" ${params.prefecture === 'kagoshima' ? 'selected' : ''}>鹿児島県</option>
-                                                <option value="okinawa" ${params.prefecture === 'okinawa' ? 'selected' : ''}>沖縄県</option>
-                                                <option value="ishigawa" ${params.prefecture === 'ishigawa' ? 'selected' : ''}>石川県</option>
-                                                <option value="shiga" ${params.prefecture === 'shiga' ? 'selected' : ''}>滋賀県</option>
-                                                <option value="ehime" ${params.prefecture === 'ehime' ? 'selected' : ''}>愛媛県</option>
-                                                <option value="toyama" ${params.prefecture === 'toyama' ? 'selected' : ''}>富山県</option>
-                                                <option value="yamaguchi" ${params.prefecture === 'yamaguchi' ? 'selected' : ''}>山口県</option>
-                                                <option value="yamagata" ${params.prefecture === 'yamagata' ? 'selected' : ''}>山形県</option>
-                                                <option value="iwate" ${params.prefecture === 'iwate' ? 'selected' : ''}>岩手県</option>
-                                                <option value="nagasaki" ${params.prefecture === 'nagasaki' ? 'selected' : ''}>長崎県</option>
-                                                <option value="kagawa" ${params.prefecture === 'kagawa' ? 'selected' : ''}>香川県</option>
-                                                <option value="aomori" ${params.prefecture === 'aomori' ? 'selected' : ''}>青森県</option>
-                                                <option value="nara" ${params.prefecture === 'nara' ? 'selected' : ''}>奈良県</option>
-                                                <option value="oita" ${params.prefecture === 'oita' ? 'selected' : ''}>大分県</option>
-                                                <option value="fukui" ${params.prefecture === 'fukui' ? 'selected' : ''}>福井県</option>
-                                                <option value="miyazaki" ${params.prefecture === 'miyazaki' ? 'selected' : ''}>宮崎県</option>
-                                                <option value="yamanashi" ${params.prefecture === 'yamanashi' ? 'selected' : ''}>山梨県</option>
-                                                <option value="akita" ${params.prefecture === 'akita' ? 'selected' : ''}>秋田県</option>
-                                                <option value="wakayama" ${params.prefecture === 'wakayama' ? 'selected' : ''}>和歌山県</option>
-                                                <option value="tokushima" ${params.prefecture === 'tokushima' ? 'selected' : ''}>徳島県</option>
-                                                <option value="saga" ${params.prefecture === 'saga' ? 'selected' : ''}>佐賀県</option>
-                                                <option value="shimane" ${params.prefecture === 'shimane' ? 'selected' : ''}>島根県</option>
-                                                <option value="kochi" ${params.prefecture === 'kochi' ? 'selected' : ''}>高知県</option>
-                                                <option value="tottori" ${params.prefecture === 'tottori' ? 'selected' : ''}>鳥取県</option>
+                                                ${this.getPrefectureOptions(params.prefecture)}
                                             </select>
                                         </div>
                                         <div class="col-md-6">

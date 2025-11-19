@@ -32,6 +32,9 @@ window.app = {
 
         // Load popular queries
         this.loadPopularQueries();
+
+        // Load prefecture data
+        this.pages.loadPrefectures();
     },
 
     // Show loading overlay
