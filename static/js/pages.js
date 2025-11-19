@@ -401,6 +401,11 @@ app.pages = {
                             <br>
                             ${processed_query ? `処理済みクエリ: ${app.utils.escapeHtml(processed_query)}` : ''}
                         </small>
+                        ${total_found > (params.limit || app.config.searchDefaultLimit) ? `
+                        <div class="alert alert-warning mt-2 py-2 px-3" role="alert">
+                            <small><strong>⚠️ 最初の${params.limit || app.config.searchDefaultLimit}件のみ表示しています。</strong></small>
+                        </div>
+                        ` : ''}
                     </div>
                     ` : ''}
 
