@@ -398,7 +398,7 @@ app.pages = {
                             <small class="text-muted">
                                 "${app.utils.escapeHtml(params.q)}" の検索結果${params.prefecture ? ` (${params.prefecture})` : ''}
                             </small>
-                            <small class="text-muted">💡 最大${params.limit || app.config.searchDefaultLimit}件表示</small>
+                            <small class="text-muted">💡 最初の${params.limit || app.config.searchDefaultLimit}件のみ表示しております</small>
                         </div>
                         <div class="d-flex align-items-center gap-2 flex-wrap">
                             <span class="badge bg-primary">${total_found}件</span>
