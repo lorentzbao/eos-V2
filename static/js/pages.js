@@ -104,8 +104,8 @@ app.pages = {
                                             <input type="radio" class="btn-check" name="target" id="target-shirachi" value="白地・過去" checked required>
                                             <label class="btn btn-outline-primary" for="target-shirachi">白地・過去</label>
 
-                                            <input type="radio" class="btn-check" name="target" id="target-keiyaku" value="契約" required disabled>
-                                            <label class="btn btn-outline-secondary" for="target-keiyaku" style="opacity: 0.5; cursor: not-allowed;">契約 (開発中)</label>
+                                            <input type="radio" class="btn-check" name="target" id="target-keiyaku" value="契約" required>
+                                            <label class="btn btn-outline-primary" for="target-keiyaku">契約</label>
                                         </div>
                                     </div>
                                 </div>
@@ -298,8 +298,8 @@ app.pages = {
                                             <input type="radio" class="btn-check" name="target" id="target-shirachi-search" value="白地・過去" ${params.target ? (params.target === '白地・過去' ? 'checked' : '') : 'checked'} required>
                                             <label class="btn btn-outline-primary" for="target-shirachi-search">白地・過去</label>
 
-                                            <input type="radio" class="btn-check" name="target" id="target-keiyaku-search" value="契約" ${params.target === '契約' ? 'checked' : ''} required disabled>
-                                            <label class="btn btn-outline-secondary" for="target-keiyaku-search" style="opacity: 0.5; cursor: not-allowed;">契約 (開発中)</label>
+                                            <input type="radio" class="btn-check" name="target" id="target-keiyaku-search" value="契約" ${params.target === '契約' ? 'checked' : ''} required>
+                                            <label class="btn btn-outline-primary" for="target-keiyaku-search">契約</label>
                                         </div>
                                     </div>
                                 </div>
@@ -470,8 +470,8 @@ app.pages = {
                                             <input type="radio" class="btn-check" name="target" id="target-shirachi-empty" value="白地・過去" ${params.target ? (params.target === '白地・過去' ? 'checked' : '') : 'checked'} required>
                                             <label class="btn btn-outline-primary" for="target-shirachi-empty">白地・過去</label>
 
-                                            <input type="radio" class="btn-check" name="target" id="target-keiyaku-empty" value="契約" ${params.target === '契約' ? 'checked' : ''} required disabled>
-                                            <label class="btn btn-outline-secondary" for="target-keiyaku-empty" style="opacity: 0.5; cursor: not-allowed;">契約 (開発中)</label>
+                                            <input type="radio" class="btn-check" name="target" id="target-keiyaku-empty" value="契約" ${params.target === '契約' ? 'checked' : ''} required>
+                                            <label class="btn btn-outline-primary" for="target-keiyaku-empty">契約</label>
                                         </div>
                                     </div>
                                 </div>
