@@ -217,14 +217,22 @@ def process_tokenized_data(lookup: Dict[str, Dict], batch_size: int,
     # Initialize batch writer
     writer = DistrictBatchWriter(output_dir, batch_size)
 
-    # Find all batch files
-    batch_files = sorted(glob.glob(os.path.join(input_dir, "*.json")))
+    # Find all batch files in prefecture subfolders
+    # Pattern: data/tokenized/{prefecture}/batch_*.json or tokenized_batch_*.json
+    batch_files = []
+    batch_files.extend(sorted(glob.glob(os.path.join(input_dir, "*", "batch_*.json"))))
+    batch_files.extend(sorted(glob.glob(os.path.join(input_dir, "*", "tokenized_batch_*.json"))))
+
+    # Remove duplicates and sort
+    batch_files = sorted(set(batch_files))
 
     if not batch_files:
         print(f"⚠️  No batch files found in {input_dir}")
+        print(f"    Looking for: {input_dir}/{{prefecture}}/batch_*.json")
+        print(f"    Or: {input_dir}/{{prefecture}}/tokenized_batch_*.json")
         return
 
-    print(f"Found {len(batch_files)} batch files to process\n")
+    print(f"Found {len(batch_files)} batch files across prefecture subfolders\n")
 
     # Statistics
     total_input_records = 0
