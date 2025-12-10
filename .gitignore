@@ -41,6 +41,7 @@ data/search_index.json       # Ignore legacy JSON index
 data/documents/*.txt          # Ignore document files
 data/documents/*.html         # Ignore document files
 data/indexes/                 # Ignore all index files
+data/tokenized_contract/      # Ignore contract tokenized data (district-based)
 # Note: data/whoosh_index/ is now tracked to share sample data
 # Note: data/sample_companies.json is tracked for test data
 
@@ -82,6 +83,7 @@ data/csv_output/
 data/contract_data.json
 data/contract_branches.json
 data/contract_solicitors.json
+data/t_producer.csv
 
 # Hydra outputs
 outputs/

@@ -6,6 +6,7 @@ input:
   csv_file: null
   json_folder: "data/raw/tokyo"  # Default to tokyo, can be overridden
   dataframe_file: "data/sample_companies.csv"
+  t_producer_file: "data/t_producer.csv"  # Producer/district mapping for contract data
 
   # Root path configuration for HTML files
   primary_root_path: ""             # Primary root path to prepend to HTML file paths (e.g., "/mnt/e/data")
