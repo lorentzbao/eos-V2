@@ -71,8 +71,16 @@ def convert_contract_csv_to_json(csv_path: str,
         'solicitors': []
     }))
 
-    # Track seen solicitors to avoid duplicates
-    seen_solicitors = defaultdict(lambda: defaultdict(set))
+    # Track seen items to avoid duplicates
+    seen_solicitors = defaultdict(lambda: defaultdict(set))  # district -> branch -> set of solicitor codes
+    seen_branches = defaultdict(dict)  # district -> {branch_code: branch_name}
+
+    # Statistics
+    total_rows = 0
+    skipped_rows = 0
+    duplicate_branches = 0
+    duplicate_solicitors = 0
+    branch_name_conflicts = 0
 
     # Read CSV file
     print(f"Reading CSV from: {csv_path}")
@@ -80,25 +88,43 @@ def convert_contract_csv_to_json(csv_path: str,
         reader = csv.DictReader(f)
 
         for row in reader:
+            total_rows += 1
             district_name = row.get('DISTRICT_NAME', '').strip()
             branch_cd = row.get('BRANCH_CD', '').strip()
             branch_name = row.get('BRANCH_NAME', '').strip()
             solicitor_cd = row.get('SOLICITOR_CD', '').strip()
             solicitor_name = row.get('SOLICITOR', '').strip()
 
+            # Skip rows with missing essential data
+            if not district_name:
+                skipped_rows += 1
+                continue
+
             # Map district name to key
             district_key = DISTRICT_MAPPING.get(district_name)
             if not district_key:
-                print(f"Warning: Unknown district '{district_name}', skipping row")
+                print(f"Warning: Unknown district '{district_name}' in row {total_rows}, skipping")
+                skipped_rows += 1
                 continue
 
-            # Store branch info (will be set multiple times but that's ok)
+            # Store branch info (check for conflicts)
             if branch_cd and branch_name:
-                branch_data[district_key][branch_cd]['name'] = branch_name
+                if branch_cd in seen_branches[district_key]:
+                    # Branch already exists - check for name conflict
+                    existing_name = seen_branches[district_key][branch_cd]
+                    if existing_name != branch_name:
+                        branch_name_conflicts += 1
+                        if branch_name_conflicts <= 5:  # Only show first 5 conflicts
+                            print(f"Warning: Branch name conflict for {district_key}/{branch_cd}: '{existing_name}' vs '{branch_name}' (keeping first)")
+                else:
+                    seen_branches[district_key][branch_cd] = branch_name
+                    branch_data[district_key][branch_cd]['name'] = branch_name
 
-            # Add solicitor to branch
+            # Add solicitor to branch (with duplicate detection)
             if solicitor_cd and solicitor_name and branch_cd:
-                if solicitor_cd not in seen_solicitors[district_key][branch_cd]:
+                if solicitor_cd in seen_solicitors[district_key][branch_cd]:
+                    duplicate_solicitors += 1
+                else:
                     branch_data[district_key][branch_cd]['solicitors'].append({
                         "code": solicitor_cd,
                         "name": solicitor_name
@@ -132,7 +158,23 @@ def convert_contract_csv_to_json(csv_path: str,
     total_solicitors = 0
 
     print(f"\n✅ Successfully converted contract data!")
-    print(f"\n📊 Statistics by district:")
+
+    # Input statistics
+    print(f"\n📥 Input Statistics:")
+    print(f"  - Total rows processed: {total_rows}")
+    print(f"  - Rows skipped (invalid/unknown district): {skipped_rows}")
+    print(f"  - Valid rows: {total_rows - skipped_rows}")
+
+    # Duplicate statistics
+    if duplicate_solicitors > 0 or branch_name_conflicts > 0:
+        print(f"\n🔄 Duplicates Removed:")
+        if duplicate_solicitors > 0:
+            print(f"  - Duplicate solicitors: {duplicate_solicitors}")
+        if branch_name_conflicts > 0:
+            print(f"  - Branch name conflicts: {branch_name_conflicts} (first name kept)")
+
+    # Output statistics by district
+    print(f"\n📊 Output Statistics by District:")
     for district_key, district_info in contract_data.items():
         num_branches = len(district_info['branches'])
         num_solicitors = sum(len(b['solicitors']) for b in district_info['branches'])
@@ -142,7 +184,7 @@ def convert_contract_csv_to_json(csv_path: str,
         print(f"    - Branches: {num_branches}")
         print(f"    - Solicitors: {num_solicitors}")
 
-    print(f"\n📁 Total: {total_branches} branches, {total_solicitors} solicitors across {len(contract_data)} districts")
+    print(f"\n📁 Total Output: {total_branches} unique branches, {total_solicitors} unique solicitors across {len(contract_data)} districts")
     print(f"\n📝 Output file: {output}")
 
     return True

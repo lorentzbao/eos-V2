@@ -78,5 +78,10 @@ data/search_logs/
 data/csv_cache/
 data/csv_output/
 
+# Contract data (contains sensitive business data)
+data/contract_data.json
+data/contract_branches.json
+data/contract_solicitors.json
+
 # Hydra outputs
 outputs/
