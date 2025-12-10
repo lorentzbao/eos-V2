@@ -37,6 +37,13 @@ def convert_contract_csv_to_json(csv_path: str,
     """
     Convert contract data CSV to single hierarchical JSON format
 
+    Expected CSV columns:
+    - DISTRICT_NAME: District name (e.g., 北海道・東北地域事業本部)
+    - MOTHERBRANCH_CD: Branch code
+    - BRANCH_NAME: Branch name
+    - SOLICITOR_CD: Solicitor code
+    - SOLICITOR: Solicitor name
+
     Output structure:
     {
       "A": {
@@ -90,7 +97,7 @@ def convert_contract_csv_to_json(csv_path: str,
         for row in reader:
             total_rows += 1
             district_name = row.get('DISTRICT_NAME', '').strip()
-            branch_cd = row.get('BRANCH_CD', '').strip()
+            branch_cd = row.get('MOTHERBRANCH_CD', '').strip()
             branch_name = row.get('BRANCH_NAME', '').strip()
             solicitor_cd = row.get('SOLICITOR_CD', '').strip()
             solicitor_name = row.get('SOLICITOR', '').strip()
@@ -192,7 +199,7 @@ def convert_contract_csv_to_json(csv_path: str,
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print("Usage: python scripts/convert_contract_data_to_json.py <csv_path> [output_path]")
-        print("\nExpected CSV columns: DISTRICT_NAME, BRANCH_CD, BRANCH_NAME, SOLICITOR_CD, SOLICITOR")
+        print("\nExpected CSV columns: DISTRICT_NAME, MOTHERBRANCH_CD, BRANCH_NAME, SOLICITOR_CD, SOLICITOR")
         print("\nDefault output: data/contract_data.json")
         sys.exit(1)
 

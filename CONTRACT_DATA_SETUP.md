@@ -13,14 +13,14 @@ The contract search mode uses district-based indexes with hierarchical dropdowns
 
 Create a CSV file with the following columns:
 - `DISTRICT_NAME` - District name (e.g., 北海道・東北地域事業本部)
-- `BRANCH_CD` - Branch code
+- `MOTHERBRANCH_CD` - Branch code
 - `BRANCH_NAME` - Branch name
 - `SOLICITOR_CD` - Solicitor code
 - `SOLICITOR` - Solicitor name
 
 **Example CSV:**
 ```csv
-DISTRICT_NAME,BRANCH_CD,BRANCH_NAME,SOLICITOR_CD,SOLICITOR
+DISTRICT_NAME,MOTHERBRANCH_CD,BRANCH_NAME,SOLICITOR_CD,SOLICITOR
 北海道・東北地域事業本部,001,札幌支店,S001,山田太郎
 北海道・東北地域事業本部,001,札幌支店,S002,田中花子
 北海道・東北地域事業本部,002,仙台支店,S003,佐藤次郎
