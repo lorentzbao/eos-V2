@@ -7,12 +7,12 @@ This guide explains how to set up branch and solicitor data for the 契約 (cont
 The contract search mode uses district-based indexes with hierarchical dropdowns:
 1. **地域事業本部 (Regional Office/District)** - Top level
 2. **支店 (Branch)** - Second level (filtered by district)
-3. **ソリシター (Solicitor)** - Third level (filtered by district)
+3. **ソリシター (Solicitor)** - Third level (filtered by branch within district)
 
 ## Step 1: Prepare Your CSV Data
 
 Create a CSV file with the following columns:
-- `DISTRICT_NAME` - District name (e.g., 東京事業本部, 大阪事業本部)
+- `DISTRICT_NAME` - District name (e.g., 北海道・東北地域事業本部)
 - `BRANCH_CD` - Branch code
 - `BRANCH_NAME` - Branch name
 - `SOLICITOR_CD` - Solicitor code
@@ -21,10 +21,10 @@ Create a CSV file with the following columns:
 **Example CSV:**
 ```csv
 DISTRICT_NAME,BRANCH_CD,BRANCH_NAME,SOLICITOR_CD,SOLICITOR
-東京事業本部,001,渋谷支店,S001,山田太郎
-東京事業本部,001,渋谷支店,S002,田中花子
-東京事業本部,002,新宿支店,S003,佐藤次郎
-大阪事業本部,010,梅田支店,S010,鈴木三郎
+北海道・東北地域事業本部,001,札幌支店,S001,山田太郎
+北海道・東北地域事業本部,001,札幌支店,S002,田中花子
+北海道・東北地域事業本部,002,仙台支店,S003,佐藤次郎
+関西地域事業本部,010,梅田支店,S010,鈴木三郎
 ```
 
 ## Step 2: Run the Conversion Script
@@ -33,35 +33,46 @@ DISTRICT_NAME,BRANCH_CD,BRANCH_NAME,SOLICITOR_CD,SOLICITOR
 python scripts/convert_contract_data_to_json.py data/your_contract_data.csv
 ```
 
-This will create:
-- `data/contract_branches.json`
-- `data/contract_solicitors.json`
+This will create a single file:
+- `data/contract_data.json`
 
 ## Step 3: JSON Output Format
 
-### contract_branches.json
+### contract_data.json (Hierarchical Structure)
 ```json
 {
-  "tokyo": [
-    {"code": "001", "name": "渋谷支店"},
-    {"code": "002", "name": "新宿支店"}
-  ],
-  "osaka": [
-    {"code": "010", "name": "梅田支店"}
-  ]
-}
-```
-
-### contract_solicitors.json
-```json
-{
-  "tokyo": [
-    {"code": "S001", "name": "山田太郎"},
-    {"code": "S002", "name": "田中花子"}
-  ],
-  "osaka": [
-    {"code": "S010", "name": "鈴木三郎"}
-  ]
+  "A": {
+    "name": "北海道・東北地域事業本部",
+    "branches": [
+      {
+        "code": "001",
+        "name": "札幌支店",
+        "solicitors": [
+          {"code": "S001", "name": "山田太郎"},
+          {"code": "S002", "name": "田中花子"}
+        ]
+      },
+      {
+        "code": "002",
+        "name": "仙台支店",
+        "solicitors": [
+          {"code": "S003", "name": "佐藤次郎"}
+        ]
+      }
+    ]
+  },
+  "E": {
+    "name": "関西地域事業本部",
+    "branches": [
+      {
+        "code": "010",
+        "name": "梅田支店",
+        "solicitors": [
+          {"code": "S010", "name": "鈴木三郎"}
+        ]
+      }
+    ]
+  }
 }
 ```
 
@@ -69,21 +80,27 @@ This will create:
 
 The following API endpoints are now available:
 
+### Get all contract data (one call for everything)
+```
+GET /api/contract-data
+Response: {"data": {/* full hierarchical structure */}}
+```
+
 ### Get all districts
 ```
 GET /api/districts
-Response: {"districts": [{"value": "tokyo", "name": "東京事業本部"}, ...]}
+Response: {"districts": [{"value": "A", "name": "北海道・東北地域事業本部"}, ...]}
 ```
 
 ### Get branches for a district
 ```
-GET /api/branches/tokyo
-Response: {"branches": [{"code": "001", "name": "渋谷支店"}, ...]}
+GET /api/branches/A
+Response: {"branches": [{"code": "001", "name": "札幌支店"}, ...]}
 ```
 
-### Get solicitors for a district
+### Get solicitors for a specific branch in a district
 ```
-GET /api/solicitors/tokyo
+GET /api/solicitors/A/001
 Response: {"solicitors": [{"code": "S001", "name": "山田太郎"}, ...]}
 ```
 
@@ -91,30 +108,50 @@ Response: {"solicitors": [{"code": "S001", "name": "山田太郎"}, ...]}
 
 The frontend can call these APIs to populate dropdowns dynamically:
 
+### Option A: Load all data once (recommended for small datasets)
+```javascript
+const response = await fetch('/api/contract-data');
+const data = await response.json();
+const contractData = data.data;
+
+// Then filter locally
+const district = 'A';
+const branches = contractData[district].branches;
+const solicitors = branches.find(b => b.code === '001').solicitors;
+```
+
+### Option B: Load data on-demand
 ```javascript
 // Load branches when district is selected
-const district = 'tokyo';
+const district = 'A';
 const response = await fetch(`/api/branches/${district}`);
 const data = await response.json();
-const branches = data.branches; // [{code: "001", name: "渋谷支店"}, ...]
+const branches = data.branches; // [{code: "001", name: "札幌支店"}, ...]
 
-// Load solicitors when district is selected
-const response2 = await fetch(`/api/solicitors/${district}`);
+// Load solicitors when branch is selected
+const branch = '001';
+const response2 = await fetch(`/api/solicitors/${district}/${branch}`);
 const data2 = await response2.json();
 const solicitors = data2.solicitors; // [{code: "S001", name: "山田太郎"}, ...]
 ```
 
 ## District Mapping
 
-The conversion script uses the following district name mapping (can be customized):
+The conversion script uses the following district name mapping:
 
-| Japanese Name | Key in JSON | Config YAML Key |
-|---------------|-------------|-----------------|
-| 東京事業本部 | `tokyo` | `tokyo` |
-| 大阪事業本部 | `osaka` | `osaka` |
-| 名古屋事業本部 | `nagoya` | `nagoya` |
-| 九州事業本部 | `kyushu` | `kyushu` |
-| 東北事業本部 | `tohoku` | `tohoku` |
+| Japanese Name | Key in JSON |
+|---------------|-------------|
+| 北海道・東北地域事業本部 | A |
+| 関信越地域事業本部 | B |
+| 首都圏地域事業本部 | C |
+| 東海・北陸地域事業本部 | D |
+| 関西地域事業本部 | E |
+| 中国・四国地域事業本部 | F |
+| 九州・沖縄地域事業本部 | G |
+| 本店グループ | H |
+| 企業営業本部 | I |
+| 全国代理店センター本部 | J |
+| 企業営業グループ | K |
 
 ## Troubleshooting
 
@@ -125,7 +162,7 @@ Add the district to the `DISTRICT_MAPPING` in `scripts/convert_contract_data_to_
 
 ```python
 DISTRICT_MAPPING = {
-    "東京事業本部": "tokyo",
+    "北海道・東北地域事業本部": "A",
     "your_new_district": "your_key",
 }
 ```
