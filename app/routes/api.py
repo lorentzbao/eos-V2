@@ -337,3 +337,93 @@ def api_cities(prefecture):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@api.route('/branches/<district>')
+def api_branches(district):
+    """API endpoint to get branches for a specific district"""
+    try:
+        # Get the path to contract_branches.json
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        branches_file = os.path.join(project_root, "data", "contract_branches.json")
+
+        # Load the branches mapping
+        if not os.path.exists(branches_file):
+            return jsonify({'error': 'Branches data file not found'}), 404
+
+        with open(branches_file, 'r', encoding='utf-8') as f:
+            branches_data = json.load(f)
+
+        # Get branches for the requested district
+        if district not in branches_data:
+            return jsonify({'branches': []})  # Return empty list if district not found
+
+        return jsonify({'branches': branches_data[district]})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api.route('/solicitors/<district>')
+def api_solicitors(district):
+    """API endpoint to get solicitors for a specific district"""
+    try:
+        # Get the path to contract_solicitors.json
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        solicitors_file = os.path.join(project_root, "data", "contract_solicitors.json")
+
+        # Load the solicitors mapping
+        if not os.path.exists(solicitors_file):
+            return jsonify({'error': 'Solicitors data file not found'}), 404
+
+        with open(solicitors_file, 'r', encoding='utf-8') as f:
+            solicitors_data = json.load(f)
+
+        # Get solicitors for the requested district
+        if district not in solicitors_data:
+            return jsonify({'solicitors': []})  # Return empty list if district not found
+
+        return jsonify({'solicitors': solicitors_data[district]})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api.route('/districts')
+def api_districts():
+    """API endpoint to get available districts (contract indexes)"""
+    try:
+        # Get districts from branches file (or could use solicitors or config)
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        branches_file = os.path.join(project_root, "data", "contract_branches.json")
+
+        if not os.path.exists(branches_file):
+            return jsonify({'error': 'Districts data file not found'}), 404
+
+        with open(branches_file, 'r', encoding='utf-8') as f:
+            branches_data = json.load(f)
+
+        # Return list of districts with metadata
+        # This could be enhanced to read from config.yaml contract_indexes section
+        districts = []
+        district_names = {
+            "北海道・東北地域事業本部": "A",
+            "関信越地域事業本部": "B",
+            "首都圏地域事業本部": "C",
+            "東海・北陸地域事業本部": "D",
+            "関西地域事業本部": "E",
+            "中国・四国地域事業本部": "F",
+            "九州・沖縄地域事業本部": "G",
+            "本店グループ": "H",
+            "企業営業本部": "I",
+            "全国代理店センター本部": "j",
+            "企業営業グループ": "K"
+        }
+
+        for district_key in branches_data.keys():
+            districts.append({
+                'value': district_key,
+                'name': district_names.get(district_key, district_key)
+            })
+
+        return jsonify({'districts': districts})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
