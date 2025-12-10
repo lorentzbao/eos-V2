@@ -223,8 +223,9 @@ def process_tokenized_data(lookup: Dict[str, Dict], batch_size: int,
     batch_files.extend(sorted(glob.glob(os.path.join(input_dir, "*", "batch_*.json"))))
     batch_files.extend(sorted(glob.glob(os.path.join(input_dir, "*", "tokenized_batch_*.json"))))
 
-    # Remove duplicates and sort
-    batch_files = sorted(set(batch_files))
+    # Remove duplicates, filter out summary files, and sort
+    batch_files = [f for f in set(batch_files) if 'summary' not in os.path.basename(f).lower()]
+    batch_files = sorted(batch_files)
 
     if not batch_files:
         print(f"⚠️  No batch files found in {input_dir}")
