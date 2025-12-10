@@ -61,7 +61,7 @@ def load_producer_lookup(config: Dict) -> Dict[str, Dict]:
         raise FileNotFoundError(f"Dataframe file not found: {dataframe_file}")
 
     print(f"  Reading dataframe: {dataframe_file}")
-    df = pd.read_csv(dataframe_file, usecols=['DOMESTIC_DESCRIMI_NO', 'PRODUCER_CD'])
+    df = pd.read_csv(dataframe_file, encoding='cp932', usecols=['DOMESTIC_DESCRIMI_NO', 'PRODUCER_CD'])
     print(f"    Loaded {len(df)} records")
 
     # Load t_producer file
