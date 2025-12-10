@@ -2,6 +2,8 @@
 app.pages = {
     // Prefecture data cache
     _prefectureData: null,
+    // Contract data cache
+    _contractData: null,
 
     // Load prefecture data from API
     async loadPrefectures() {
@@ -20,6 +22,23 @@ app.pages = {
         }
     },
 
+    // Load contract data from API (districts, branches, solicitors)
+    async loadContractData() {
+        if (this._contractData) {
+            return this._contractData;
+        }
+
+        try {
+            const response = await fetch('/api/contract-data');
+            const data = await response.json();
+            this._contractData = data.data || {};
+            return this._contractData;
+        } catch (error) {
+            console.error('Failed to load contract data:', error);
+            return {};
+        }
+    },
+
     // Generate prefecture options HTML
     getPrefectureOptions(selectedValue = '') {
         if (!this._prefectureData) {
@@ -30,6 +49,62 @@ app.pages = {
         return this._prefectureData.map(pref => {
             const selected = pref.value === selectedValue ? 'selected' : '';
             return `<option value="${pref.value}" ${selected}>${pref.name}</option>`;
+        }).join('\n');
+    },
+
+    // Generate district options HTML
+    getDistrictOptions(selectedValue = '') {
+        if (!this._contractData) {
+            return '';
+        }
+
+        const districts = Object.keys(this._contractData).map(key => ({
+            value: key,
+            name: this._contractData[key].name
+        }));
+
+        return districts.map(district => {
+            const selected = district.value === selectedValue ? 'selected' : '';
+            return `<option value="${district.value}" ${selected}>${district.name}</option>`;
+        }).join('\n');
+    },
+
+    // Generate branch options HTML for a specific district
+    getBranchOptions(districtCode, selectedValue = '') {
+        if (!this._contractData || !districtCode) {
+            return '';
+        }
+
+        const district = this._contractData[districtCode];
+        if (!district || !district.branches) {
+            return '';
+        }
+
+        return district.branches.map(branch => {
+            const selected = branch.code === selectedValue ? 'selected' : '';
+            return `<option value="${branch.code}" ${selected}>${branch.name}</option>`;
+        }).join('\n');
+    },
+
+    // Generate solicitor options HTML for a specific district and branch
+    getSolicitorOptions(districtCode, branchCode, selectedValue = '') {
+        if (!this._contractData || !districtCode || !branchCode) {
+            return '';
+        }
+
+        const district = this._contractData[districtCode];
+        if (!district || !district.branches) {
+            return '';
+        }
+
+        const branch = district.branches.find(b => b.code === branchCode);
+        if (!branch || !branch.solicitors) {
+            return '';
+        }
+
+        return branch.solicitors.map(solicitor => {
+            const selected = solicitor.code === selectedValue ? 'selected' : '';
+            return `<option value="${solicitor.code}" ${selected}>${solicitor.name}</option>`;
         }).join('\n');
     },
 
@@ -134,35 +209,21 @@ app.pages = {
                                     <div class="row g-3">
                                         <div class="col-md-4">
                                             <label class="form-label">地域事業本部 <span class="text-danger">*</span></label>
-                                            <select name="regional_office" class="form-select">
+                                            <select name="regional_office" id="district-select" class="form-select">
                                                 <option value="">地域事業本部を選択</option>
-                                                <option value="tokyo">東京事業本部</option>
-                                                <option value="osaka">大阪事業本部</option>
-                                                <option value="nagoya">名古屋事業本部</option>
-                                                <option value="kyushu">九州事業本部</option>
-                                                <option value="tohoku">東北事業本部</option>
+                                                ${this.getDistrictOptions()}
                                             </select>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">支店</label>
-                                            <select name="branch" class="form-select">
+                                            <select name="branch" id="branch-select" class="form-select" disabled>
                                                 <option value="">支店を選択（任意）</option>
-                                                <option value="shibuya">渋谷支店</option>
-                                                <option value="shinjuku">新宿支店</option>
-                                                <option value="ginza">銀座支店</option>
-                                                <option value="ikebukuro">池袋支店</option>
-                                                <option value="shinagawa">品川支店</option>
                                             </select>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">ソリシター</label>
-                                            <select name="solicitor" class="form-select">
+                                            <select name="solicitor" id="solicitor-select" class="form-select" disabled>
                                                 <option value="">ソリシターを選択（任意）</option>
-                                                <option value="yamada">山田太郎</option>
-                                                <option value="tanaka">田中花子</option>
-                                                <option value="sato">佐藤次郎</option>
-                                                <option value="suzuki">鈴木三郎</option>
-                                                <option value="takahashi">高橋四郎</option>
                                             </select>
                                         </div>
                                     </div>
@@ -328,35 +389,23 @@ app.pages = {
                                     <div class="row g-3">
                                         <div class="col-md-4">
                                             <label class="form-label">地域事業本部 <span class="text-danger">*</span></label>
-                                            <select name="regional_office" class="form-select" ${params.target === '契約' ? 'required' : ''}>
+                                            <select name="regional_office" class="contract-district-select form-select" ${params.target === '契約' ? 'required' : ''}>
                                                 <option value="">地域事業本部を選択</option>
-                                                <option value="tokyo" ${params.regional_office === 'tokyo' ? 'selected' : ''}>東京事業本部</option>
-                                                <option value="osaka" ${params.regional_office === 'osaka' ? 'selected' : ''}>大阪事業本部</option>
-                                                <option value="nagoya" ${params.regional_office === 'nagoya' ? 'selected' : ''}>名古屋事業本部</option>
-                                                <option value="kyushu" ${params.regional_office === 'kyushu' ? 'selected' : ''}>九州事業本部</option>
-                                                <option value="tohoku" ${params.regional_office === 'tohoku' ? 'selected' : ''}>東北事業本部</option>
+                                                ${this.getDistrictOptions(params.regional_office || '')}
                                             </select>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">支店</label>
-                                            <select name="branch" class="form-select">
+                                            <select name="branch" class="contract-branch-select form-select" ${!params.regional_office ? 'disabled' : ''}>
                                                 <option value="">支店を選択（任意）</option>
-                                                <option value="shibuya" ${params.branch === 'shibuya' ? 'selected' : ''}>渋谷支店</option>
-                                                <option value="shinjuku" ${params.branch === 'shinjuku' ? 'selected' : ''}>新宿支店</option>
-                                                <option value="ginza" ${params.branch === 'ginza' ? 'selected' : ''}>銀座支店</option>
-                                                <option value="ikebukuro" ${params.branch === 'ikebukuro' ? 'selected' : ''}>池袋支店</option>
-                                                <option value="shinagawa" ${params.branch === 'shinagawa' ? 'selected' : ''}>品川支店</option>
+                                                ${params.regional_office ? this.getBranchOptions(params.regional_office, params.branch || '') : ''}
                                             </select>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">ソリシター</label>
-                                            <select name="solicitor" class="form-select">
+                                            <select name="solicitor" class="contract-solicitor-select form-select" ${!params.branch ? 'disabled' : ''}>
                                                 <option value="">ソリシターを選択（任意）</option>
-                                                <option value="yamada" ${params.solicitor === 'yamada' ? 'selected' : ''}>山田太郎</option>
-                                                <option value="tanaka" ${params.solicitor === 'tanaka' ? 'selected' : ''}>田中花子</option>
-                                                <option value="sato" ${params.solicitor === 'sato' ? 'selected' : ''}>佐藤次郎</option>
-                                                <option value="suzuki" ${params.solicitor === 'suzuki' ? 'selected' : ''}>鈴木三郎</option>
-                                                <option value="takahashi" ${params.solicitor === 'takahashi' ? 'selected' : ''}>高橋四郎</option>
+                                                ${params.regional_office && params.branch ? this.getSolicitorOptions(params.regional_office, params.branch, params.solicitor || '') : ''}
                                             </select>
                                         </div>
                                     </div>
@@ -500,35 +549,23 @@ app.pages = {
                                     <div class="row g-3">
                                         <div class="col-md-4">
                                             <label class="form-label">地域事業本部 <span class="text-danger">*</span></label>
-                                            <select name="regional_office" class="form-select" ${params.target === '契約' ? 'required' : ''}>
+                                            <select name="regional_office" class="contract-district-select form-select" ${params.target === '契約' ? 'required' : ''}>
                                                 <option value="">地域事業本部を選択</option>
-                                                <option value="tokyo" ${params.regional_office === 'tokyo' ? 'selected' : ''}>東京事業本部</option>
-                                                <option value="osaka" ${params.regional_office === 'osaka' ? 'selected' : ''}>大阪事業本部</option>
-                                                <option value="nagoya" ${params.regional_office === 'nagoya' ? 'selected' : ''}>名古屋事業本部</option>
-                                                <option value="kyushu" ${params.regional_office === 'kyushu' ? 'selected' : ''}>九州事業本部</option>
-                                                <option value="tohoku" ${params.regional_office === 'tohoku' ? 'selected' : ''}>東北事業本部</option>
+                                                ${this.getDistrictOptions(params.regional_office || '')}
                                             </select>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">支店</label>
-                                            <select name="branch" class="form-select">
+                                            <select name="branch" class="contract-branch-select form-select" ${!params.regional_office ? 'disabled' : ''}>
                                                 <option value="">支店を選択（任意）</option>
-                                                <option value="shibuya" ${params.branch === 'shibuya' ? 'selected' : ''}>渋谷支店</option>
-                                                <option value="shinjuku" ${params.branch === 'shinjuku' ? 'selected' : ''}>新宿支店</option>
-                                                <option value="ginza" ${params.branch === 'ginza' ? 'selected' : ''}>銀座支店</option>
-                                                <option value="ikebukuro" ${params.branch === 'ikebukuro' ? 'selected' : ''}>池袋支店</option>
-                                                <option value="shinagawa" ${params.branch === 'shinagawa' ? 'selected' : ''}>品川支店</option>
+                                                ${params.regional_office ? this.getBranchOptions(params.regional_office, params.branch || '') : ''}
                                             </select>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">ソリシター</label>
-                                            <select name="solicitor" class="form-select">
+                                            <select name="solicitor" class="contract-solicitor-select form-select" ${!params.branch ? 'disabled' : ''}>
                                                 <option value="">ソリシターを選択（任意）</option>
-                                                <option value="yamada" ${params.solicitor === 'yamada' ? 'selected' : ''}>山田太郎</option>
-                                                <option value="tanaka" ${params.solicitor === 'tanaka' ? 'selected' : ''}>田中花子</option>
-                                                <option value="sato" ${params.solicitor === 'sato' ? 'selected' : ''}>佐藤次郎</option>
-                                                <option value="suzuki" ${params.solicitor === 'suzuki' ? 'selected' : ''}>鈴木三郎</option>
-                                                <option value="takahashi" ${params.solicitor === 'takahashi' ? 'selected' : ''}>高橋四郎</option>
+                                                ${params.regional_office && params.branch ? this.getSolicitorOptions(params.regional_office, params.branch, params.solicitor || '') : ''}
                                             </select>
                                         </div>
                                     </div>

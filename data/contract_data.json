@@ -1,0 +1,71 @@
+{
+  "A": {
+    "name": "北海道・東北地域事業本部",
+    "branches": [
+      {
+        "code": "A001",
+        "name": "札幌支店",
+        "solicitors": [
+          {"code": "SA001", "name": "山田太郎"},
+          {"code": "SA002", "name": "田中花子"}
+        ]
+      },
+      {
+        "code": "A002",
+        "name": "仙台支店",
+        "solicitors": [
+          {"code": "SA003", "name": "佐藤次郎"},
+          {"code": "SA004", "name": "鈴木三郎"}
+        ]
+      }
+    ]
+  },
+  "C": {
+    "name": "首都圏地域事業本部",
+    "branches": [
+      {
+        "code": "C001",
+        "name": "渋谷支店",
+        "solicitors": [
+          {"code": "SC001", "name": "高橋四郎"},
+          {"code": "SC002", "name": "伊藤五郎"}
+        ]
+      },
+      {
+        "code": "C002",
+        "name": "新宿支店",
+        "solicitors": [
+          {"code": "SC003", "name": "渡辺六郎"}
+        ]
+      },
+      {
+        "code": "C003",
+        "name": "品川支店",
+        "solicitors": [
+          {"code": "SC004", "name": "小林七郎"},
+          {"code": "SC005", "name": "加藤八郎"}
+        ]
+      }
+    ]
+  },
+  "E": {
+    "name": "関西地域事業本部",
+    "branches": [
+      {
+        "code": "E001",
+        "name": "梅田支店",
+        "solicitors": [
+          {"code": "SE001", "name": "吉田九郎"},
+          {"code": "SE002", "name": "山本十郎"}
+        ]
+      },
+      {
+        "code": "E002",
+        "name": "難波支店",
+        "solicitors": [
+          {"code": "SE003", "name": "中村一郎"}
+        ]
+      }
+    ]
+  }
+}

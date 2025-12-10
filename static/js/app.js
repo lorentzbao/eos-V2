@@ -35,6 +35,78 @@ window.app = {
 
         // Load prefecture data
         this.pages.loadPrefectures();
+
+        // Load contract data
+        this.pages.loadContractData();
+
+        // Setup contract dropdown handlers
+        this.setupContractDropdownHandlers();
+    },
+
+    // Setup event handlers for contract dropdowns (cascading)
+    setupContractDropdownHandlers() {
+        // Use event delegation for dynamically loaded elements
+        document.addEventListener('change', (e) => {
+            // Handle district selection change
+            if (e.target.classList.contains('contract-district-select') || e.target.id === 'district-select') {
+                const districtSelect = e.target;
+                const districtValue = districtSelect.value;
+
+                // Find the corresponding branch and solicitor selects
+                const form = districtSelect.closest('form');
+                if (!form) return;
+
+                const branchSelect = form.querySelector('.contract-branch-select, #branch-select, #branch-select-search');
+                const solicitorSelect = form.querySelector('.contract-solicitor-select, #solicitor-select, #solicitor-select-search');
+
+                if (districtValue && branchSelect) {
+                    // Load branches for selected district
+                    branchSelect.disabled = false;
+                    branchSelect.innerHTML = '<option value="">支店を選択（任意）</option>' +
+                        this.pages.getBranchOptions(districtValue);
+
+                    // Reset solicitor dropdown
+                    if (solicitorSelect) {
+                        solicitorSelect.disabled = true;
+                        solicitorSelect.innerHTML = '<option value="">ソリシターを選択（任意）</option>';
+                    }
+                } else if (branchSelect) {
+                    // Reset both branch and solicitor dropdowns
+                    branchSelect.disabled = true;
+                    branchSelect.innerHTML = '<option value="">支店を選択（任意）</option>';
+                    if (solicitorSelect) {
+                        solicitorSelect.disabled = true;
+                        solicitorSelect.innerHTML = '<option value="">ソリシターを選択（任意）</option>';
+                    }
+                }
+            }
+
+            // Handle branch selection change
+            if (e.target.classList.contains('contract-branch-select') || e.target.id === 'branch-select' || e.target.id === 'branch-select-search') {
+                const branchSelect = e.target;
+                const branchValue = branchSelect.value;
+
+                // Find the district and solicitor selects
+                const form = branchSelect.closest('form');
+                if (!form) return;
+
+                const districtSelect = form.querySelector('.contract-district-select, #district-select, #district-select-search');
+                const solicitorSelect = form.querySelector('.contract-solicitor-select, #solicitor-select, #solicitor-select-search');
+
+                if (branchValue && districtSelect && solicitorSelect) {
+                    const districtValue = districtSelect.value;
+
+                    // Load solicitors for selected branch
+                    solicitorSelect.disabled = false;
+                    solicitorSelect.innerHTML = '<option value="">ソリシターを選択（任意）</option>' +
+                        this.pages.getSolicitorOptions(districtValue, branchValue);
+                } else if (solicitorSelect) {
+                    // Reset solicitor dropdown
+                    solicitorSelect.disabled = true;
+                    solicitorSelect.innerHTML = '<option value="">ソリシターを選択（任意）</option>';
+                }
+            }
+        });
     },
 
     // Show loading overlay
