@@ -3,13 +3,13 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.services.whoosh_simple import WhooshSimpleJapanese
+from app.services.whoosh_prefecture import WhooshPrefectureJapanese
 
 def test_whoosh_simple():
     print("=== Whoosh Simple 日本語検索テスト ===\n")
     
     # Initialize search engine
-    search_engine = WhooshSimpleJapanese()
+    search_engine = WhooshPrefectureJapanese()
     
     # Clear existing index
     print("既存のインデックスをクリア中...")

@@ -1,10 +1,10 @@
 from typing import Dict, List
-from .search_service import SearchService
+from .search_service_prefecture import SearchServicePrefecture
 from omegaconf import DictConfig
 
-class MultiIndexSearchService:
+class MultiPrefectureSearchService:
     """Search service that manages multiple prefecture-based indexes"""
-    
+
     def __init__(self, indexes_config: DictConfig, prewarm: bool = False):
         self.indexes_config = indexes_config
         self.search_services = {}
@@ -13,7 +13,7 @@ class MultiIndexSearchService:
         for prefecture, config in indexes_config.items():
             # Handle both DictConfig and regular dict
             index_dir = config.dir if hasattr(config, 'dir') else config['dir']
-            self.search_services[prefecture] = SearchService(index_dir, prewarm=prewarm)
+            self.search_services[prefecture] = SearchServicePrefecture(index_dir, prewarm=prewarm)
     
     def get_available_prefectures(self) -> List[Dict]:
         """Get list of available prefectures for frontend selection, sorted by prefecture code"""

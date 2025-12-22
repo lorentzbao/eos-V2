@@ -21,7 +21,7 @@ from datetime import datetime
 # Add the parent directory to the path to import app modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.services.search_service import SearchService
+from app.services.search_service_prefecture import SearchServicePrefecture
 
 
 def format_bytes(bytes_size: int) -> str:
@@ -188,7 +188,7 @@ Examples:
         print("🔍 SEARCH ENGINE INFORMATION")
         print("-" * 40)
         
-        search_service = SearchService(args.index_dir)
+        search_service = SearchServicePrefecture(args.index_dir)
         stats = search_service.get_stats()
         
         print(f"📄 Total Documents: {stats.get('total_documents', 0):,}")

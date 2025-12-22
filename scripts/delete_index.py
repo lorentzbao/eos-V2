@@ -21,7 +21,7 @@ import shutil
 # Add the parent directory to the path to import app modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.services.search_service import SearchService
+from app.services.search_service_prefecture import SearchServicePrefecture
 
 
 def confirm_deletion(index_dir: str, force: bool = False) -> bool:
@@ -113,7 +113,7 @@ Examples:
     
     # Initialize search service to get index information
     try:
-        search_service = SearchService(args.index_dir)
+        search_service = SearchServicePrefecture(args.index_dir)
         index_info = get_index_info(search_service)
         
         print("📊 INDEX INFORMATION")

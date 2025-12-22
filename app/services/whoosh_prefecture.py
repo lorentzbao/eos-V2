@@ -6,8 +6,8 @@ from whoosh.analysis import StandardAnalyzer
 from typing import List, Dict, Optional
 from .tokenizers import get_tokenizer
 
-class WhooshSimpleJapanese:
-    """Whoosh search engine with pre-processed Japanese text"""
+class WhooshPrefectureJapanese:
+    """Whoosh search engine for prefecture-based indexes with pre-processed Japanese text"""
 
     def __init__(self, index_dir: str = "data/whoosh_index", tokenizer_type: Optional[str] = None, prewarm: bool = False):
         """

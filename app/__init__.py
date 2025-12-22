@@ -40,16 +40,16 @@ def create_app(config: DictConfig = None):
         app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
 
     # Initialize search service ONCE (for cache reuse)
-    from app.services.search_service import SearchService
-    from app.services.multi_index_search_service import MultiIndexSearchService
+    from app.services.search_service_prefecture import SearchServicePrefecture
+    from app.services.multi_prefecture_search_service import MultiPrefectureSearchService
 
     prewarm = app.config.get('PREWARM_INDEXES', False)
 
     if 'INDEXES' in app.config:
-        app.search_service = MultiIndexSearchService(app.config['INDEXES'], prewarm=prewarm)
+        app.search_service = MultiPrefectureSearchService(app.config['INDEXES'], prewarm=prewarm)
     else:
         index_dir = app.config.get('INDEX_DIR', 'data/whoosh_index')
-        app.search_service = SearchService(index_dir, prewarm=prewarm)
+        app.search_service = SearchServicePrefecture(index_dir, prewarm=prewarm)
 
     # Register blueprints
     from app.routes.main import main

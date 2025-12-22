@@ -23,7 +23,7 @@ from typing import List, Dict
 # Add the parent directory to the path to import app modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.services.search_service import SearchService
+from app.services.search_service_prefecture import SearchServicePrefecture
 import json
 import glob
 
@@ -146,7 +146,7 @@ def convert_to_int(value, default: int = 0) -> int:
         return default
 
 
-def process_batch(search_service: SearchService, batch: List[Dict], batch_num: int, is_tokenized: bool = False) -> bool:
+def process_batch(search_service: SearchServicePrefecture, batch: List[Dict], batch_num: int, is_tokenized: bool = False) -> bool:
     """Process a single batch of documents"""
     print(f"📝 Processing batch {batch_num} ({len(batch)} records)...")
     
@@ -290,7 +290,7 @@ Examples:
     
     # Initialize search service
     try:
-        search_service = SearchService(index_dir)
+        search_service = SearchServicePrefecture(index_dir)
         
         # Clear existing index if requested
         if args.clear_existing:

@@ -211,3 +211,49 @@ indexes:
     code: "47"
     dir: "data/indexes/okinawa"
     name: "沖縄県"
+
+contract_indexes:
+  "A":
+    district_cd: "A"
+    dir: "data/contract_indexes/A"
+    name: "北海道・東北地域事業本部"
+  "B":
+    district_cd: "B"
+    dir: "data/contract_indexes/B"
+    name: "関信越地域事業本部"
+  "C":
+    district_cd: "C"
+    dir: "data/contract_indexes/C"
+    name: "首都圏地域事業本部"
+  "D":
+    district_cd: "D"
+    dir: "data/contract_indexes/D"
+    name: "東海・北陸地域事業本部"
+  "E":
+    district_cd: "E"
+    dir: "data/contract_indexes/E"
+    name: "関西地域事業本部"
+  "F":
+    district_cd: "F"
+    dir: "data/contract_indexes/F"
+    name: "中国・四国地域事業本部"
+  "G":
+    district_cd: "G"
+    dir: "data/contract_indexes/G"
+    name: "九州・沖縄地域事業本部"
+  "H":
+    district_cd: "H"
+    dir: "data/contract_indexes/H"
+    name: "本店グループ"
+  "I":
+    district_cd: "I"
+    dir: "data/contract_indexes/I"
+    name: "企業営業本部"
+  "J":
+    district_cd: "J"
+    dir: "data/contract_indexes/J"
+    name: "全国代理店センター本部"
+  "K":
+    district_cd: "K"
+    dir: "data/contract_indexes/K"
+    name: "企業営業グループ"

@@ -3,13 +3,13 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.services.search_service import SearchService
+from app.services.search_service_prefecture import SearchServicePrefecture
 
 def test_search_engine():
     print("=== 日本語検索エンジンテスト ===\n")
     
     # Initialize search service
-    search_service = SearchService()
+    search_service = SearchServicePrefecture()
     
     # Test data - clean set with no duplicates
     test_documents = [

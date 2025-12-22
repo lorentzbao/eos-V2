@@ -6,7 +6,7 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.services.search_service import SearchService  # Custom implementation
+from app.services.search_service_prefecture import SearchServicePrefecture  # Custom implementation
 from app.services.search_service_whoosh import WhooshSearchService  # Whoosh implementation
 
 def compare_implementations():
@@ -36,8 +36,8 @@ def compare_implementations():
     
     # Initialize both search engines
     print("1. 検索エンジンを初期化中...")
-    custom_search = SearchService()
-    whoosh_search = WhooshSearchService()
+    custom_search = SearchServicePrefecture()
+    whoosh_search = WhooshSearchServicePrefecture()
     
     # Add test data to both
     print("2. テストデータを追加中...")

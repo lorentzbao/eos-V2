@@ -1,11 +1,11 @@
 from typing import List, Dict
 from functools import lru_cache
-from .whoosh_simple import WhooshSimpleJapanese
+from .whoosh_prefecture import WhooshPrefectureJapanese
 from .query_processor import QueryProcessor
 
-class SearchService:
+class SearchServicePrefecture:
     def __init__(self, index_dir: str = "data/whoosh_index", prewarm: bool = False):
-        self.search_engine = WhooshSimpleJapanese(index_dir, prewarm=prewarm)
+        self.search_engine = WhooshPrefectureJapanese(index_dir, prewarm=prewarm)
         self.query_processor = QueryProcessor()
     
     @lru_cache(maxsize=128)

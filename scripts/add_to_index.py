@@ -23,7 +23,7 @@ from typing import List, Dict, Set
 # Add the parent directory to the path to import app modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.services.search_service import SearchService
+from app.services.search_service_prefecture import SearchServicePrefecture
 
 
 def read_existing_ids(search_service: SearchService) -> Set[str]:
@@ -222,7 +222,7 @@ Examples:
     
     # Initialize search service
     try:
-        search_service = SearchService(args.index_dir)
+        search_service = SearchServicePrefecture(args.index_dir)
         initial_stats = search_service.get_stats()
         initial_count = initial_stats['total_documents']
         

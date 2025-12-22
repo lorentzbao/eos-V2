@@ -2,7 +2,7 @@ from typing import Dict, List
 from .search_service_contract import SearchServiceContract
 from omegaconf import DictConfig
 
-class MultiIndexSearchContractService:
+class MultiContractSearchService:
     """Search service that manages multiple district-based contract indexes"""
 
     def __init__(self, indexes_config: DictConfig, prewarm: bool = False):
