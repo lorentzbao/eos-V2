@@ -273,9 +273,9 @@ def process_tokenized_data(lookup: Dict[str, Dict], batch_size: int,
 
             batch_contract += 1
 
-            # Lookup producer info
-            # Ensure DOMESTIC_DESCRIMI_NO is in correct format (same as dataframe conversion)
-            domestic_no = record.get('DOMESTIC_DESCRIMI_NO')
+            # Lookup producer info using 'jcn' field (as used in tokenize_csv_streaming.py)
+            # Note: 'jcn' in JSON corresponds to DOMESTIC_DESCRIMI_NO in dataframe
+            domestic_no = record.get('jcn')
             if not domestic_no:
                 batch_dropped += 1
                 continue
