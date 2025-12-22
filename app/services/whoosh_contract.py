@@ -86,11 +86,21 @@ class WhooshContractJapanese:
             print(f"Warning: Failed to prewarm index: {e}")
 
     def _tokenize_japanese(self, text: str) -> str:
-        """Tokenize Japanese text using the configured tokenizer"""
+        """Tokenize Japanese text and return space-separated tokens"""
         if not text:
             return ""
-        tokens = self.tokenizer.tokenize(text)
-        return " ".join(tokens)
+
+        # Use the tokenizer's built-in filtering
+        tokens = self.tokenizer.tokenize_and_filter(text, min_length=2)
+
+        # Additional filtering for numeric tokens
+        filtered_tokens = [
+            token.lower().strip()
+            for token in tokens
+            if not token.isdigit()
+        ]
+
+        return " ".join(filtered_tokens)
 
     def add_documents_batch(self, documents: List[Dict]) -> bool:
         """Add multiple documents in a batch (more efficient than adding one by one)"""
