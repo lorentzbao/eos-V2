@@ -42,6 +42,7 @@ def create_app(config: DictConfig = None):
     # Initialize search service ONCE (for cache reuse)
     from app.services.search_service_prefecture import SearchServicePrefecture
     from app.services.multi_prefecture_search_service import MultiPrefectureSearchService
+    from app.services.multi_contract_search_service import MultiContractSearchService
 
     prewarm = app.config.get('PREWARM_INDEXES', False)
 
@@ -50,6 +51,13 @@ def create_app(config: DictConfig = None):
     else:
         index_dir = app.config.get('INDEX_DIR', 'data/whoosh_index')
         app.search_service = SearchServicePrefecture(index_dir, prewarm=prewarm)
+
+    # Initialize contract search service
+    if hasattr(config, 'contract_indexes'):
+        app.config['CONTRACT_INDEXES'] = config.contract_indexes
+        app.contract_search_service = MultiContractSearchService(app.config['CONTRACT_INDEXES'], prewarm=prewarm)
+    else:
+        app.contract_search_service = None
 
     # Register blueprints
     from app.routes.main import main

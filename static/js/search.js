@@ -226,7 +226,10 @@ app.search = {
             app.showLoading();
 
             const searchParams = new URLSearchParams(params);
-            const response = await fetch(`/search?${searchParams.toString()}`);
+
+            // Route to correct endpoint based on target
+            const endpoint = params.target === '契約' ? '/search-contract' : '/search';
+            const response = await fetch(`${endpoint}?${searchParams.toString()}`);
 
             if (!response.ok) {
                 throw new Error(`Search failed: ${response.status}`);

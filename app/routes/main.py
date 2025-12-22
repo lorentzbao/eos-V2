@@ -173,6 +173,69 @@ def search():
         'stats': stats
     })
 
+@main.route('/search-contract')
+def search_contract():
+    """Contract search results API endpoint"""
+    if 'username' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    query = request.args.get('q', '')
+    # Get default limit from config
+    default_limit = current_app.config.get('SEARCH_DEFAULT_LIMIT', 50)
+    limit = int(request.args.get('limit', default_limit))
+    district = request.args.get('regional_office', '')  # District (A, B, C...)
+    branch_cd = request.args.get('branch', '')  # MOTHERBRANCH_CD
+    solicitor_cd = request.args.get('solicitor', '')  # SOLICITOR_CD
+    city = request.args.get('city', '')
+    username = session['username']
+
+    # Handle empty or whitespace-only queries
+    if not query or not query.strip():
+        return jsonify({'error': 'Query is required'}), 400
+
+    # Get contract search service
+    contract_search_service = current_app.contract_search_service
+
+    if not contract_search_service:
+        return jsonify({'error': 'Contract search service not available'}), 503
+
+    # District is required for contract search
+    if not district:
+        return jsonify({'error': 'Regional office (district) is required'}), 400
+
+    # Perform contract search
+    search_results = contract_search_service.search(
+        query, district, limit, branch_cd, solicitor_cd, "", city
+    )
+    stats = contract_search_service.get_stats(district)
+
+    # Log the search query
+    search_logger.log_search(
+        username,
+        query,
+        search_results['total_found'],
+        search_results['search_time'],
+        f"District_{district}",  # Log district instead of prefecture
+        '契約',  # Contract status
+        city
+    )
+
+    return jsonify({
+        'query': query,
+        'grouped_results': search_results.get('grouped_results', []),
+        'total_found': search_results['total_found'],
+        'total_companies': search_results.get('total_companies', 0),
+        'search_time': search_results['search_time'],
+        'processed_query': search_results['processed_query'],
+        'district': district,
+        'branch_cd': branch_cd,
+        'solicitor_cd': solicitor_cd,
+        'city': city,
+        'limit': limit,
+        'username': username,
+        'stats': stats
+    })
+
 @main.route('/api/popular-queries')
 def api_popular_queries():
     """Popular queries API endpoint"""
