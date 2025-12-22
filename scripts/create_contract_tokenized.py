@@ -86,6 +86,10 @@ def load_producer_lookup(config: Dict) -> Dict[str, Dict]:
         'SOLICITOR_CD',
         'SOLICITOR'
     ])
+
+    # Convert SOLICITOR_CD to string format
+    t_producer['SOLICITOR_CD'] = t_producer['SOLICITOR_CD'].astype(str)
+
     print(f"    Loaded {len(t_producer)} records")
 
     # Join: df.PRODUCER_CD = t_producer.PRODUCER_CD_ML
