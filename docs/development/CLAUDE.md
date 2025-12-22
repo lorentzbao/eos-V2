@@ -74,13 +74,13 @@ uv run pytest -v
 The application uses **prefecture-based routing** with separate Whoosh indexes for each prefecture. This is the core architectural pattern:
 
 **Key files:**
-- `app/services/multi_index_search_service.py` - Routes searches to correct prefecture index
-- `app/services/search_service.py` - Single-index search operations (wrapped by multi-index)
+- `app/services/multi_prefecture_search_service_prefecture.py` - Routes searches to correct prefecture index
+- `app/services/search_service_prefecture.py` - Single-index search operations (wrapped by multi-index)
 - `conf/config.yaml` - Multi-index configuration
 
 **How it works:**
 1. User selects a prefecture in the frontend
-2. `MultiIndexSearchService.search()` routes to the appropriate prefecture's `SearchService`
+2. `MultiPrefectureSearchService.search()` routes to the appropriate prefecture's `SearchService`
 3. Each prefecture has its own Whoosh index in `data/indexes/{prefecture}/`
 4. Configuration in `conf/config.yaml` defines available prefectures
 
@@ -89,10 +89,10 @@ The application uses **prefecture-based routing** with separate Whoosh indexes f
 # Routes check for multi-index vs single-index configuration
 def get_search_service():
     if 'INDEXES' in current_app.config:
-        return MultiIndexSearchService(current_app.config['INDEXES'])
+        return MultiPrefectureSearchServicePrefecture(current_app.config['INDEXES'])
     else:
         # Fallback to single index (backward compatibility)
-        return SearchService(current_app.config['INDEX_DIR'])
+        return SearchServicePrefecture(current_app.config['INDEX_DIR'])
 ```
 
 ### Flask Application Structure
@@ -158,7 +158,7 @@ uv run python scripts/tokenize_csv.py processing.batch_size=1000
 ### Search Service Layer
 
 **Service hierarchy:**
-- `MultiIndexSearchService` - Prefecture routing (wraps multiple SearchServices)
+- `MultiPrefectureSearchService` - Prefecture routing (wraps multiple SearchServices)
 - `SearchService` - Single-index operations (Whoosh interactions)
 - `QueryProcessor` - Query parsing and tokenization
 - `SearchLogger` - Search history and analytics
@@ -169,7 +169,7 @@ uv run python scripts/tokenize_csv.py processing.batch_size=1000
 - `add_document()` / `add_documents_batch()` - Document management
 - `clear_index()` / `optimize_index()` - Index maintenance
 
-**Important:** Multi-index service requires prefecture parameter. Check for `isinstance(search_service, MultiIndexSearchService)` when adding features.
+**Important:** Multi-index service requires prefecture parameter. Check for `isinstance(search_service, MultiPrefectureSearchService)` when adding features.
 
 ## Critical Patterns
 
@@ -221,7 +221,7 @@ if os.path.exists(cache_file):
 2. Results grouped by `jcn` (company number)
 3. Frontend displays one company card with multiple URL entries
 
-**Implementation:** `app/services/search_service.py` - see `search()` method's grouping logic
+**Implementation:** `app/services/search_service_prefecture.py` - see `search()` method's grouping logic
 
 ## Data Folder Structure
 

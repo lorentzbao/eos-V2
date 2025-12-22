@@ -191,10 +191,180 @@ data/source_name/tokenized/
 
 **Optional Fields:** Enterprise data including customer status, address, industry classification, financial data, organization codes, etc.
 
+## Contract Data Processing (契約モード)
+
+For contract (契約) search mode, you need to process data differently to create district-based indexes.
+
+### Overview
+
+Contract data processing involves:
+1. Converting branch/solicitor CSV to hierarchical JSON for dropdowns
+2. Creating district-based tokenized data from prefecture-based data
+3. Building district-based search indexes
+
+### 5. `convert_contract_data_to_json.py` - Contract Data Conversion
+
+Converts CSV with branch/solicitor data to hierarchical JSON for frontend dropdowns.
+
+**Usage:**
+```bash
+python scripts/convert_contract_data_to_json.py <csv_file> [--output OUTPUT]
+```
+
+**Input CSV Format:**
+- `DISTRICT_NAME` - District name (e.g., 北海道・東北地域事業本部)
+- `MOTHERBRANCH_CD` - Branch code
+- `BRANCH_NAME` - Branch name
+- `SOLICITOR_CD` - Solicitor code
+- `SOLICITOR` - Solicitor name
+
+**Output:** Creates `data/contract_data.json` with hierarchical structure:
+```json
+{
+  "A": {
+    "name": "北海道・東北地域事業本部",
+    "branches": [
+      {
+        "code": "001",
+        "name": "札幌支店",
+        "solicitors": [
+          {"code": "S001", "name": "山田太郎"}
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Example:**
+```bash
+python scripts/convert_contract_data_to_json.py data/t_producer.csv
+```
+
+### 6. `create_contract_tokenized.py` - Contract Tokenized Data Creation
+
+Creates district-based tokenized data from prefecture-based tokenized data.
+
+**Usage:**
+```bash
+python scripts/create_contract_tokenized.py
+```
+
+**Prerequisites:**
+- Prefecture-based tokenized data in `data/tokenized/{prefecture}/batch_*.json`
+- `data/sample_companies.csv` (DOMESTIC_DESCRIMI_NO, PRODUCER_CD)
+- `data/t_producer.csv` (producer data with district/branch/solicitor info)
+- Configuration in `conf/json_companies.yaml`
+
+**What it does:**
+1. Reads tokenized data from `data/tokenized/{prefecture}/batch_*.json`
+2. Filters only records where `CUST_STATUS2='契約'`
+3. Joins with dataframe and t_producer.csv using:
+   - `DOMESTIC_DESCRIMI_NO` → `PRODUCER_CD` → `PRODUCER_CD_ML`
+4. Adds 5 contract fields: `DISTRICT_NAME`, `MOTHERBRANCH_CD`, `BRANCH_NAME`, `SOLICITOR_CD`, `SOLICITOR`
+5. Outputs to `data/tokenized_contract/{district}/batch_*.json`
+
+**Configuration (conf/json_companies.yaml):**
+```yaml
+input:
+  dataframe_file: "data/sample_companies.csv"
+  t_producer_file: "data/t_producer.csv"
+
+processing:
+  batch_size: 256
+```
+
+**Output Structure:**
+```
+data/tokenized_contract/
+├── A/
+│   ├── batch_0.json
+│   ├── batch_1.json
+│   └── ...
+├── B/
+└── ...
+```
+
+### 7. `create_index_contract.py` - Contract Index Creation
+
+Creates district-based Whoosh search indexes for contract data.
+
+**Usage:**
+```bash
+# Create all district indexes
+python scripts/create_index_contract.py
+
+# Create specific district
+python scripts/create_index_contract.py --district A
+
+# Clear and rebuild
+python scripts/create_index_contract.py --clear-existing
+python scripts/create_index_contract.py --district A --clear-existing
+```
+
+**Options:**
+- `--district DISTRICT` - Process specific district (A, B, C, ...)
+- `--tokenized-dir DIR` - Base directory for tokenized data (default: `data/tokenized_contract`)
+- `--index-dir DIR` - Base directory for indexes (default: `data/contract_indexes`)
+- `--clear-existing` - Clear existing indexes before creating
+
+**Output Structure:**
+```
+data/contract_indexes/
+├── A/
+│   ├── _MAIN_0.toc
+│   └── MAIN_*.seg
+├── B/
+└── ...
+```
+
+**District Mapping:**
+- A: 北海道・東北地域事業本部
+- B: 関信越地域事業本部
+- C: 首都圏地域事業本部
+- D: 東海・北陸地域事業本部
+- E: 関西地域事業本部
+- F: 中国・四国地域事業本部
+- G: 九州・沖縄地域事業本部
+- H: 本店グループ
+- I: 企業営業本部
+- J: 全国代理店センター本部
+- K: 企業営業グループ
+
+**Example Workflow:**
+```bash
+# 1. Convert contract data CSV to JSON (for dropdowns)
+python scripts/convert_contract_data_to_json.py data/t_producer.csv
+
+# 2. Create district-based tokenized data
+python scripts/create_contract_tokenized.py
+
+# 3. Create search indexes for all districts
+python scripts/create_index_contract.py
+
+# 4. Verify indexes
+python scripts/index_info.py data/contract_indexes/A
+python scripts/index_info.py data/contract_indexes/E
+```
+
+## Service Architecture
+
+### Prefecture Mode (白地・過去)
+- `whoosh_prefecture.py` - Whoosh schema for prefecture-based search
+- `search_service_prefecture.py` - Single prefecture search operations
+- `multi_prefecture_search_service.py` - Multi-prefecture search management
+
+### Contract Mode (契約)
+- `whoosh_contract.py` - Whoosh schema with contract fields (MOTHERBRANCH_CD, SOLICITOR_CD)
+- `search_service_contract.py` - Single district search operations
+- `multi_contract_search_service.py` - Multi-district search management
+
 ## Performance & Tips
 
-- **Batch sizes**: 500-1000 for most datasets
+- **Batch sizes**: 500-1000 for most datasets, 256 for contract data
 - **Two-step approach**: Tokenize first, then index for better performance
 - **Memory**: Reduce batch size if encountering memory issues
 - **Confirmation**: `delete_index.py` requires confirmation unless `--force`
 - **Dry run**: Use `--dry-run` with `add_to_index.py` to preview changes
+- **Contract data**: Use streaming approach (Option B) for memory efficiency
+- **Index verification**: Always verify indexes with `index_info.py` after creation

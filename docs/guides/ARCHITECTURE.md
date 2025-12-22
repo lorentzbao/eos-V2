@@ -27,13 +27,13 @@ EOS Japanese Enterprise Search Engine architecture overview.
 The application uses **prefecture-based routing** with separate Whoosh indexes for each prefecture.
 
 ### Key Components
-- `app/services/multi_index_search_service.py` - Routes searches to correct prefecture index
-- `app/services/search_service.py` - Single-index search operations
+- `app/services/multi_prefecture_search_service_prefecture.py` - Routes searches to correct prefecture index
+- `app/services/search_service_prefecture.py` - Single-index search operations
 - `conf/config.yaml` - Multi-index configuration
 
 ### How It Works
 1. User selects a prefecture in the frontend
-2. `MultiIndexSearchService.search()` routes to the appropriate prefecture's `SearchService`
+2. `MultiPrefectureSearchService.search()` routes to the appropriate prefecture's `SearchService`
 3. Each prefecture has its own Whoosh index in `data/indexes/{prefecture}/`
 4. Configuration in `conf/config.yaml` defines available prefectures
 
@@ -156,12 +156,12 @@ Register Blueprints (main, api)
   ↓
 Routes share get_search_service() helper
   ↓
-SearchService / MultiIndexSearchService
+SearchService / MultiPrefectureSearchService
 ```
 
 ### Service Layer Hierarchy
 ```
-MultiIndexSearchService (prefecture routing)
+MultiPrefectureSearchService (prefecture routing)
   ↓
 SearchService (single-index operations)
   ↓
@@ -197,8 +197,8 @@ eos/
 │   │   ├── main.py             # HTML pages
 │   │   └── api.py              # JSON APIs
 │   ├── services/                # Business logic
-│   │   ├── search_service.py
-│   │   ├── multi_index_search_service.py
+│   │   ├── search_service_prefecture.py
+│   │   ├── multi_prefecture_search_service_prefecture.py
 │   │   ├── query_processor.py
 │   │   ├── search_logger.py
 │   │   └── tokenizers/         # Modular tokenizer architecture
@@ -253,7 +253,7 @@ eos/
 2. Results grouped by `jcn` (company number)
 3. Frontend displays one company card with multiple URL entries
 
-**Implementation:** See `app/services/search_service.py:search()` method
+**Implementation:** See `app/services/search_service_prefecture.py:search()` method
 
 ---
 

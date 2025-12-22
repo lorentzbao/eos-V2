@@ -104,7 +104,97 @@ GET /api/solicitors/A/001
 Response: {"solicitors": [{"code": "S001", "name": "山田太郎"}, ...]}
 ```
 
-## Step 5: Frontend Usage
+## Step 5: Create Contract Tokenized Data
+
+After setting up the contract data JSON for dropdowns, you need to create district-based tokenized data from the prefecture-based tokenized data.
+
+### Prerequisites
+- You must have already run `scripts/tokenize_csv_streaming.py` to create `data/tokenized/{prefecture}/batch_*.json`
+- You must have the following files:
+  - `data/sample_companies.csv` (dataframe with DOMESTIC_DESCRIMI_NO and PRODUCER_CD)
+  - `data/t_producer.csv` (producer data with district/branch/solicitor info)
+
+### Run the Script
+
+```bash
+python scripts/create_contract_tokenized.py
+```
+
+This script will:
+1. Read tokenized data from `data/tokenized/{prefecture}/batch_*.json`
+2. Filter only records where `CUST_STATUS2='契約'`
+3. Join with `data/sample_companies.csv` and `data/t_producer.csv`
+4. Add 5 contract fields to each record: `DISTRICT_NAME`, `MOTHERBRANCH_CD`, `BRANCH_NAME`, `SOLICITOR_CD`, `SOLICITOR`
+5. Output to `data/tokenized_contract/{district}/batch_*.json`
+
+### Output Structure
+```
+data/tokenized_contract/
+├── A/
+│   ├── batch_0.json
+│   ├── batch_1.json
+│   └── ...
+├── B/
+│   ├── batch_0.json
+│   └── ...
+└── ...
+```
+
+Each batch file contains records with all original fields plus the 5 contract-specific fields.
+
+## Step 6: Create Contract Search Indexes
+
+After creating the contract tokenized data, create Whoosh search indexes for each district.
+
+### Create All District Indexes
+
+```bash
+python scripts/create_index_contract.py
+```
+
+This will create indexes for all districts (A, B, C, ...) found in `data/tokenized_contract/`.
+
+### Create Index for Specific District
+
+```bash
+# Create index for district A only
+python scripts/create_index_contract.py --district A
+
+# Create index for district E only
+python scripts/create_index_contract.py --district E
+```
+
+### Clear and Rebuild Indexes
+
+```bash
+# Clear and rebuild all indexes
+python scripts/create_index_contract.py --clear-existing
+
+# Clear and rebuild specific district
+python scripts/create_index_contract.py --district A --clear-existing
+```
+
+### Output Structure
+```
+data/contract_indexes/
+├── A/
+│   ├── _MAIN_0.toc
+│   └── MAIN_*.seg
+├── B/
+│   └── ...
+└── ...
+```
+
+### Verify Index Creation
+
+Check the statistics for each district:
+
+```bash
+python scripts/index_info.py data/contract_indexes/A
+python scripts/index_info.py data/contract_indexes/E
+```
+
+## Step 7: Frontend Usage
 
 The frontend can call these APIs to populate dropdowns dynamically:
 

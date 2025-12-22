@@ -339,7 +339,7 @@ For high traffic, replace file-based search logs with database:
 
 ```bash
 # Optimize indexes regularly (via cron)
-0 3 * * 0 cd /path/to/eos && uv run python -c "from app.services.search_service import SearchService; s = SearchService('data/indexes/tokyo'); s.optimize_index()"
+0 3 * * 0 cd /path/to/eos && uv run python -c "from app.services.search_service_prefecture import SearchServicePrefecture; s = SearchServicePrefecture('data/indexes/tokyo'); s.optimize_index()"
 ```
 
 ### CSV Cache Cleanup

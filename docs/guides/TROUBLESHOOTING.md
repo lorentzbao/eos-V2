@@ -235,8 +235,8 @@ print(t.tokenize_and_filter('テスト'))
 
 # Test search service
 uv run python -c "
-from app.services.search_service import SearchService
-s = SearchService('data/indexes/tokyo')
+from app.services.search_service_prefecture import SearchServicePrefecture
+s = SearchServicePrefecture('data/indexes/tokyo')
 print(s.get_document_count())
 "
 ```
