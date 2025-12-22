@@ -63,10 +63,14 @@ def load_producer_lookup(config: Dict) -> Dict[str, Dict]:
     print(f"  Reading dataframe: {dataframe_file}")
     df = pd.read_csv(dataframe_file, encoding='cp932', usecols=['DOMESTIC_DESCRIMI_NO', 'PRODUCER_CD'])
 
+    # Clean the data
+    df = df[df['DOMESTIC_DESCRIMI_NO'].notnull()]
+    df.drop_duplicates(subset=['DOMESTIC_DESCRIMI_NO'], inplace=True)
+
     # Convert DOMESTIC_DESCRIMI_NO to string (same as tokenize_csv_streaming.py)
     df['DOMESTIC_DESCRIMI_NO'] = df['DOMESTIC_DESCRIMI_NO'].apply(lambda x: str(int(float(x))))
 
-    print(f"    Loaded {len(df)} records")
+    print(f"    Loaded {len(df)} records (after cleaning)")
 
     # Load t_producer file
     t_producer_file = config['input']['t_producer_file']
