@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, session, send_file, current_app
-from app.services.multi_index_search_service import MultiIndexSearchService
+from app.services.multi_prefecture_search_service import MultiPrefectureSearchService
 import csv
 import io
 import os
@@ -29,7 +29,7 @@ def api_search():
     search_service = get_search_service()
     
     # Check if using multi-index service
-    if isinstance(search_service, MultiIndexSearchService):
+    if isinstance(search_service, MultiPrefectureSearchService):
         if not prefecture:
             return jsonify({'error': 'Prefecture selection is required'}), 400
         results = search_service.search(query, prefecture, limit, cust_status)
@@ -44,7 +44,7 @@ def api_prefectures():
     """API endpoint to get available prefectures"""
     search_service = get_search_service()
     
-    if isinstance(search_service, MultiIndexSearchService):
+    if isinstance(search_service, MultiPrefectureSearchService):
         prefectures = search_service.get_available_prefectures()
         return jsonify({'prefectures': prefectures})
     else:

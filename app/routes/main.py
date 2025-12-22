@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, session, redirect, url_for, current_app, jsonify
 from app.services.search_logger import SearchLogger
-from app.services.multi_index_search_service import MultiIndexSearchService
+from app.services.multi_prefecture_search_service import MultiPrefectureSearchService
 
 main = Blueprint('main', __name__)
 search_logger = SearchLogger()
@@ -137,7 +137,7 @@ def search():
     search_service = get_search_service()
 
     # Handle multi-index service
-    if isinstance(search_service, MultiIndexSearchService):
+    if isinstance(search_service, MultiPrefectureSearchService):
         if not prefecture:
             return jsonify({'error': 'Prefecture is required'}), 400
         search_results = search_service.search(query, prefecture, limit, cust_status_filter, "", city)
