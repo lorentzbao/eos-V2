@@ -203,38 +203,49 @@ def search_contract():
     if not district:
         return jsonify({'error': 'Regional office (district) is required'}), 400
 
-    # Perform contract search
-    search_results = contract_search_service.search(
-        query, district, limit, branch_cd, solicitor_cd, "", city
-    )
-    stats = contract_search_service.get_stats(district)
+    try:
+        # Perform contract search
+        search_results = contract_search_service.search(
+            query, district, limit, branch_cd, solicitor_cd, "", city
+        )
+        stats = contract_search_service.get_stats(district)
 
-    # Log the search query
-    search_logger.log_search(
-        username,
-        query,
-        search_results['total_found'],
-        search_results['search_time'],
-        f"District_{district}",  # Log district instead of prefecture
-        '契約',  # Contract status
-        city
-    )
+        # Log the search query
+        search_logger.log_search(
+            username,
+            query,
+            search_results['total_found'],
+            search_results['search_time'],
+            f"District_{district}",  # Log district instead of prefecture
+            '契約',  # Contract status
+            city
+        )
 
-    return jsonify({
-        'query': query,
-        'grouped_results': search_results.get('grouped_results', []),
-        'total_found': search_results['total_found'],
-        'total_companies': search_results.get('total_companies', 0),
-        'search_time': search_results['search_time'],
-        'processed_query': search_results['processed_query'],
-        'district': district,
-        'branch_cd': branch_cd,
-        'solicitor_cd': solicitor_cd,
-        'city': city,
-        'limit': limit,
-        'username': username,
-        'stats': stats
-    })
+        return jsonify({
+            'query': query,
+            'grouped_results': search_results.get('grouped_results', []),
+            'total_found': search_results['total_found'],
+            'total_companies': search_results.get('total_companies', 0),
+            'search_time': search_results['search_time'],
+            'processed_query': search_results['processed_query'],
+            'district': district,
+            'branch_cd': branch_cd,
+            'solicitor_cd': solicitor_cd,
+            'city': city,
+            'limit': limit,
+            'username': username,
+            'stats': stats
+        })
+    except Exception as e:
+        import traceback
+        error_message = str(e)
+        traceback_str = traceback.format_exc()
+        print(f"Contract search error: {error_message}")
+        print(f"Traceback: {traceback_str}")
+        return jsonify({
+            'error': f'Contract search failed: {error_message}',
+            'details': traceback_str if current_app.debug else None
+        }), 500
 
 @main.route('/api/popular-queries')
 def api_popular_queries():
