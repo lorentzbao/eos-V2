@@ -62,6 +62,10 @@ def load_producer_lookup(config: Dict) -> Dict[str, Dict]:
 
     print(f"  Reading dataframe: {dataframe_file}")
     df = pd.read_csv(dataframe_file, encoding='cp932', usecols=['DOMESTIC_DESCRIMI_NO', 'PRODUCER_CD'])
+
+    # Convert DOMESTIC_DESCRIMI_NO to string (same as tokenize_csv_streaming.py)
+    df['DOMESTIC_DESCRIMI_NO'] = df['DOMESTIC_DESCRIMI_NO'].apply(lambda x: str(int(float(x))))
+
     print(f"    Loaded {len(df)} records")
 
     # Load t_producer file
@@ -241,6 +245,9 @@ def process_tokenized_data(lookup: Dict[str, Dict], batch_size: int,
     total_enriched_records = 0
     total_dropped_records = 0
 
+    # Track unmatched DOMESTIC_DESCRIMI_NO for debugging
+    unmatched_samples = set()
+
     # Process each batch file
     for i, batch_file in enumerate(batch_files, 1):
         batch_name = os.path.basename(batch_file)
@@ -263,9 +270,24 @@ def process_tokenized_data(lookup: Dict[str, Dict], batch_size: int,
             batch_contract += 1
 
             # Lookup producer info
+            # Ensure DOMESTIC_DESCRIMI_NO is in correct format (same as dataframe conversion)
             domestic_no = record.get('DOMESTIC_DESCRIMI_NO')
-            if not domestic_no or domestic_no not in lookup:
+            if not domestic_no:
                 batch_dropped += 1
+                continue
+
+            # Convert to string format to match lookup table
+            try:
+                domestic_no = str(int(float(domestic_no)))
+            except (ValueError, TypeError):
+                # If conversion fails, try as-is
+                pass
+
+            if domestic_no not in lookup:
+                batch_dropped += 1
+                # Collect sample unmatched values for debugging (limit to 10)
+                if len(unmatched_samples) < 10:
+                    unmatched_samples.add(domestic_no)
                 continue
 
             # Enrich record with producer info
@@ -302,6 +324,19 @@ def process_tokenized_data(lookup: Dict[str, Dict], batch_size: int,
     print(f"Contract records (CUST_STATUS2='契約'): {total_contract_records:,}")
     print(f"Successfully enriched: {total_enriched_records:,}")
     print(f"Dropped (no producer match): {total_dropped_records:,}")
+
+    # Show debugging info for unmatched records
+    if unmatched_samples:
+        print(f"\n🔍 Sample unmatched DOMESTIC_DESCRIMI_NO values (first 10):")
+        for sample in sorted(list(unmatched_samples)[:10]):
+            print(f"    '{sample}' (type: {type(sample).__name__})")
+
+        # Show sample lookup keys for comparison
+        sample_lookup_keys = list(lookup.keys())[:5]
+        print(f"\n🔍 Sample lookup table keys (first 5):")
+        for key in sample_lookup_keys:
+            print(f"    '{key}' (type: {type(key).__name__})")
+
     print()
 
     writer.print_summary()
