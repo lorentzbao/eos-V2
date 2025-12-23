@@ -232,10 +232,30 @@ app.search = {
             const response = await fetch(`${endpoint}?${searchParams.toString()}`);
 
             if (!response.ok) {
-                throw new Error(`Search failed: ${response.status}`);
+                // Try to get error message from JSON response
+                let errorMessage = `Search failed with status ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    if (errorData.error) {
+                        errorMessage = errorData.error;
+                        if (errorData.details) {
+                            console.error('Error details:', errorData.details);
+                        }
+                    }
+                } catch (e) {
+                    // If JSON parsing fails, use status text
+                    errorMessage = `Search failed: ${response.statusText || response.status}`;
+                }
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();
+
+            // Check if response contains an error
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
             app.state.searchResults = data;
 
             // Update popular queries incrementally in memory

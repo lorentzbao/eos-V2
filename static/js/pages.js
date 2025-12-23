@@ -323,10 +323,12 @@ app.pages = {
 
         } catch (error) {
             console.error('Search error:', error);
+            const errorMessage = error.message || '不明なエラーが発生しました';
             return `
                 <div class="alert alert-danger">
                     <h5>検索エラー</h5>
-                    <p>検索中にエラーが発生しました。再度お試しください。</p>
+                    <p>${app.utils.escapeHtml(errorMessage)}</p>
+                    <p class="mb-0"><small>詳細はブラウザのコンソールをご確認ください。</small></p>
                 </div>
             `;
         }
