@@ -322,8 +322,12 @@ app.pages = {
             }
 
         } catch (error) {
-            console.error('Search error:', error);
+            console.error('[DEBUG] renderSearchPage caught error:', error);
+            console.error('[DEBUG] Error type:', typeof error);
+            console.error('[DEBUG] Error message:', error.message);
+            console.error('[DEBUG] Error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
             const errorMessage = error.message || '不明なエラーが発生しました';
+            console.log('[DEBUG] Final error message to display:', errorMessage);
             return `
                 <div class="alert alert-danger">
                     <h5>検索エラー</h5>

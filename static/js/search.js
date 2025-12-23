@@ -223,19 +223,24 @@ app.search = {
     // Perform search
     async performSearch(params) {
         try {
+            console.log('[DEBUG] performSearch called with params:', params);
             app.showLoading();
 
             const searchParams = new URLSearchParams(params);
 
             // Route to correct endpoint based on target
             const endpoint = params.target === '契約' ? '/search-contract' : '/search';
+            console.log('[DEBUG] Endpoint:', endpoint);
+            console.log('[DEBUG] Full URL:', `${endpoint}?${searchParams.toString()}`);
             const response = await fetch(`${endpoint}?${searchParams.toString()}`);
 
             if (!response.ok) {
+                console.log('[DEBUG] Response not OK. Status:', response.status);
                 // Try to get error message from JSON response
                 let errorMessage = `Search failed with status ${response.status}`;
                 try {
                     const errorData = await response.json();
+                    console.log('[DEBUG] Error response data:', errorData);
                     if (errorData.error) {
                         errorMessage = errorData.error;
                         if (errorData.details) {
@@ -244,15 +249,20 @@ app.search = {
                     }
                 } catch (e) {
                     // If JSON parsing fails, use status text
+                    console.log('[DEBUG] Failed to parse error JSON:', e);
                     errorMessage = `Search failed: ${response.statusText || response.status}`;
                 }
+                console.log('[DEBUG] Throwing error with message:', errorMessage);
                 throw new Error(errorMessage);
             }
 
+            console.log('[DEBUG] Response OK, parsing JSON...');
             const data = await response.json();
+            console.log('[DEBUG] Response data:', data);
 
             // Check if response contains an error
             if (data.error) {
+                console.log('[DEBUG] Data contains error field:', data.error);
                 throw new Error(data.error);
             }
 
@@ -266,7 +276,9 @@ app.search = {
             return data;
 
         } catch (error) {
-            console.error('Search error:', error);
+            console.error('[DEBUG] Search error caught:', error);
+            console.error('[DEBUG] Error message:', error.message);
+            console.error('[DEBUG] Error stack:', error.stack);
             throw error;
         } finally {
             app.hideLoading();

@@ -360,27 +360,36 @@ window.app = {
 
         // Validate form before submission
         validateSearchForm(formData) {
+            console.log('[DEBUG] validateSearchForm called');
+            console.log('[DEBUG] FormData entries:', Object.fromEntries(formData.entries()));
             const target = formData.get('target');
+            console.log('[DEBUG] Target:', target);
 
             if (!target) {
+                console.log('[DEBUG] Validation failed: No target selected');
                 app.utils.showAlert('対象を選択してください。', 'danger');
                 return false;
             }
 
             if (target === '白地・過去') {
                 const prefecture = formData.get('prefecture');
+                console.log('[DEBUG] Prefecture:', prefecture);
                 if (!prefecture) {
+                    console.log('[DEBUG] Validation failed: No prefecture selected');
                     app.utils.showAlert('都道府県を選択してください。', 'danger');
                     return false;
                 }
             } else if (target === '契約') {
                 const regionalOffice = formData.get('regional_office');
+                console.log('[DEBUG] Regional office:', regionalOffice);
                 if (!regionalOffice) {
+                    console.log('[DEBUG] Validation failed: No regional office selected');
                     app.utils.showAlert('地域事業本部を選択してください。', 'danger');
                     return false;
                 }
             }
 
+            console.log('[DEBUG] Validation passed');
             return true;
         }
     }
