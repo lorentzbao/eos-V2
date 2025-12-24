@@ -43,6 +43,7 @@ data/documents/*.html         # Ignore document files
 data/indexes/                 # Ignore all index files
 data/tokenized_contract/      # Ignore contract tokenized data (district-based)
 data/test_*_output/           # Ignore test output directories
+data/test_contract_indexes/   # Ignore test contract indexes
 data/KEN_ALL.CSV              # Ignore postal code data
 # Note: data/whoosh_index/ is now tracked to share sample data
 # Note: data/sample_companies.json is tracked for test data

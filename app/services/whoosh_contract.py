@@ -232,17 +232,29 @@ class WhooshContractJapanese:
 
                 # Execute search with sorting
                 if sort_by == "revenue":
-                    results = searcher.search(query, limit=limit, filter=filter_query,
+                    results = searcher.search(query, limit=limit, terms=True, filter=filter_query,
                                             sortedby="CURR_SETLMNT_TAKING_AMT", reverse=True)
                 elif sort_by == "employees":
-                    results = searcher.search(query, limit=limit, filter=filter_query,
+                    results = searcher.search(query, limit=limit, terms=True, filter=filter_query,
                                             sortedby="EMPLOYEE_ALL_NUM", reverse=True)
                 else:
-                    results = searcher.search(query, limit=limit, filter=filter_query)
+                    results = searcher.search(query, limit=limit, terms=True, filter=filter_query)
 
                 # Convert results to list of dicts
                 search_results = []
                 for hit in results:
+                    # Use Whoosh's built-in matched_terms() method and process the results
+                    raw_matched_terms = hit.matched_terms()
+                    # Extract unique terms from tuples and decode bytes
+                    unique_terms = set()
+                    for field_name, term_bytes in raw_matched_terms:
+                        if isinstance(term_bytes, bytes):
+                            term = term_bytes.decode('utf-8')
+                        else:
+                            term = str(term_bytes)
+                        unique_terms.add(term)
+                    matched_terms = list(unique_terms)
+
                     result = {
                         'id': hit['id'],
                         'url': hit['url'],
@@ -281,14 +293,16 @@ class WhooshContractJapanese:
                         'main_domain_url': hit['main_domain_url'],
                         'url_name': hit['url_name'],
 
-                        'matched_terms': list(hit.matched_terms())
+                        'matched_terms': matched_terms
                     }
                     search_results.append(result)
 
                 return search_results
 
         except Exception as e:
+            import traceback
             print(f"Search error: {e}")
+            print(f"Traceback: {traceback.format_exc()}")
             return []
 
     def get_document_count(self) -> int:
