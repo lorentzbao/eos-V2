@@ -14,6 +14,9 @@ def create_app(config: DictConfig = None):
         # Configure session lifetime
         session_hours = config.app.get('session_lifetime_hours', 8)
         app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=session_hours)
+        app.config['SESSION_COOKIE_HTTPONLY'] = True
+        app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+        app.config['SESSION_COOKIE_SECURE'] = False
         # Store search configuration
         if hasattr(config, 'search'):
             app.config['SEARCH_DEFAULT_LIMIT'] = config.search.get('default_limit', 100)
@@ -38,6 +41,9 @@ def create_app(config: DictConfig = None):
         app.config['CSV_OUTPUT_DIR'] = 'data/csv_output'
         app.config['CSV_ENABLE_BROWSER_DOWNLOAD'] = True
         app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
+        app.config['SESSION_COOKIE_HTTPONLY'] = True
+        app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+        app.config['SESSION_COOKIE_SECURE'] = False
 
     # Initialize search service ONCE (for cache reuse)
     from app.services.search_service_prefecture import SearchServicePrefecture
