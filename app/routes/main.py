@@ -217,9 +217,11 @@ def search_contract():
             query,
             search_results['total_found'],
             search_results['search_time'],
-            f"District_{district}",  # Log district instead of prefecture
-            '契約',  # Contract status
-            city
+            f"District_{district}",
+            '契約',
+            city,
+            branch=branch_cd,
+            solicitor=solicitor_cd
         )
 
         return jsonify({

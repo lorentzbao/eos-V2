@@ -148,7 +148,7 @@ app.csvDownload = {
     },
 
     // Download CSV from history entry params (used by 再発行)
-    async downloadFromParams(query, prefecture, target, triggerBtn) {
+    async downloadFromParams(query, prefecture, city, target, branch, solicitor, triggerBtn) {
         const originalHTML = triggerBtn ? triggerBtn.innerHTML : '';
         try {
             if (triggerBtn) {
@@ -156,7 +156,20 @@ app.csvDownload = {
                 triggerBtn.disabled = true;
             }
 
-            const params = new URLSearchParams({ q: query, prefecture, target });
+            let params;
+            if (target === '契約') {
+                const district = prefecture.startsWith('District_')
+                    ? prefecture.replace('District_', '') : prefecture;
+                params = new URLSearchParams({
+                    q: query, target,
+                    regional_office: district,
+                    branch: branch || '',
+                    solicitor: solicitor || '',
+                    city: city || ''
+                });
+            } else {
+                params = new URLSearchParams({ q: query, prefecture, city: city || '', target });
+            }
             const response = await fetch(`/api/download-csv?${params.toString()}`);
             const contentType = response.headers.get('content-type');
 

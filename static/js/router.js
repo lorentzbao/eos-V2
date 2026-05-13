@@ -247,14 +247,25 @@ app.router = {
 
             if (researchBtn) {
                 e.preventDefault();
-                const { query, prefecture, city, target } = researchBtn.dataset;
-                this.navigate('search', { q: query, prefecture, city, target });
+                const { query, prefecture, city, target, branch, solicitor } = researchBtn.dataset;
+                let params = { q: query, city, target };
+                if (target === '契約') {
+                    params.regional_office = prefecture.startsWith('District_')
+                        ? prefecture.replace('District_', '') : prefecture;
+                    params.branch = branch || '';
+                    params.solicitor = solicitor || '';
+                } else {
+                    params.prefecture = prefecture;
+                }
+                this.navigate('search', params);
             }
 
             if (reissueBtn) {
                 e.preventDefault();
-                const { query, prefecture, target } = reissueBtn.dataset;
-                await app.csvDownload.downloadFromParams(query, prefecture, target, reissueBtn);
+                const { query, prefecture, city, target, branch, solicitor } = reissueBtn.dataset;
+                await app.csvDownload.downloadFromParams(
+                    query, prefecture, city, target, branch, solicitor, reissueBtn
+                );
             }
         });
     },

@@ -133,9 +133,9 @@ def api_optimize_index():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-def get_cache_key(query, prefecture, cust_status):
-    """Generate unique cache key for search parameters"""
-    params = f"{query}:{prefecture}:{cust_status}"
+def get_cache_key(*parts):
+    """Generate unique cache key from all search parameters"""
+    params = ':'.join(parts)
     return hashlib.md5(params.encode('utf-8')).hexdigest()
 
 def _copy_to_output_dir_sync(cache_file, filename, output_dir):
@@ -169,72 +169,61 @@ def copy_to_output_dir_async(cache_file, filename, output_dir):
 @api.route('/download-csv')
 def download_csv():
     """Download search results as CSV with file-based caching"""
-    # Check authentication
     if 'username' not in session:
         return jsonify({'error': 'Authentication required'}), 401
 
-    # Get search parameters
     query = request.args.get('q', '').strip()
-    prefecture = request.args.get('prefecture', '')
-    target = request.args.get('target', '')
-    cust_status = request.args.get('cust_status', '')
-
-    # Map target to internal filter value (same logic as /search route)
-    if target == '白地・過去':
-        cust_status = '白地|過去'
-    elif target == '契約':
-        cust_status = '契約'
-
     if not query:
         return jsonify({'error': 'Query parameter required'}), 400
 
-    # Get username from session
+    target = request.args.get('target', '')
+    is_contract = (target == '契約')
+
     username = session.get('username', 'UNKNOWN').upper()
-
-    # Get values from Flask context (before any threading)
     output_dir = current_app.config.get('CSV_OUTPUT_DIR', 'data/csv_output')
-    search_service = get_search_service()
     enable_browser_download = current_app.config.get('CSV_ENABLE_BROWSER_DOWNLOAD', True)
-
-    # Generate cache key and file path
-    cache_key = get_cache_key(query, prefecture, cust_status)
-    # Use absolute path from project root
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     cache_dir = os.path.join(project_root, "data", "csv_cache")
-    cache_file = os.path.join(cache_dir, f"{cache_key}.csv")
 
-    # Generate filename for download
+    if is_contract:
+        district = request.args.get('regional_office', '')
+        branch_cd = request.args.get('branch', '')
+        solicitor_cd = request.args.get('solicitor', '')
+        city = request.args.get('city', '')
+        service = current_app.contract_search_service
+        if not service:
+            return jsonify({'error': 'Contract search service not available'}), 503
+        if not district:
+            return jsonify({'error': 'Regional office is required'}), 400
+        cache_key = get_cache_key('contract', query, district, branch_cd, solicitor_cd, city)
+    else:
+        prefecture = request.args.get('prefecture', '')
+        city = request.args.get('city', '')
+        cust_status = request.args.get('cust_status', '')
+        if target == '白地・過去':
+            cust_status = '白地|過去'
+        service = get_search_service()
+        cache_key = get_cache_key('regular', query, prefecture, cust_status, city)
+
+    cache_file = os.path.join(cache_dir, f"{cache_key}.csv")
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = f"EOS_{username}_{timestamp}.csv"
 
-    # Check if cached file exists
     if os.path.exists(cache_file):
-        # Cache hit: copy cached file to output directory (async, non-blocking)
         copy_to_output_dir_async(cache_file, filename, output_dir)
-
-        # Check if browser download is enabled
         if enable_browser_download:
-            # Serve cached file immediately
             return send_file(cache_file, as_attachment=True, download_name=filename)
         else:
-            # Return success message without serving file
             return jsonify({
                 'success': True,
                 'message': 'ダウンロード処理中です。完了次第、メールでお知らせいたします。',
                 'filename': filename
             })
-    
-    # File doesn't exist, generate and cache it
-    def generate_csv_content(search_service):
-        """Generate CSV content and save to cache file"""
+
+    def generate_csv_content():
         try:
-            # Create cache directory if it doesn't exist
             os.makedirs(cache_dir, exist_ok=True)
-            
-            # Use Python's CSV writer for proper encoding
             output = io.StringIO()
-            
-            # Create CSV writer with enterprise data field order
             fieldnames = [
                 'jcn',
                 # 'CUST_STATUS2', 'company_name_kj', 'company_address_all',
@@ -246,68 +235,46 @@ def download_csv():
                 # 'id'
             ]
             writer = csv.DictWriter(output, fieldnames=fieldnames)
-            
-            # Write header
             writer.writeheader()
-            
-            # Single search to get all results - most efficient approach with JCN sorting
-            search_results = search_service.search(query, limit=10000, prefecture=prefecture, cust_status=cust_status, sort_by="jcn")
-            grouped_results = search_results.get('grouped_results', [])
-            
-            # Write all results by flattening grouped results
-            for company in grouped_results:
+
+            if is_contract:
+                search_results = service.search(
+                    query, district, limit=10000,
+                    branch_cd=branch_cd, solicitor_cd=solicitor_cd,
+                    sort_by="jcn", city=city
+                )
+            else:
+                search_results = service.search(
+                    query, limit=10000, prefecture=prefecture,
+                    cust_status=cust_status, sort_by="jcn", city=city
+                )
+
+            for company in search_results.get('grouped_results', []):
                 for url in company.get('urls', []):
-                    # Format result data with enterprise structure
-                    result_data = {
+                    writer.writerow({
                         'jcn': company.get('jcn', ''),
-                        # 'CUST_STATUS2': company.get('CUST_STATUS2', ''),
-                        # 'company_name_kj': company.get('company_name_kj', ''),
-                        # 'company_address_all': company.get('company_address_all', ''),
-                        # 'LARGE_CLASS_NAME': company.get('LARGE_CLASS_NAME', ''),
-                        # 'MIDDLE_CLASS_NAME': company.get('MIDDLE_CLASS_NAME', ''),
-                        # 'CURR_SETLMNT_TAKING_AMT': company.get('CURR_SETLMNT_TAKING_AMT', ''),
-                        # 'EMPLOYEE_ALL_NUM': company.get('EMPLOYEE_ALL_NUM', ''),
-                        # 'prefecture': company.get('prefecture', ''),
-                        # 'city': company.get('city', ''),
-                        # 'district_finalized_cd': company.get('district_finalized_cd', ''),
-                        # 'branch_name_cd': company.get('branch_name_cd', ''),
                         'main_domain_url': company.get('main_domain_url', ''),
-                        # 'url_name': url.get('url_name', ''),
-                        # 'url': url.get('url', ''),
-                        # 'content': url.get('content', '')[:500],  # Limit content length
                         'matched_terms': '|'.join(url.get('matched_terms', [])),
-                        # 'id': url.get('id', '')
-                    }
-                    
-                    writer.writerow(result_data)
-            
-            # Get CSV content
+                    })
+
             csv_content = output.getvalue()
-            
-            # Save to cache file with UTF-8 BOM for Excel compatibility
             with open(cache_file, 'w', encoding='utf-8-sig', newline='') as f:
                 f.write(csv_content)
-            
             return csv_content
-            
+
         except Exception as e:
-            # If error occurs, create a simple error CSV
             error_csv = f"Error,{str(e)}\n"
             with open(cache_file, 'w', encoding='utf-8-sig', newline='') as f:
                 f.write(error_csv)
             return error_csv
-    
-    # Check if browser download is enabled
+
     if enable_browser_download:
-        # Browser download enabled: generate synchronously and serve file
-        generate_csv_content(search_service)
+        generate_csv_content()
         copy_to_output_dir_async(cache_file, filename, output_dir)
         return send_file(cache_file, as_attachment=True, download_name=filename)
     else:
-        # Browser download disabled: return immediately and generate in background
-        # Start CSV generation in background thread
         def generate_in_background():
-            generate_csv_content(search_service)
+            generate_csv_content()
             copy_to_output_dir_async(cache_file, filename, output_dir)
 
         thread = threading.Thread(target=generate_in_background, daemon=True)

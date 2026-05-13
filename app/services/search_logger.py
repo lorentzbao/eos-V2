@@ -116,7 +116,8 @@ class SearchLogger:
             self._user_history_cache = defaultdict(list)
     
     def log_search(self, username: str, query: str, results_count: int = 0,
-                   search_time: float = 0.0, prefecture: str = "", cust_status: str = "", city: str = ""):
+                   search_time: float = 0.0, prefecture: str = "", cust_status: str = "", city: str = "",
+                   branch: str = "", solicitor: str = ""):
         """Log a search query by user with detailed information"""
         # Normalize query for consistent tracking
         normalized_query = self.query_processor.normalize_query(query)
@@ -128,17 +129,16 @@ class SearchLogger:
             "search_time": round(search_time, 3)
         }
 
-        # Only include prefecture if it's specified
         if prefecture:
             log_entry["prefecture"] = prefecture
-
-        # Only include cust_status if it's specified
         if cust_status:
             log_entry["cust_status"] = cust_status
-
-        # Only include city if it's specified
         if city:
             log_entry["city"] = city
+        if branch:
+            log_entry["branch"] = branch
+        if solicitor:
+            log_entry["solicitor"] = solicitor
 
         try:
             # Write to file

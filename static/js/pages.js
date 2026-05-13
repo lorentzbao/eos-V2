@@ -807,7 +807,10 @@ app.pages = {
                                                     `<button class="btn btn-sm btn-outline-success history-reissue-btn"
                                                         data-query="${app.utils.escapeHtml(search.query)}"
                                                         data-prefecture="${app.utils.escapeHtml(search.prefecture || '')}"
-                                                        data-target="${app.utils.escapeHtml(search.cust_status || '')}">
+                                                        data-city="${app.utils.escapeHtml(search.city || '')}"
+                                                        data-target="${app.utils.escapeHtml(search.cust_status || '')}"
+                                                        data-branch="${app.utils.escapeHtml(search.branch || '')}"
+                                                        data-solicitor="${app.utils.escapeHtml(search.solicitor || '')}">
                                                         再発行
                                                     </button>` :
                                                     '<span class="text-muted">-</span>'
@@ -818,7 +821,9 @@ app.pages = {
                                                     data-query="${app.utils.escapeHtml(search.query)}"
                                                     data-prefecture="${app.utils.escapeHtml(search.prefecture || '')}"
                                                     data-city="${app.utils.escapeHtml(search.city || '')}"
-                                                    data-target="${app.utils.escapeHtml(search.cust_status || '')}">
+                                                    data-target="${app.utils.escapeHtml(search.cust_status || '')}"
+                                                    data-branch="${app.utils.escapeHtml(search.branch || '')}"
+                                                    data-solicitor="${app.utils.escapeHtml(search.solicitor || '')}">
                                                     再検索
                                                 </button>
                                             </td>
