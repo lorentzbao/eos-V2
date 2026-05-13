@@ -52,6 +52,23 @@ app.pages = {
         }).join('\n');
     },
 
+    // Resolve a stored prefecture/district value to its display name
+    getLocationName(storedValue) {
+        if (!storedValue) return '';
+        if (storedValue.startsWith('District_')) {
+            const code = storedValue.replace('District_', '');
+            if (this._contractData && this._contractData[code]) {
+                return this._contractData[code].name || storedValue;
+            }
+            return storedValue;
+        }
+        if (this._prefectureData) {
+            const pref = this._prefectureData.find(p => p.value === storedValue);
+            if (pref) return pref.name;
+        }
+        return storedValue;
+    },
+
     // Generate district options HTML
     getDistrictOptions(selectedValue = '') {
         if (!this._contractData) {
@@ -701,6 +718,9 @@ app.pages = {
 
             const data = await response.json();
 
+            // Ensure lookup data is available for badge display names
+            await Promise.all([this.loadPrefectures(), this.loadContractData()]);
+
             return this.renderHistoryContent(data, showAll);
 
         } catch (error) {
@@ -772,7 +792,7 @@ app.pages = {
                                             <td>
                                                 <div class="d-flex flex-wrap gap-1">
                                                     ${search.cust_status ? `<span class="badge bg-primary">${search.cust_status}</span>` : ''}
-                                                    ${search.prefecture ? `<span class="badge bg-info">${search.prefecture}</span>` : ''}
+                                                    ${search.prefecture ? `<span class="badge bg-info">${app.utils.escapeHtml(this.getLocationName(search.prefecture))}</span>` : ''}
                                                     ${search.city ? `<span class="badge bg-secondary">${search.city}</span>` : ''}
                                                 </div>
                                             </td>
