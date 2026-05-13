@@ -147,6 +147,58 @@ app.csvDownload = {
         return new URLSearchParams(window.location.search);
     },
 
+    // Download CSV from history entry params (used by 再発行)
+    async downloadFromParams(query, prefecture, target, triggerBtn) {
+        const originalHTML = triggerBtn ? triggerBtn.innerHTML : '';
+        try {
+            if (triggerBtn) {
+                triggerBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>';
+                triggerBtn.disabled = true;
+            }
+
+            const params = new URLSearchParams({ q: query, prefecture, target });
+            const response = await fetch(`/api/download-csv?${params.toString()}`);
+            const contentType = response.headers.get('content-type');
+
+            if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                if (data.success) {
+                    this.showMessageModal(data.message);
+                } else {
+                    app.utils.showAlert('CSVダウンロード中にエラーが発生しました', 'danger');
+                }
+            } else {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                const contentDisposition = response.headers.get('content-disposition');
+                let filename = 'search_results.csv';
+                if (contentDisposition) {
+                    const match = contentDisposition.match(/filename="?(.+)"?/);
+                    if (match) filename = match[1];
+                }
+                link.download = filename;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+                this.showDownloadSuccess();
+            }
+        } catch (error) {
+            console.error('CSV reissue error:', error);
+            app.utils.showAlert('CSVダウンロード中にエラーが発生しました', 'danger');
+        } finally {
+            if (triggerBtn) {
+                setTimeout(() => {
+                    triggerBtn.innerHTML = originalHTML;
+                    triggerBtn.disabled = false;
+                }, 3000);
+            }
+        }
+    },
+
     // Show download success message
     showDownloadSuccess() {
         const alertDiv = document.createElement('div');

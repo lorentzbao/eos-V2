@@ -148,13 +148,14 @@ def search():
         stats = search_service.get_stats()
 
     # Log the search query with detailed information
+    # Use target (user-facing value) so history can restore the correct filter on re-search
     search_logger.log_search(
         username,
         query,
         search_results['total_found'],
         search_results['search_time'],
         prefecture,
-        cust_status,
+        target or cust_status,
         city
     )
 

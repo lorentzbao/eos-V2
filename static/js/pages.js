@@ -784,15 +784,23 @@ app.pages = {
                                             </td>
                                             <td>
                                                 ${hasResults ?
-                                                    `<button class="btn btn-sm btn-outline-success" onclick="alert('ダミー: リスト${index + 1}.csvをダウンロードしました')">
+                                                    `<button class="btn btn-sm btn-outline-success history-reissue-btn"
+                                                        data-query="${app.utils.escapeHtml(search.query)}"
+                                                        data-prefecture="${app.utils.escapeHtml(search.prefecture || '')}"
+                                                        data-target="${app.utils.escapeHtml(search.cust_status || '')}">
                                                         再発行
                                                     </button>` :
                                                     '<span class="text-muted">-</span>'
                                                 }
                                             </td>
                                             <td>
-                                                <a href="#" onclick="app.router.navigate('search', {q: '${app.utils.escapeHtml(search.query)}', prefecture: '${search.prefecture || ''}', city: '${search.city || ''}', cust_status: '${search.cust_status || ''}'})"
-                                                   class="btn btn-sm btn-outline-primary">再検索</a>
+                                                <button class="btn btn-sm btn-outline-primary history-research-btn"
+                                                    data-query="${app.utils.escapeHtml(search.query)}"
+                                                    data-prefecture="${app.utils.escapeHtml(search.prefecture || '')}"
+                                                    data-city="${app.utils.escapeHtml(search.city || '')}"
+                                                    data-target="${app.utils.escapeHtml(search.cust_status || '')}">
+                                                    再検索
+                                                </button>
                                             </td>
                                         </tr>
                                         `;

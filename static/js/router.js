@@ -238,7 +238,25 @@ app.router = {
 
     // Initialize history page
     initHistoryPage() {
-        // No specific initialization needed for history page
+        const appContent = document.getElementById('app-content');
+        if (!appContent) return;
+
+        appContent.addEventListener('click', async (e) => {
+            const researchBtn = e.target.closest('.history-research-btn');
+            const reissueBtn = e.target.closest('.history-reissue-btn');
+
+            if (researchBtn) {
+                e.preventDefault();
+                const { query, prefecture, city, target } = researchBtn.dataset;
+                this.navigate('search', { q: query, prefecture, city, target });
+            }
+
+            if (reissueBtn) {
+                e.preventDefault();
+                const { query, prefecture, target } = reissueBtn.dataset;
+                await app.csvDownload.downloadFromParams(query, prefecture, target, reissueBtn);
+            }
+        });
     },
 
     // Initialize rankings page

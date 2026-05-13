@@ -176,7 +176,14 @@ def download_csv():
     # Get search parameters
     query = request.args.get('q', '').strip()
     prefecture = request.args.get('prefecture', '')
+    target = request.args.get('target', '')
     cust_status = request.args.get('cust_status', '')
+
+    # Map target to internal filter value (same logic as /search route)
+    if target == '白地・過去':
+        cust_status = '白地|過去'
+    elif target == '契約':
+        cust_status = '契約'
 
     if not query:
         return jsonify({'error': 'Query parameter required'}), 400
