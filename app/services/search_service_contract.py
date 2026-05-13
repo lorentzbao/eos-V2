@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 from functools import lru_cache
 from .whoosh_contract import WhooshContractJapanese
 from .query_processor import QueryProcessor
@@ -11,7 +11,7 @@ class SearchServiceContract:
         self.query_processor = QueryProcessor()
 
     @lru_cache(maxsize=128)
-    def _cached_search(self, query: str, limit: int, branch_cd: str, solicitor_cd: str,
+    def _cached_search(self, query: str, limit: Optional[int], branch_cd: str, solicitor_cd: str,
                       sort_by: str = "", city: str = "") -> tuple:
         """
         Cached search implementation using LRU cache.
@@ -30,7 +30,7 @@ class SearchServiceContract:
         except Exception:
             return ([], processed_query)
 
-    def search(self, query: str, limit: int = 10, branch_cd: str = "", solicitor_cd: str = "",
+    def search(self, query: str, limit: Optional[int] = 10, branch_cd: str = "", solicitor_cd: str = "",
               sort_by: str = "", city: str = "") -> Dict:
         """
         Search contract data with branch and solicitor filtering

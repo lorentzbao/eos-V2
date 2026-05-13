@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 from functools import lru_cache
 from .whoosh_prefecture import WhooshPrefectureJapanese
 from .query_processor import QueryProcessor
@@ -9,7 +9,7 @@ class SearchServicePrefecture:
         self.query_processor = QueryProcessor()
     
     @lru_cache(maxsize=128)
-    def _cached_search(self, query: str, limit: int, prefecture: str, cust_status: str, sort_by: str = "", city: str = "") -> tuple:
+    def _cached_search(self, query: str, limit: Optional[int], prefecture: str, cust_status: str, sort_by: str = "", city: str = "") -> tuple:
         """
         Cached search implementation using LRU cache.
         Returns tuple to make it hashable and cacheable.
@@ -27,7 +27,7 @@ class SearchServicePrefecture:
         except Exception:
             return ([], processed_query)
 
-    def search(self, query: str, limit: int = 10, prefecture: str = "", cust_status: str = "", sort_by: str = "", city: str = "") -> Dict:
+    def search(self, query: str, limit: Optional[int] = 10, prefecture: str = "", cust_status: str = "", sort_by: str = "", city: str = "") -> Dict:
         if not query.strip():
             return {
                 'grouped_results': [],

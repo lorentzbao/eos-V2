@@ -239,13 +239,13 @@ def download_csv():
 
             if is_contract:
                 search_results = service.search(
-                    query, district, limit=10000,
+                    query, district, limit=None,
                     branch_cd=branch_cd, solicitor_cd=solicitor_cd,
                     sort_by="jcn", city=city
                 )
             else:
                 search_results = service.search(
-                    query, limit=10000, prefecture=prefecture,
+                    query, limit=None, prefecture=prefecture,
                     cust_status=cust_status, sort_by="jcn", city=city
                 )
 

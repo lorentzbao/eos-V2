@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 from .search_service_contract import SearchServiceContract
 from omegaconf import DictConfig
 
@@ -33,7 +33,7 @@ class MultiContractSearchService:
         districts.sort(key=lambda x: x['district_cd'])
         return districts
 
-    def search(self, query: str, district: str, limit: int = 10,
+    def search(self, query: str, district: str, limit: Optional[int] = 10,
                branch_cd: str = "", solicitor_cd: str = "", sort_by: str = "", city: str = "") -> Dict:
         """
         Search in a specific district index with branch and solicitor filtering
