@@ -208,6 +208,7 @@ Examples:
         print()
         
         # Performance testing
+        performance = None
         if not args.no_performance_test:
             performance = test_search_performance(search_service)
             
@@ -270,7 +271,7 @@ Examples:
         if stats.get('total_documents', 0) > 100000:
             print("• Consider using larger batch sizes for better performance")
         
-        if performance.get('avg_time', 0) > 0.5:
+        if performance and performance.get('avg_time', 0) > 0.5:
             print("• Search performance could be improved - consider index optimization")
         
         if dir_info['total_size'] > 1024 * 1024 * 1024:  # > 1GB
