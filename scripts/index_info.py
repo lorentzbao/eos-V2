@@ -84,7 +84,7 @@ def get_directory_info(index_dir: str) -> dict:
     return info
 
 
-def test_search_performance(search_service: SearchService) -> dict:
+def test_search_performance(search_service: SearchServicePrefecture) -> dict:
     """Test basic search performance"""
     test_queries = ['技術', 'サービス', '東京', '開発']
     performance = {
